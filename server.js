@@ -81,6 +81,23 @@ async function authenticateAdmin(req, res, next) {
   });
 }
 
+// Temporary Debugging route to check files on Render filesystem
+app.get('/api/debug-files', (req, res) => {
+  try {
+    const publicPath = path.join(__dirname, 'public');
+    const files = fs.readdirSync(publicPath);
+    res.json({ 
+      success: true, 
+      __dirname, 
+      publicPath, 
+      exists: fs.existsSync(publicPath),
+      files 
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Store temporary OTPs in memory for demo verification
 const tempOtps = {};
 
