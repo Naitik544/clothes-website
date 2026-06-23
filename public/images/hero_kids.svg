@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" width="100%" height="100%">
+  <defs>
+    <linearGradient id="g3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#581C87" />
+      <stop offset="100%" stop-color="#701A75" />
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#g3)" />
+  <!-- Cute star shapes -->
+  <g fill="#F59E0B" opacity="0.3">
+    <polygon points="900,100 905,115 920,115 908,125 912,140 900,130 888,140 892,125 880,115 895,115" />
+    <polygon points="1050,300 1053,308 1062,308 1055,313 1057,322 1050,317 1043,322 1045,313 1038,308 1047,308" />
+  </g>
+</svg>

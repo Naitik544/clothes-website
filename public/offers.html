@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offers & Discount Coupons | Little to Large</title>
+  <meta name="description" content="Save big with active coupon codes, clearance deals, and seasonal discounts on clothing at Little to Large. Free shipping on family boxes.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Header Injected by app.js -->
+  <header></header>
+
+  <!-- Offers Hero Banner -->
+  <section style="background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%); color: #fff; padding: 4rem 0; text-align: center; border-bottom: 4px solid var(--marigold);">
+    <div class="container" style="max-width: 800px;">
+      <h1 style="font-size: 2.8rem; font-weight: 800; margin-bottom: 1rem;">Family Savings Zone</h1>
+      <p style="font-size: 1.1rem; line-height: 1.6; color: rgba(255,255,255,0.9)">Use our exclusive discount coupons during checkout to enjoy maximum benefits on ethnic and western wear.</p>
+    </div>
+  </section>
+
+  <!-- Deal of the Day Count Down -->
+  <section class="container" style="margin: 3.5rem auto; text-align:center">
+    <div style="background-color: var(--primary); color:#fff; border-radius:var(--radius-lg); padding:2rem; display:inline-flex; align-items:center; gap:2rem; flex-wrap:wrap; justify-content:center">
+      <div style="text-align:left">
+        <h3 style="font-size:1.2rem; font-weight:700; color:var(--marigold)">⚡ FLASH DEAL OF THE DAY</h3>
+        <p style="font-size:0.88rem; color:rgba(255,255,255,0.8)">Get an extra 15% off on Men's Saffron silk Kurtas.</p>
+      </div>
+      <div style="display:flex; gap:8px" id="countdownTimerContainer">
+        <div class="timer-box"><span id="timeHr">04</span><p>Hrs</p></div>
+        <div class="timer-box"><span id="timeMin">59</span><p>Mins</p></div>
+        <div class="timer-box"><span id="timeSec">59</span><p>Secs</p></div>
+      </div>
+    </div>
+    <style>
+      .timer-box {
+        background: rgba(255,255,255,0.1);
+        padding: 0.5rem 0.8rem;
+        border-radius: 8px;
+        min-width: 60px;
+        border: 1px solid rgba(255,255,255,0.1);
+      }
+      .timer-box span {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: var(--marigold);
+      }
+      .timer-box p {
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        margin: 0;
+        opacity: 0.7;
+      }
+    </style>
+  </section>
+
+  <!-- Coupon Code Cards -->
+  <section class="container" style="margin-bottom: 5rem;">
+    <div class="section-title">
+      <h2>Active Promo Coupons</h2>
+      <p>Click any coupon box to copy the promo code instantly</p>
+    </div>
+    
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:2rem">
+      <!-- Coupon 1 -->
+      <div class="coupon-card" onclick="copyCoupon('WELCOME10')">
+        <span class="coupon-tag">NEW USER</span>
+        <h3>10% Discount</h3>
+        <p>Applicable on all products. No minimum purchase required.</p>
+        <div class="code-box">WELCOME10 <i class="far fa-copy"></i></div>
+      </div>
+
+      <!-- Coupon 2 -->
+      <div class="coupon-card" onclick="copyCoupon('FAMILY40')">
+        <span class="coupon-tag">ACCESSORIES</span>
+        <h3>Flat 40% OFF</h3>
+        <p>Save massive amounts on clutches, belts, and mojari footwear combos.</p>
+        <div class="code-box" style="border-color:var(--accent); color:var(--accent)">FAMILY40 <i class="far fa-copy"></i></div>
+      </div>
+
+      <!-- Coupon 3 -->
+      <div class="coupon-card" onclick="copyCoupon('TWINNING500')">
+        <span class="coupon-tag">MEGA SAVER</span>
+        <h3>Save ₹500</h3>
+        <p>Valid on purchase of minimum 2 kids outfits. Perfect for twins.</p>
+        <div class="code-box" style="border-color:var(--success); color:var(--success)">TWINNING500 <i class="far fa-copy"></i></div>
+      </div>
+    </div>
+
+    <style>
+      .coupon-card {
+        background-color: #fff;
+        border: 2px dashed var(--border-color);
+        border-radius: var(--radius);
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        position: relative;
+        transition: var(--transition);
+        overflow: hidden;
+      }
+      .coupon-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--primary);
+      }
+      .coupon-tag {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: var(--primary);
+        color: #fff;
+        font-size: 0.68rem;
+        font-weight: 700;
+        padding: 0.25rem 0.8rem;
+        border-bottom-left-radius: 6px;
+        border-bottom-right-radius: 6px;
+      }
+      .coupon-card h3 {
+        font-size: 1.5rem;
+        color: var(--primary);
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        margin-top: 0.5rem;
+      }
+      .coupon-card p {
+        font-size: 0.85rem;
+        color: var(--text-light);
+        margin-bottom: 1.5rem;
+        height: 40px;
+        overflow: hidden;
+      }
+      .code-box {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid var(--primary);
+        color: var(--primary);
+        padding: 0.4rem 1.2rem;
+        border-radius: 50px;
+        font-weight: 800;
+        font-size: 0.9rem;
+        background-color: rgba(30, 27, 75, 0.02);
+      }
+    </style>
+  </section>
+
+  <!-- Clearance Sale Grid -->
+  <section class="container" style="margin-bottom: 5rem;">
+    <div class="section-title">
+      <h2>Clearance Sale</h2>
+      <p>Grab these top-selling outfits at heavily discounted prices before stock runs out</p>
+    </div>
+    
+    <div class="products-grid" id="clearanceGrid">
+      <div style="grid-column:1/-1; text-align:center; padding:3rem">
+        <i class="fas fa-spinner fa-spin" style="font-size:2rem; color:var(--primary)"></i>
+        <p style="margin-top:10px">Searching clearance items...</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer></footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+  <script src="js/chatbot.js"></script>
+  <script>
+    // Copy Coupon to Clipboard helper
+    function copyCoupon(code) {
+      navigator.clipboard.writeText(code).then(() => {
+        showToast(`Coupon "${code}" copied to clipboard! Paste it at checkout.`);
+      }).catch(err => {
+        showToast('Failed to copy code', 'error');
+      });
+    }
+
+    // Countdown Timer animation
+    function startCountdown() {
+      let seconds = 17999; // 5 hours approx
+      const hDisplay = document.getElementById('timeHr');
+      const mDisplay = document.getElementById('timeMin');
+      const sDisplay = document.getElementById('timeSec');
+
+      setInterval(() => {
+        seconds--;
+        if (seconds <= 0) seconds = 17999;
+        
+        const hrs = Math.floor(seconds / 3600).toString().padStart(2, '0');
+        const mins = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+        const secs = (seconds % 60).toString().padStart(2, '0');
+
+        if (hDisplay) {
+          hDisplay.textContent = hrs;
+          mDisplay.textContent = mins;
+          sDisplay.textContent = secs;
+        }
+      }, 1000);
+    }
+
+    // Load clearance items
+    async function loadClearanceItems() {
+      const grid = document.getElementById('clearanceGrid');
+      
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        
+        if (data.success) {
+          grid.innerHTML = '';
+          const clearanceItems = data.products.filter(p => p.discount_price !== null);
+          
+          if (clearanceItems.length === 0) {
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--text-light)">No products are currently marked down. Check back during our next festival!</div>';
+            return;
+          }
+
+          clearanceItems.forEach(p => {
+            const images = JSON.parse(p.image_urls || '[]');
+            const mainImg = images[0] || 'images/products/placeholder.jpg';
+            const priceVal = p.discount_price || p.price;
+            
+            // Build stars
+            let stars = '';
+            const floorRating = Math.floor(p.rating || 0);
+            for (let i = 1; i <= 5; i++) {
+              if (i <= floorRating) stars += '<i class="fas fa-star"></i>';
+              else if (i - 0.5 <= (p.rating || 0)) stars += '<i class="fas fa-star-half-alt"></i>';
+              else stars += '<i class="far fa-star"></i>';
+            }
+
+            const wishlist = getLocalWishlist();
+            const isInWish = wishlist.includes(p.id);
+
+            grid.innerHTML += `
+              <div class="product-card">
+                <span class="badge-tag" style="background-color:var(--success)">OFFER</span>
+                <div class="product-img-wrapper" onclick="window.location.href='product-detail.html?id=${p.id}'" style="cursor:pointer">
+                  <img src="${mainImg}" alt="${p.name}" onerror="this.src='/images/products/placeholder.jpg'">
+                </div>
+                <button class="wishlist-btn ${isInWish ? 'active' : ''}" onclick="event.stopPropagation(); handleWishlistToggle(${p.id}, this)">
+                  <i class="fas fa-heart"></i>
+                </button>
+                <div class="product-details">
+                  <span class="product-cat">${p.category} | ${p.subcategory}</span>
+                  <a href="product-detail.html?id=${p.id}" class="product-name">${p.name}</a>
+                  <div class="product-rating">
+                    ${stars}
+                    <span class="rating-num">(${p.rating || '5.0'})</span>
+                  </div>
+                  <div class="product-pricing">
+                    <span class="price">₹${priceVal}</span>
+                    <span class="old-price">₹${p.price}</span>
+                    <span class="discount-pct">${Math.round(((p.price - p.discount_price) / p.price) * 100)}% OFF</span>
+                  </div>
+                  <button class="btn-add-cart" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')})">
+                    <i class="fas fa-shopping-basket"></i> Add to Box
+                  </button>
+                </div>
+              </div>
+            `;
+          });
+        }
+      } catch (err) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--danger)">Error fetching clearance items.</div>';
+      }
+    }
+
+    async function handleWishlistToggle(productId, btn) {
+      const added = await toggleWishlistItem(productId);
+      if (added) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+
+    function handleAddToCart(product) {
+      const sizes = product.size_variants.split(',');
+      const defaultSize = sizes[0] || 'M';
+      addToCart(product, defaultSize, 1);
+    }
+
+    startCountdown();
+    loadClearanceItems();
+  </script>
+</body>
+</html>

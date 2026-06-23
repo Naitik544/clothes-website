@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Little to Large | India's Premium Family Clothing E-Store</title>
+  <meta name="description" content="Shop premium clothing for your entire family online in India. Ethnic wear, western outfits, kids apparel, and handcrafted accessories from Little to Large.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Dynamic Header Injected by app.js -->
+  <header></header>
+
+  <!-- Hero Section Carousel -->
+  <section class="hero-slider">
+    <!-- Slide 1: Ethnic -->
+    <div class="slide active" style="background-image: url('images/hero_ethnic.svg'); background-color: #3b3658;">
+      <div class="slide-overlay"></div>
+      <div class="container">
+        <div class="slide-content">
+          <h1>Celebrate <span>Family Traditions</span></h1>
+          <p>Explore gorgeous, premium handwoven Banarasi silk sarees and pure silk kurtas tailored for festive family joy.</p>
+          <a href="products.html?subcategory=Ethnic" class="btn">Discover Festive Collection</a>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 2: Western -->
+    <div class="slide" style="background-image: url('images/hero_western.svg'); background-color: #2b4549;">
+      <div class="slide-overlay"></div>
+      <div class="container">
+        <div class="slide-content">
+          <h1>Everyday <span>Western Comfort</span></h1>
+          <p>Step out in style with floral summer dresses and stretchable indigo denim built for dynamic daily routines.</p>
+          <a href="products.html?subcategory=Western" class="btn">Shop Smart Casuals</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3: Kids -->
+    <div class="slide" style="background-image: url('images/hero_kids.svg'); background-color: #553c3b;">
+      <div class="slide-overlay"></div>
+      <div class="container">
+        <div class="slide-content">
+          <h1>Little Outfits, <span>Large Memories</span></h1>
+          <p>100% bio-washed organic cotton dungarees, toddler rompers, and mirror-work lehenga sets that let kids play freely.</p>
+          <a href="products.html?category=Kids" class="btn">Explore Kids Wardrobe</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation dots -->
+    <div class="slider-nav">
+      <div class="slider-dot active" onclick="setSlide(0)"></div>
+      <div class="slider-dot" onclick="setSlide(1)"></div>
+      <div class="slider-dot" onclick="setSlide(2)"></div>
+    </div>
+  </section>
+
+  <!-- Categories Highlight Grid -->
+  <section class="container" style="margin-bottom: 5rem;">
+    <div class="section-title">
+      <h2>Shop by Category</h2>
+      <p>Thoughtfully categorized wardrobe collections for every family member</p>
+    </div>
+    <div class="categories-grid">
+      <div class="category-card" onclick="window.location.href='products.html?category=Women'">
+        <img src="images/cat_women.svg" alt="Women Clothing" style="background-color: #c9b1b9;">
+        <div class="category-card-overlay">
+          <span>Elegant Collections</span>
+          <h3>Women</h3>
+        </div>
+      </div>
+      <div class="category-card" onclick="window.location.href='products.html?category=Men'">
+        <img src="images/cat_men.svg" alt="Men Clothing" style="background-color: #b1bcc9;">
+        <div class="category-card-overlay">
+          <span>Royal & Casuals</span>
+          <h3>Men</h3>
+        </div>
+      </div>
+      <div class="category-card" onclick="window.location.href='products.html?category=Kids'">
+        <img src="images/cat_kids.svg" alt="Kids Clothing" style="background-color: #c9c7b1;">
+        <div class="category-card-overlay">
+          <span>Organic & Soft</span>
+          <h3>Kids</h3>
+        </div>
+      </div>
+      <div class="category-card" onclick="window.location.href='products.html?category=Accessories'">
+        <img src="images/cat_accessories.svg" alt="Accessories" style="background-color: #b1c9b4;">
+        <div class="category-card-overlay">
+          <span>Handcrafted Trusts</span>
+          <h3>Accessories</h3>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Brand Value Highlights (Premium Trust) -->
+  <section style="background-color: var(--primary); color: #fff; padding: 4rem 0; margin-bottom: 5rem; border-top: 4px solid var(--marigold);">
+    <div class="container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 3rem; text-align: center;">
+      <div>
+        <i class="fas fa-heart" style="font-size: 2.2rem; color: var(--marigold); margin-bottom: 1rem;"></i>
+        <h3 style="font-weight: 700; margin-bottom: 0.5rem;">Family Values First</h3>
+        <p style="font-size: 0.9rem; color: rgba(255,255,255,0.8)">Sourced, stitched, and styled keeping Indian sensitivities and comfort in mind.</p>
+      </div>
+      <div>
+        <i class="fas fa-seedling" style="font-size: 2.2rem; color: var(--marigold); margin-bottom: 1rem;"></i>
+        <h3 style="font-weight: 700; margin-bottom: 0.5rem;">100% Premium Cotton</h3>
+        <p style="font-size: 0.9rem; color: rgba(255,255,255,0.8)">Zero toxic colors or cheap polyester mixes. Breathable comfort for all-day wear.</p>
+      </div>
+      <div>
+        <i class="fas fa-globe" style="font-size: 2.2rem; color: var(--marigold); margin-bottom: 1rem;"></i>
+        <h3 style="font-weight: 700; margin-bottom: 0.5rem;">Local to Global</h3>
+        <p style="font-size: 0.9rem; color: rgba(255,255,255,0.8)">Handcrafted by local Indian weavers and shipped globally directly to your doorstep.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Products -->
+  <section class="container" style="margin-bottom: 5rem;">
+    <div class="section-title">
+      <h2>Family Favorites</h2>
+      <p>Explore our trending outfits loved by families across India</p>
+    </div>
+    
+    <div class="products-grid" id="featuredProductsGrid">
+      <!-- Injected dynamically by AJAX script below -->
+      <div style="grid-column: 1/-1; text-align:center; padding:3rem">
+        <i class="fas fa-spinner fa-spin" style="font-size:2rem; color:var(--primary)"></i>
+        <p style="margin-top:10px">Loading clothing collections...</p>
+      </div>
+    </div>
+    
+    <div style="text-align: center; margin-top: 2rem;">
+      <a href="products.html" class="btn btn-primary">Browse Entire Wardrobe</a>
+    </div>
+  </section>
+
+  <!-- Promotional Banner -->
+  <section class="container" style="margin-bottom: 5rem;">
+    <div style="background: linear-gradient(135deg, hsl(243, 75%, 19%) 0%, hsl(16, 96%, 53%) 100%); border-radius: var(--radius-lg); padding: 4rem; color: #fff; position: relative; overflow: hidden; box-shadow: var(--shadow-lg);">
+      <div style="position: absolute; right: -50px; top: -50px; width: 300px; height: 300px; border-radius: 50%; background: rgba(255, 255, 255, 0.05);"></div>
+      <div style="position: relative; z-index: 2; max-width: 550px;">
+        <span style="background-color: var(--marigold); color: var(--primary); padding: 0.4rem 1rem; border-radius: 50px; font-weight: 800; font-size: 0.8rem; text-transform: uppercase;">Mega Combo Sale</span>
+        <h2 style="font-size: 2.5rem; font-weight: 800; line-height: 1.2; margin: 1rem 0;">Get Flat ₹500 OFF on Family Twins Collection</h2>
+        <p style="font-size: 1.05rem; margin-bottom: 2rem; color: rgba(255,255,255,0.9)">Twin in matching saffron kurtas or floral dresses with your little ones. Use code <strong>TWINNING500</strong> at checkout.</p>
+        <a href="products.html" class="btn">Shop Twinning Outfits</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dynamic Footer Injected by app.js -->
+  <footer></footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+  <script src="js/chatbot.js"></script>
+  <script>
+    // Hero Slider animation
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const dots = document.querySelectorAll('.slider-dot');
+    
+    function showSlide(index) {
+      slides.forEach(slide => slide.classList.remove('active'));
+      dots.forEach(dot => dot.classList.remove('active'));
+      
+      slides[index].classList.add('active');
+      dots[index].classList.add('active');
+      currentSlide = index;
+    }
+    
+    function setSlide(index) {
+      showSlide(index);
+    }
+    
+    // Auto rotation
+    setInterval(() => {
+      let next = (currentSlide + 1) % slides.length;
+      showSlide(next);
+    }, 6000);
+
+    // Fetch and render featured products
+    async function loadFeaturedProducts() {
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        if (data.success && data.products.length > 0) {
+          const grid = document.getElementById('featuredProductsGrid');
+          grid.innerHTML = '';
+          
+          // Show first 4 products as featured
+          const featured = data.products.slice(0, 4);
+          featured.forEach(p => {
+            const images = JSON.parse(p.image_urls || '[]');
+            const mainImg = images[0] || 'images/products/placeholder.jpg';
+            const oldPriceHtml = p.discount_price ? `<span class="old-price">₹${p.price}</span>` : '';
+            const discountPercentHtml = p.discount_price ? `<span class="discount-pct">${Math.round(((p.price - p.discount_price) / p.price) * 100)}% OFF</span>` : '';
+            const priceVal = p.discount_price || p.price;
+            
+            // Build stars
+            let stars = '';
+            const floorRating = Math.floor(p.rating || 0);
+            for (let i = 1; i <= 5; i++) {
+              if (i <= floorRating) {
+                stars += '<i class="fas fa-star"></i>';
+              } else if (i - 0.5 <= (p.rating || 0)) {
+                stars += '<i class="fas fa-star-half-alt"></i>';
+              } else {
+                stars += '<i class="far fa-star"></i>';
+              }
+            }
+
+            // Check if wishlist contains item
+            const wishlist = getLocalWishlist();
+            const isInWishlist = wishlist.includes(p.id);
+
+            grid.innerHTML += `
+              <div class="product-card">
+                ${p.discount_price ? `<span class="badge-tag">Sale</span>` : ''}
+                <div class="product-img-wrapper" onclick="window.location.href='product-detail.html?id=${p.id}'" style="cursor:pointer">
+                  <img src="${mainImg}" alt="${p.name}" onerror="this.src='/images/products/placeholder.jpg'">
+                </div>
+                <button class="wishlist-btn ${isInWishlist ? 'active' : ''}" onclick="event.stopPropagation(); handleWishlistToggle(${p.id}, this)">
+                  <i class="fas fa-heart"></i>
+                </button>
+                <div class="product-details">
+                  <span class="product-cat">${p.category} | ${p.subcategory}</span>
+                  <a href="product-detail.html?id=${p.id}" class="product-name">${p.name}</a>
+                  <div class="product-rating">
+                    ${stars}
+                    <span class="rating-num">(${p.rating || '5.0'})</span>
+                  </div>
+                  <div class="product-pricing">
+                    <span class="price">₹${priceVal}</span>
+                    ${oldPriceHtml}
+                    ${discountPercentHtml}
+                  </div>
+                  <button class="btn-add-cart" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')})">
+                    <i class="fas fa-shopping-basket"></i> Add to Box
+                  </button>
+                </div>
+              </div>
+            `;
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load products', err);
+      }
+    }
+
+    async function handleWishlistToggle(productId, btn) {
+      const added = await toggleWishlistItem(productId);
+      if (added) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+
+    function handleAddToCart(product) {
+      // Default to first size variation
+      const sizes = product.size_variants.split(',');
+      const defaultSize = sizes[0] || 'M';
+      addToCart(product, defaultSize, 1);
+    }
+
+    loadFeaturedProducts();
+  </script>
+</body>
+</html>

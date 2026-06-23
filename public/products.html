@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop Collections | Little to Large Clothing</title>
+  <meta name="description" content="Browse our wide selection of Indian family clothing. Filters by Men, Women, Kids, Accessories, sizes, and prices. Direct global shipping.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header></header>
+
+  <!-- Page Banner -->
+  <section style="background-color: var(--primary); color:#fff; padding: 2rem 0; margin-bottom: 2.5rem;">
+    <div class="container" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px">
+      <div>
+        <h1 id="shopPageTitle" style="font-size:1.8rem; font-weight:800">Our Collections</h1>
+        <p style="font-size:0.85rem; color:var(--marigold)">Home &gt; Shop</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px">
+        <label style="font-size:0.85rem; font-weight:700">Sort By:</label>
+        <select id="sortSelector" style="padding:0.4rem 1rem; border-radius:6px; border:none; font-weight:600; color:var(--primary)">
+          <option value="">Latest Arrivals</option>
+          <option value="price_asc">Price: Low to High</option>
+          <option value="price_desc">Price: High to Low</option>
+          <option value="rating">Top Rated</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Catalog Grid Layout -->
+  <section class="container" style="display:grid; grid-template-columns: 260px 1fr; gap: 2.5rem; margin-bottom: 5rem;">
+    
+    <!-- Sidebar Filters -->
+    <aside style="background-color:#fff; border:1px solid var(--border-color); border-radius:var(--radius-lg); padding:1.5rem; height:fit-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.8rem; margin-bottom:1.5rem">
+        <h3 style="font-size:1.1rem; color:var(--primary); font-weight:800"><i class="fas fa-filter"></i> Filters</h3>
+        <button onclick="clearFilters()" style="background:none; border:none; color:var(--accent); font-weight:700; font-size:0.8rem; cursor:pointer">Clear All</button>
+      </div>
+
+      <!-- Categories Filter -->
+      <div style="margin-bottom:1.5rem">
+        <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.8rem; text-transform:uppercase">Category</h4>
+        <ul style="display:flex; flex-direction:column; gap:0.5rem; font-size:0.9rem">
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="cat-filter" value="Men"> Men's Wear</label></li>
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="cat-filter" value="Women"> Women's Wear</label></li>
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="cat-filter" value="Kids"> Kids' Wear</label></li>
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="cat-filter" value="Accessories"> Accessories</label></li>
+        </ul>
+      </div>
+
+      <!-- Subcategory Type Filter -->
+      <div style="margin-bottom:1.5rem">
+        <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.8rem; text-transform:uppercase">Style Type</h4>
+        <ul style="display:flex; flex-direction:column; gap:0.5rem; font-size:0.9rem">
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="subcat-filter" value="Ethnic"> Traditional Ethnic</label></li>
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="subcat-filter" value="Western"> Modern Western</label></li>
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="subcat-filter" value="Footwear"> Footwear</label></li>
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="subcat-filter" value="Bags"> Bags & Clutches</label></li>
+        </ul>
+      </div>
+
+      <!-- Sizes Filter -->
+      <div style="margin-bottom:1.5rem">
+        <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.8rem; text-transform:uppercase">Select Size</h4>
+        <div style="display:flex; flex-wrap:wrap; gap:6px" id="sizesFilterContainer">
+          <span class="size-filter-chip" onclick="toggleSizeFilter(this, 'XS')">XS</span>
+          <span class="size-filter-chip" onclick="toggleSizeFilter(this, 'S')">S</span>
+          <span class="size-filter-chip" onclick="toggleSizeFilter(this, 'M')">M</span>
+          <span class="size-filter-chip" onclick="toggleSizeFilter(this, 'L')">L</span>
+          <span class="size-filter-chip" onclick="toggleSizeFilter(this, 'XL')">XL</span>
+          <span class="size-filter-chip" onclick="toggleSizeFilter(this, 'XXL')">XXL</span>
+        </div>
+        <style>
+          .size-filter-chip {
+            padding: 0.3rem 0.6rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+          }
+          .size-filter-chip.active {
+            background-color: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+          }
+        </style>
+      </div>
+
+      <!-- Price Bound Filter -->
+      <div>
+        <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.8rem; text-transform:uppercase">Max Price</h4>
+        <input type="range" id="priceRange" min="200" max="6000" step="100" value="6000" style="width:100%" oninput="updatePriceLabel(this.value)">
+        <div style="display:flex; justify-content:space-between; font-size:0.8rem; font-weight:700; color:var(--text-light); margin-top:5px">
+          <span>₹200</span>
+          <span id="priceValDisplay" style="color:var(--accent)">₹6,000</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Catalog Listing Grid -->
+    <div>
+      <div class="products-grid" id="catalogGrid">
+        <!-- Injected dynamically via script -->
+        <div style="grid-column: 1/-1; text-align:center; padding:3rem">
+          <i class="fas fa-spinner fa-spin" style="font-size:2rem; color:var(--primary)"></i>
+          <p style="margin-top:10px">Loading clothing items...</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer></footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+  <script src="js/chatbot.js"></script>
+  <script>
+    let activeSizeFilter = null;
+    
+    // Parse URL params on load
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const catParam = urlParams.get('category');
+      const subcatParam = urlParams.get('subcategory');
+      const searchParam = urlParams.get('search');
+
+      if (catParam) {
+        document.querySelectorAll('.cat-filter').forEach(chk => {
+          if (chk.value === catParam) chk.checked = true;
+        });
+        document.getElementById('shopPageTitle').textContent = `${catParam} Clothing`;
+      }
+
+      if (subcatParam) {
+        document.querySelectorAll('.subcat-filter').forEach(chk => {
+          if (chk.value === subcatParam) chk.checked = true;
+        });
+      }
+
+      if (searchParam) {
+        document.getElementById('shopPageTitle').textContent = `Search results for "${searchParam}"`;
+      }
+
+      // Add listeners to elements
+      document.querySelectorAll('.cat-filter, .subcat-filter').forEach(el => {
+        el.addEventListener('change', fetchProducts);
+      });
+      document.getElementById('sortSelector').addEventListener('change', fetchProducts);
+      document.getElementById('priceRange').addEventListener('change', fetchProducts);
+
+      fetchProducts();
+    });
+
+    function toggleSizeFilter(el, size) {
+      const chips = document.querySelectorAll('.size-filter-chip');
+      if (el.classList.contains('active')) {
+        el.classList.remove('active');
+        activeSizeFilter = null;
+      } else {
+        chips.forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        activeSizeFilter = size;
+      }
+      fetchProducts();
+    }
+
+    function updatePriceLabel(val) {
+      document.getElementById('priceValDisplay').textContent = `₹${parseInt(val).toLocaleString('en-IN')}`;
+    }
+
+    function clearFilters() {
+      document.querySelectorAll('.cat-filter, .subcat-filter').forEach(chk => chk.checked = false);
+      document.querySelectorAll('.size-filter-chip').forEach(c => c.classList.remove('active'));
+      activeSizeFilter = null;
+      document.getElementById('priceRange').value = 6000;
+      updatePriceLabel(6000);
+      document.getElementById('sortSelector').value = '';
+      
+      // Reset page title if query params were cleared
+      history.pushState(null, '', 'products.html');
+      document.getElementById('shopPageTitle').textContent = 'Our Collections';
+
+      fetchProducts();
+    }
+
+    // Core catalog query execution
+    async function fetchProducts() {
+      const grid = document.getElementById('catalogGrid');
+      grid.innerHTML = `
+        <div style="grid-column: 1/-1; text-align:center; padding:3rem">
+          <i class="fas fa-spinner fa-spin" style="font-size:2rem; color:var(--primary)"></i>
+          <p style="margin-top:10px">Loading clothing items...</p>
+        </div>
+      `;
+
+      // Build url query
+      const urlParams = new URLSearchParams();
+      
+      // Get category checkboxes checked
+      const checkedCats = Array.from(document.querySelectorAll('.cat-filter:checked')).map(c => c.value);
+      // SQLite/MySQL support single category value. If multiple checked, we query each, but let's fetch first category, or fetch all and filter in JS. Let's send first category or all.
+      if (checkedCats.length > 0) {
+        urlParams.set('category', checkedCats[0]); // Simple single filter matching REST endpoint
+      } else {
+        // Fallback checks for URL params
+        const pathParams = new URLSearchParams(window.location.search);
+        if (pathParams.get('category')) urlParams.set('category', pathParams.get('category'));
+      }
+
+      const checkedSubcats = Array.from(document.querySelectorAll('.subcat-filter:checked')).map(c => c.value);
+      if (checkedSubcats.length > 0) {
+        urlParams.set('subcategory', checkedSubcats[0]);
+      } else {
+        const pathParams = new URLSearchParams(window.location.search);
+        if (pathParams.get('subcategory')) urlParams.set('subcategory', pathParams.get('subcategory'));
+      }
+
+      const pathParams = new URLSearchParams(window.location.search);
+      if (pathParams.get('search')) urlParams.set('search', pathParams.get('search'));
+
+      if (activeSizeFilter) urlParams.set('size', activeSizeFilter);
+
+      const maxPrice = document.getElementById('priceRange').value;
+      if (maxPrice < 6000) urlParams.set('maxPrice', maxPrice);
+
+      const sort = document.getElementById('sortSelector').value;
+      if (sort) urlParams.set('sort', sort);
+
+      try {
+        const res = await fetch(`/api/products?${urlParams.toString()}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          grid.innerHTML = '';
+          if (data.products.length === 0) {
+            grid.innerHTML = `
+              <div style="grid-column: 1/-1; text-align:center; padding:3rem">
+                <i class="far fa-sad-tear" style="font-size:3rem; color:var(--text-light); margin-bottom:1rem"></i>
+                <h3>No outfits found match these filters</h3>
+                <p style="color:var(--text-light)">Try checking different categories or sizing options.</p>
+              </div>
+            `;
+            return;
+          }
+
+          data.products.forEach(p => {
+            const images = JSON.parse(p.image_urls || '[]');
+            const mainImg = images[0] || 'images/products/placeholder.jpg';
+            const oldPriceHtml = p.discount_price ? `<span class="old-price">₹${p.price}</span>` : '';
+            const discountPercentHtml = p.discount_price ? `<span class="discount-pct">${Math.round(((p.price - p.discount_price) / p.price) * 100)}% OFF</span>` : '';
+            const priceVal = p.discount_price || p.price;
+
+            // Build stars
+            let stars = '';
+            const floorRating = Math.floor(p.rating || 0);
+            for (let i = 1; i <= 5; i++) {
+              if (i <= floorRating) {
+                stars += '<i class="fas fa-star"></i>';
+              } else if (i - 0.5 <= (p.rating || 0)) {
+                stars += '<i class="fas fa-star-half-alt"></i>';
+              } else {
+                stars += '<i class="far fa-star"></i>';
+              }
+            }
+
+            const wishlist = getLocalWishlist();
+            const isInWishlist = wishlist.includes(p.id);
+
+            grid.innerHTML += `
+              <div class="product-card">
+                ${p.discount_price ? `<span class="badge-tag">Sale</span>` : ''}
+                <div class="product-img-wrapper" onclick="window.location.href='product-detail.html?id=${p.id}'" style="cursor:pointer">
+                  <img src="${mainImg}" alt="${p.name}" onerror="this.src='/images/products/placeholder.jpg'">
+                </div>
+                <button class="wishlist-btn ${isInWishlist ? 'active' : ''}" onclick="event.stopPropagation(); handleWishlistToggle(${p.id}, this)">
+                  <i class="fas fa-heart"></i>
+                </button>
+                <div class="product-details">
+                  <span class="product-cat">${p.category} | ${p.subcategory}</span>
+                  <a href="product-detail.html?id=${p.id}" class="product-name">${p.name}</a>
+                  <div class="product-rating">
+                    ${stars}
+                    <span class="rating-num">(${p.rating || '5.0'})</span>
+                  </div>
+                  <div class="product-pricing">
+                    <span class="price">₹${priceVal}</span>
+                    ${oldPriceHtml}
+                    ${discountPercentHtml}
+                  </div>
+                  <button class="btn-add-cart" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')})">
+                    <i class="fas fa-shopping-basket"></i> Add to Box
+                  </button>
+                </div>
+              </div>
+            `;
+          });
+        }
+      } catch (err) {
+        grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:3rem; color:var(--danger)">Error loading products catalog.</div>';
+      }
+    }
+
+    async function handleWishlistToggle(productId, btn) {
+      const added = await toggleWishlistItem(productId);
+      if (added) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+
+    function handleAddToCart(product) {
+      const sizes = product.size_variants.split(',');
+      const defaultSize = sizes[0] || 'M';
+      addToCart(product, defaultSize, 1);
+    }
+  </script>
+</body>
+</html>

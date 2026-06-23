@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Details | Little to Large</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header></header>
+
+  <!-- Page Breadcrumbs -->
+  <section class="container" style="margin-top: 2rem; font-size: 0.88rem; color: var(--text-light)">
+    <a href="index.html">Home</a> &gt; <a href="products.html">Shop</a> &gt; <span id="breadcrumbProdName" style="color:var(--primary); font-weight:700">Product</span>
+  </section>
+
+  <!-- Main Product Detail View -->
+  <main class="container product-detail-container">
+    
+    <!-- Gallery Component -->
+    <div class="product-gallery">
+      <div class="main-image-wrapper" id="zoomContainer">
+        <img id="mainProdImage" src="/images/products/placeholder.jpg" alt="Product Image">
+      </div>
+      <div class="thumbnail-list" id="thumbnailsContainer">
+        <!-- Render thumbnails dynamically -->
+      </div>
+    </div>
+
+    <!-- Product Meta Info -->
+    <div class="detail-info">
+      <span class="product-cat" id="detailCategory">Apparel</span>
+      <h1 id="detailTitle">Loading clothing product...</h1>
+      
+      <div class="detail-meta">
+        <div class="product-rating" id="detailRatingStars">
+          <!-- Star icons injected dynamically -->
+        </div>
+        <span style="color: var(--text-light); font-size: 0.9rem" id="reviewsCount">0 Customer Reviews</span>
+      </div>
+
+      <!-- Pricing Block -->
+      <div class="product-pricing" style="margin-bottom: 1.5rem">
+        <span class="price" style="font-size: 2rem; color:var(--primary)" id="detailPrice">₹0.00</span>
+        <span class="old-price" style="font-size: 1.3rem" id="detailOldPrice"></span>
+        <span class="discount-pct" style="font-size: 1.1rem" id="detailDiscount"></span>
+      </div>
+
+      <p class="detail-desc" id="detailDescription">Loading description details...</p>
+
+      <!-- Sizing Options -->
+      <div class="detail-variants">
+        <h4>Select Size:</h4>
+        <div class="size-selector" id="sizeOptionsContainer">
+          <!-- Injected size chips -->
+        </div>
+      </div>
+
+      <!-- Quantity Selector -->
+      <div class="qty-selector">
+        <h4 style="font-size: 0.95rem; font-weight: 700">Quantity:</h4>
+        <div class="qty-control">
+          <button onclick="changeQty(-1)"><i class="fas fa-minus"></i></button>
+          <span id="qtyDisplay">1</span>
+          <button onclick="changeQty(1)"><i class="fas fa-plus"></i></button>
+        </div>
+        <span style="font-size: 0.8rem; font-weight: 700; color:var(--success)" id="stockDisplay">In Stock</span>
+      </div>
+
+      <!-- Core CTA Buttons -->
+      <div class="detail-actions">
+        <button class="btn btn-primary" onclick="handleAddClick()" style="display:flex; align-items:center; justify-content:center; gap:8px">
+          <i class="fas fa-shopping-basket"></i> Add to Box
+        </button>
+        <button class="btn btn-accent" id="detailWishlistBtn" onclick="handleWishlistClick()" style="max-width: 180px">
+          <i class="far fa-heart"></i> Wishlist
+        </button>
+      </div>
+
+      <!-- Delivery Pin Checker -->
+      <div class="delivery-box">
+        <div class="delivery-box-title">
+          <i class="fas fa-truck-moving"></i> Delivery Pincode Availability
+        </div>
+        <div class="pincode-checker">
+          <input type="text" id="pinInput" placeholder="Enter 6-digit Pincode" maxlength="6">
+          <button onclick="checkPincode()">Check</button>
+        </div>
+        <p id="pinResult" style="font-size: 0.82rem; font-weight: 700; display: none;"></p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Review Panel -->
+  <section class="container" style="margin-bottom: 5rem; border-top: 1px solid var(--border-color); padding-top: 3rem;">
+    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 4rem;">
+      
+      <!-- Existing Reviews List -->
+      <div>
+        <h3 style="font-size: 1.5rem; color: var(--primary); font-weight: 800; margin-bottom: 2rem;">Customer Reviews</h3>
+        <div id="reviewsListContainer" style="display:flex; flex-direction:column; gap:1.5rem">
+          <p style="color:var(--text-light)">No reviews for this product yet. Be the first to share your experience!</p>
+        </div>
+      </div>
+
+      <!-- Submit Review Form -->
+      <div style="background-color:#fff; padding:2rem; border-radius:var(--radius-lg); border:1px solid var(--border-color); box-shadow:var(--shadow-sm); height:fit-content">
+        <h3 style="font-size:1.3rem; color:var(--primary); font-weight:700; margin-bottom:1.5rem">Write a Review</h3>
+        <div id="reviewAuthMessage" style="display:none; color:var(--text-light); text-align:center; padding:1.5rem 0">
+          🔑 Please <a href="login.html" style="color:var(--accent); font-weight:700">Login</a> to write a customer review.
+        </div>
+        <form id="reviewForm" style="display:flex; flex-direction:column; gap:1.2rem">
+          <div>
+            <label style="font-size:0.85rem; font-weight:700; display:block; margin-bottom:0.5rem">Rating (Out of 5 Stars)</label>
+            <div style="display:flex; gap:8px; font-size:1.5rem; color:#ccc; cursor:pointer" id="starSelectorContainer">
+              <i class="far fa-star star-select" data-rating="1"></i>
+              <i class="far fa-star star-select" data-rating="2"></i>
+              <i class="far fa-star star-select" data-rating="3"></i>
+              <i class="far fa-star star-select" data-rating="4"></i>
+              <i class="far fa-star star-select" data-rating="5"></i>
+            </div>
+          </div>
+          <div>
+            <label style="font-size:0.85rem; font-weight:700; display:block; margin-bottom:0.5rem">Comment / Feedback</label>
+            <textarea id="reviewComment" rows="4" placeholder="How was the cloth fit? Tell us about the fabric quality!" style="width:100%; padding:0.7rem; border:1px solid var(--border-color); border-radius:6px" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%">Submit Review</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer></footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+  <script src="js/chatbot.js"></script>
+  <script>
+    let activeProduct = null;
+    let selectedSize = '';
+    let selectedQty = 1;
+    let selectedRating = 0;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadProductDetails();
+      setupZoomEffect();
+      setupReviewForm();
+    });
+
+    // Parse id and fetch product details
+    async function loadProductDetails() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const prodId = urlParams.get('id');
+
+      if (!prodId) {
+        window.location.href = 'products.html';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/products/${prodId}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          activeProduct = data.product;
+          renderProductDetails(data.product);
+          renderReviews(data.reviews);
+        } else {
+          showToast(data.message, 'error');
+          setTimeout(() => window.location.href = 'products.html', 1500);
+        }
+      } catch (err) {
+        showToast('Error connecting to product server', 'error');
+      }
+    }
+
+    function renderProductDetails(p) {
+      document.getElementById('breadcrumbProdName').textContent = p.name;
+      document.getElementById('detailTitle').textContent = p.name;
+      document.getElementById('detailCategory').textContent = `${p.category} | ${p.subcategory}`;
+      document.getElementById('detailDescription').textContent = p.description;
+      
+      const priceVal = p.discount_price || p.price;
+      document.getElementById('detailPrice').textContent = `₹${priceVal}`;
+      
+      if (p.discount_price) {
+        document.getElementById('detailOldPrice').textContent = `₹${p.price}`;
+        document.getElementById('detailDiscount').textContent = `${Math.round(((p.price - p.discount_price) / p.price) * 100)}% OFF`;
+      }
+
+      // Stock
+      const stockEl = document.getElementById('stockDisplay');
+      if (p.stock === 0) {
+        stockEl.textContent = 'Out of Stock';
+        stockEl.style.color = 'var(--danger)';
+      } else if (p.stock < 10) {
+        stockEl.textContent = `Only ${p.stock} units left!`;
+        stockEl.style.color = 'var(--danger)';
+      } else {
+        stockEl.textContent = 'In Stock (Ready to Ship)';
+      }
+
+      // Image Gallery
+      const images = JSON.parse(p.image_urls || '[]');
+      const mainImg = document.getElementById('mainProdImage');
+      mainImg.src = images[0] || '/images/products/placeholder.jpg';
+
+      // Thumbnails
+      const thumbList = document.getElementById('thumbnailsContainer');
+      thumbList.innerHTML = '';
+      images.forEach((img, idx) => {
+        thumbList.innerHTML += `
+          <div class="thumb ${idx === 0 ? 'active' : ''}" onclick="changeMainImage(this, '${img}')">
+            <img src="${img}" alt="${p.name}" onerror="this.src='/images/products/placeholder.jpg'">
+          </div>
+        `;
+      });
+
+      // Size Variants
+      const sizesContainer = document.getElementById('sizeOptionsContainer');
+      sizesContainer.innerHTML = '';
+      const sizes = p.size_variants.split(',');
+      sizes.forEach((sz, idx) => {
+        if (idx === 0) selectedSize = sz; // Auto select first
+        sizesContainer.innerHTML += `
+          <span class="size-option ${idx === 0 ? 'active' : ''}" onclick="selectSize(this, '${sz}')">${sz}</span>
+        `;
+      });
+
+      // Rating Stars
+      const starWrapper = document.getElementById('detailRatingStars');
+      starWrapper.innerHTML = '';
+      const floorRating = Math.floor(p.rating || 0);
+      for (let i = 1; i <= 5; i++) {
+        if (i <= floorRating) {
+          starWrapper.innerHTML += '<i class="fas fa-star" style="font-size:1.2rem; color:#f59e0b"></i>';
+        } else if (i - 0.5 <= (p.rating || 0)) {
+          starWrapper.innerHTML += '<i class="fas fa-star-half-alt" style="font-size:1.2rem; color:#f59e0b"></i>';
+        } else {
+          starWrapper.innerHTML += '<i class="far fa-star" style="font-size:1.2rem; color:#f59e0b"></i>';
+        }
+      }
+      starWrapper.innerHTML += `<span class="rating-num" style="font-size:0.95rem; font-weight:700">(${p.rating || '5.0'})</span>`;
+
+      // Wishlist active styling
+      const wishlist = getLocalWishlist();
+      const isWish = wishlist.includes(p.id);
+      const wishBtn = document.getElementById('detailWishlistBtn');
+      if (isWish) {
+        wishBtn.innerHTML = '<i class="fas fa-heart" style="color:var(--danger)"></i> Wishlisted';
+      }
+    }
+
+    function changeMainImage(el, imgSrc) {
+      document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('mainProdImage').src = imgSrc;
+    }
+
+    function selectSize(el, size) {
+      document.querySelectorAll('.size-option').forEach(s => s.classList.remove('active'));
+      el.classList.add('active');
+      selectedSize = size;
+    }
+
+    function changeQty(diff) {
+      selectedQty += diff;
+      if (selectedQty < 1) selectedQty = 1;
+      if (activeProduct && selectedQty > activeProduct.stock) {
+        selectedQty = activeProduct.stock;
+        showToast(`Stock capacity reached. Only ${activeProduct.stock} items available.`, 'error');
+      }
+      document.getElementById('qtyDisplay').textContent = selectedQty;
+    }
+
+    // Pincode availability
+    function checkPincode() {
+      const pin = document.getElementById('pinInput').value.trim();
+      const result = document.getElementById('pinResult');
+      
+      if (pin.length < 6 || isNaN(pin)) {
+        result.style.display = 'block';
+        result.style.color = 'var(--danger)';
+        result.textContent = '❌ Please enter a valid 6-digit Pincode';
+        return;
+      }
+
+      result.style.display = 'block';
+      result.style.color = 'var(--primary)';
+      result.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking availability...';
+
+      setTimeout(() => {
+        result.style.color = 'var(--success)';
+        result.innerHTML = `✅ Delivery available to <strong>${pin}</strong>!<br>Estimated Delivery: 2-3 Days. Cash on Delivery supported.`;
+      }, 1000);
+    }
+
+    // Mouse hover zoom engine
+    function setupZoomEffect() {
+      const container = document.getElementById('zoomContainer');
+      const img = document.getElementById('mainProdImage');
+
+      container.addEventListener('mousemove', (e) => {
+        const rect = container.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+        img.style.transformOrigin = `${x}% ${y}%`;
+        img.style.transform = 'scale(1.8)';
+      });
+
+      container.addEventListener('mouseleave', () => {
+        img.style.transform = 'scale(1)';
+        img.style.transformOrigin = 'center center';
+      });
+    }
+
+    // Wishlist Toggle
+    async function handleWishlistClick() {
+      if (!activeProduct) return;
+      const isWish = await toggleWishlistItem(activeProduct.id);
+      const wishBtn = document.getElementById('detailWishlistBtn');
+      if (isWish) {
+        wishBtn.innerHTML = '<i class="fas fa-heart" style="color:var(--danger)"></i> Wishlisted';
+      } else {
+        wishBtn.innerHTML = '<i class="far fa-heart"></i> Wishlist';
+      }
+    }
+
+    // Cart Placement
+    function handleAddClick() {
+      if (!activeProduct) return;
+      if (activeProduct.stock <= 0) {
+        showToast('Sorry, this product is currently out of stock!', 'error');
+        return;
+      }
+      addToCart(activeProduct, selectedSize, selectedQty);
+    }
+
+    /* ==========================================================================
+       REVIEWS HANDLING
+       ========================================================================== */
+    function renderReviews(reviews) {
+      const container = document.getElementById('reviewsListContainer');
+      const countDisplay = document.getElementById('reviewsCount');
+      
+      countDisplay.textContent = `${reviews.length} Customer Reviews`;
+
+      if (reviews.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-light)">No reviews for this product yet. Be the first to share your experience!</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      reviews.forEach(r => {
+        const date = new Date(r.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        
+        let stars = '';
+        for (let i = 1; i <= 5; i++) {
+          stars += `<i class="fas fa-star" style="color:${i <= r.rating ? '#f59e0b' : '#ccc'}"></i>`;
+        }
+
+        container.innerHTML += `
+          <div style="background-color:#fff; padding:1.2rem; border-radius:var(--radius); border:1px solid var(--border-color)">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem">
+              <strong>${r.customer_name}</strong>
+              <span style="font-size:0.75rem; color:var(--text-light)">${date}</span>
+            </div>
+            <div style="font-size:0.85rem; margin-bottom:0.6rem">${stars}</div>
+            <p style="font-size:0.9rem; color:var(--text-light)">${r.comment || 'No comment details provided.'}</p>
+          </div>
+        `;
+      });
+    }
+
+    function setupReviewForm() {
+      const user = getCurrentUser();
+      const form = document.getElementById('reviewForm');
+      const authMsg = document.getElementById('reviewAuthMessage');
+
+      if (!user) {
+        form.style.display = 'none';
+        authMsg.style.display = 'block';
+        return;
+      }
+
+      // Star Selector Interactive click
+      const stars = document.querySelectorAll('.star-select');
+      stars.forEach(star => {
+        star.addEventListener('click', () => {
+          const rating = parseInt(star.getAttribute('data-rating'));
+          selectedRating = rating;
+
+          stars.forEach(s => {
+            const r = parseInt(s.getAttribute('data-rating'));
+            if (r <= rating) {
+              s.className = 'fas fa-star star-select';
+              s.style.color = '#f59e0b';
+            } else {
+              s.className = 'far fa-star star-select';
+              s.style.color = '#ccc';
+            }
+          });
+        });
+      });
+
+      // Submit listener
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (selectedRating === 0) {
+          showToast('Please select a Star rating!', 'error');
+          return;
+        }
+
+        const payload = {
+          product_id: activeProduct.id,
+          rating: selectedRating,
+          comment: document.getElementById('reviewComment').value.trim()
+        };
+
+        try {
+          const res = await fetch('/api/reviews', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${getToken()}`
+            },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (data.success) {
+            showToast('Review submitted successfully!');
+            form.reset();
+            
+            // Reset stars
+            stars.forEach(s => {
+              s.className = 'far fa-star star-select';
+              s.style.color = '#ccc';
+            });
+            selectedRating = 0;
+
+            loadProductDetails(); // Reload reviews list
+          } else {
+            showToast(data.message, 'error');
+          }
+        } catch (err) {
+          showToast('Failed to submit review', 'error');
+        }
+      });
+    }
+  </script>
+</body>
+</html>

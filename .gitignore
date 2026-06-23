@@ -1,0 +1,4 @@
+node_modules/
+.env
+little_to_large.db
+package-lock.json

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login / Register | Little to Large</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .auth-container {
+      max-width: 480px;
+      margin: 4rem auto;
+      background-color: #fff;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+    .auth-tabs {
+      display: flex;
+      background: var(--bg-main);
+      border-bottom: 1px solid var(--border-color);
+    }
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text-light);
+      transition: var(--transition);
+    }
+    .auth-tab.active {
+      background-color: #fff;
+      color: var(--primary);
+      border-bottom: 3px solid var(--marigold);
+    }
+    .auth-panel {
+      padding: 2.5rem;
+      display: none;
+    }
+    .auth-panel.active {
+      display: block;
+    }
+    .form-group {
+      margin-bottom: 1.2rem;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      color: var(--primary);
+    }
+    .form-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      font-size: 0.9rem;
+      transition: var(--transition);
+    }
+    .form-input:focus {
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 3px rgba(30, 27, 75, 0.08);
+    }
+    .auth-btn {
+      width: 100%;
+      padding: 0.9rem;
+      background-color: var(--primary);
+      color: #fff;
+      border-radius: 50px;
+      border: none;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: var(--transition);
+    }
+    .auth-btn:hover {
+      background-color: var(--primary-light);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header></header>
+
+  <!-- Main Auth Widget -->
+  <main class="container">
+    <div class="auth-container">
+      
+      <!-- Tabs switching -->
+      <div class="auth-tabs">
+        <div class="auth-tab active" onclick="switchTab('login')">Sign In</div>
+        <div class="auth-tab" onclick="switchTab('register')">Register</div>
+      </div>
+
+      <!-- 1. SIGN IN PANEL -->
+      <div class="auth-panel active" id="loginPanel">
+        <!-- Traditional Email / Password Form -->
+        <form id="traditionalLoginForm">
+          <h3 style="font-size: 1.4rem; color: var(--primary); font-weight: 800; margin-bottom: 1.2rem;">Welcome Back</h3>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="loginEmail" class="form-input" placeholder="customer@littlelarge.in" required>
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="auth-btn">Sign In</button>
+          
+          <div style="text-align: center; margin: 1.2rem 0; color: var(--text-light); font-size: 0.85rem; font-weight: 600;">
+            — OR —
+          </div>
+          <button type="button" class="auth-btn" style="background-color: var(--accent);" onclick="toggleOtpForm(true)">
+            📲 Sign In with Mobile OTP
+          </button>
+        </form>
+
+        <!-- OTP-Based Login Form (Hidden initially) -->
+        <form id="otpLoginForm" style="display: none;">
+          <h3 style="font-size: 1.4rem; color: var(--primary); font-weight: 800; margin-bottom: 1.2rem;">Mobile OTP Login</h3>
+          
+          <div id="phoneInputGroup">
+            <div class="form-group">
+              <label>Indian Mobile Number</label>
+              <div style="display: flex; gap: 8px">
+                <span style="padding: 0.75rem; background: #eee; border: 1px solid var(--border-color); border-radius: 8px; font-weight: 700; font-size: 0.9rem;">+91</span>
+                <input type="tel" id="loginPhone" class="form-input" placeholder="9876543210" maxlength="10" required>
+              </div>
+            </div>
+            <button type="button" class="auth-btn" onclick="sendMobileOtp()">Get Verification Code</button>
+          </div>
+
+          <div id="otpInputGroup" style="display: none; margin-top: 1rem;">
+            <div class="form-group">
+              <label>Enter 6-Digit OTP</label>
+              <input type="text" id="loginOtp" class="form-input" style="text-align:center; font-size:1.5rem; letter-spacing:8px; font-weight:800" placeholder="123456" maxlength="6">
+            </div>
+            
+            <!-- OTP DEMO NOTIFICATION -->
+            <div style="background-color: var(--success-light); border:1px solid var(--success); padding:1rem; border-radius:8px; margin-bottom:1.2rem; text-align:center" id="demoOtpBox">
+              <p style="font-size:0.8rem; color:var(--success); margin:0"><strong>Demo SMS Simulator:</strong></p>
+              <h4 style="font-size:1.5rem; color:var(--primary); font-weight:800; margin:0.3rem 0" id="demoOtpValue">000000</h4>
+              <p style="font-size:0.75rem; color:var(--text-light); margin:0">Use this generated OTP to log in immediately.</p>
+            </div>
+
+            <button type="submit" class="auth-btn">Verify & Sign In</button>
+          </div>
+
+          <div style="text-align: center; margin-top: 1.5rem;">
+            <a href="#" onclick="toggleOtpForm(false)" style="color: var(--primary); font-weight: 700; font-size: 0.85rem;"><i class="fas fa-arrow-left"></i> Back to Email Sign In</a>
+          </div>
+        </form>
+      </div>
+
+      <!-- 2. REGISTRATION PANEL -->
+      <div class="auth-panel" id="registerPanel">
+        <form id="customerRegisterForm">
+          <h3 style="font-size: 1.4rem; color: var(--primary); font-weight: 800; margin-bottom: 1.2rem;">Create Family Account</h3>
+          
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="regName" class="form-input" placeholder="e.g. Rajesh Kumar" required>
+          </div>
+
+          <div style="display: flex; gap: 1rem">
+            <div class="form-group" style="flex: 1">
+              <label>Email Address</label>
+              <input type="email" id="regEmail" class="form-input" placeholder="rajesh@email.com" required>
+            </div>
+            <div class="form-group" style="flex: 1">
+              <label>Mobile Number</label>
+              <input type="tel" id="regPhone" class="form-input" placeholder="9876543210" maxlength="10" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="regPassword" class="form-input" placeholder="Create secure password" required>
+          </div>
+
+          <h4 style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; margin: 1.5rem 0 0.8rem 0; color:var(--text-light); border-bottom:1px solid #eee; padding-bottom:5px">Default Delivery Address</h4>
+
+          <div class="form-group">
+            <label>Address Line</label>
+            <input type="text" id="regAddress" class="form-input" placeholder="Flat No, Building, Street Address">
+          </div>
+
+          <div style="display: flex; gap: 1rem">
+            <div class="form-group" style="flex: 1">
+              <label>City</label>
+              <input type="text" id="regCity" class="form-input" placeholder="Bengaluru">
+            </div>
+            <div class="form-group" style="flex: 1">
+              <label>State</label>
+              <input type="text" id="regState" class="form-input" placeholder="Karnataka">
+            </div>
+            <div class="form-group" style="flex: 1">
+              <label>Pincode</label>
+              <input type="text" id="regPincode" class="form-input" placeholder="560001" maxlength="6">
+            </div>
+          </div>
+
+          <button type="submit" class="auth-btn">Register Account</button>
+        </form>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer></footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+  <script src="js/chatbot.js"></script>
+  <script>
+    function switchTab(tab) {
+      document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+
+      if (tab === 'login') {
+        document.querySelector('.auth-tab:nth-child(1)').classList.add('active');
+        document.getElementById('loginPanel').classList.add('active');
+      } else {
+        document.querySelector('.auth-tab:nth-child(2)').classList.add('active');
+        document.getElementById('registerPanel').classList.add('active');
+      }
+    }
+
+    function toggleOtpForm(useOtp) {
+      if (useOtp) {
+        document.getElementById('traditionalLoginForm').style.display = 'none';
+        document.getElementById('otpLoginForm').style.display = 'block';
+      } else {
+        document.getElementById('traditionalLoginForm').style.display = 'block';
+        document.getElementById('otpLoginForm').style.display = 'none';
+      }
+    }
+
+    // Submit Traditional Login
+    document.getElementById('traditionalLoginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          saveToken(data.token, data.user);
+          showToast(`Welcome back, ${data.user.name}!`, 'success');
+          
+          // Redirect check: if from cart checkout, send back to cart
+          setTimeout(() => {
+            if (data.user.email === 'admin@littlelarge.in') {
+              window.location.href = 'admin.html';
+            } else {
+              window.location.href = 'index.html';
+            }
+          }, 1200);
+        } else {
+          showToast(data.message || 'Login failed', 'error');
+        }
+      } catch (err) {
+        showToast('Server connection failed', 'error');
+      }
+    });
+
+    // Send Mobile OTP
+    async function sendMobileOtp() {
+      const phone = document.getElementById('loginPhone').value.trim();
+      if (phone.length < 10 || isNaN(phone)) {
+        showToast('Please enter a valid 10-digit mobile number!', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/auth/otp-send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.message);
+          document.getElementById('phoneInputGroup').style.display = 'none';
+          document.getElementById('otpInputGroup').style.display = 'block';
+          
+          // Display simulated OTP on screen
+          document.getElementById('demoOtpValue').textContent = data.demoOtp;
+        } else {
+          showToast(data.message, 'error');
+        }
+      } catch (err) {
+        showToast('OTP request failed', 'error');
+      }
+    }
+
+    // Submit Verify OTP
+    document.getElementById('otpLoginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const phone = document.getElementById('loginPhone').value.trim();
+      const otp = document.getElementById('loginOtp').value.trim();
+
+      if (otp.length < 6) {
+        showToast('Enter complete 6-digit verification code!', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/auth/otp-verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, otp })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          saveToken(data.token, data.user);
+          showToast(`OTP Verified! Welcome, ${data.user.name}!`, 'success');
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 1200);
+        } else {
+          showToast(data.message || 'Verification failed', 'error');
+        }
+      } catch (err) {
+        showToast('Server verification error', 'error');
+      }
+    });
+
+    // Register User Form Submit
+    document.getElementById('customerRegisterForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const payload = {
+        name: document.getElementById('regName').value.trim(),
+        email: document.getElementById('regEmail').value.trim(),
+        phone: document.getElementById('regPhone').value.trim(),
+        password: document.getElementById('regPassword').value.trim(),
+        address: document.getElementById('regAddress').value.trim(),
+        city: document.getElementById('regCity').value.trim(),
+        state: document.getElementById('regState').value.trim(),
+        pincode: document.getElementById('regPincode').value.trim()
+      };
+
+      if (payload.phone.length < 10 || isNaN(payload.phone)) {
+        showToast('Enter valid 10-digit phone number', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          saveToken(data.token, data.user);
+          showToast('Registration successful! Welcome to the family.', 'success');
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 1200);
+        } else {
+          showToast(data.message || 'Registration failed', 'error');
+        }
+      } catch (err) {
+        showToast('Server registration failed', 'error');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping Cart | Little to Large</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header></header>
+
+  <!-- Page Banner -->
+  <section style="background-color: var(--primary); color:#fff; padding: 2rem 0; margin-bottom: 2rem;">
+    <div class="container">
+      <h1 style="font-size:1.8rem; font-weight:800">Your Family Box</h1>
+      <p style="font-size:0.85rem; color:var(--marigold)">Home &gt; Cart</p>
+    </div>
+  </section>
+
+  <!-- Cart Content Layout -->
+  <main class="container cart-container">
+    
+    <!-- Left panel: Cart Items -->
+    <div>
+      <div class="cart-items-panel" id="cartItemsContainer">
+        <!-- Rendered dynamically -->
+        <p style="color:var(--text-light)">Your cart is empty.</p>
+      </div>
+
+      <!-- Billing & Shipping Information (Visible on checkout flow) -->
+      <div id="shippingFormCard" style="display:none; background-color:#fff; border:1px solid var(--border-color); border-radius:var(--radius-lg); padding:2rem; margin-top:2rem; box-shadow:var(--shadow-sm)">
+        <h3 style="font-size:1.3rem; color:var(--primary); font-weight:800; margin-bottom:1.5rem; border-bottom:1px solid #eee; padding-bottom:10px">
+          🚚 Delivery & Billing Details
+        </h3>
+        <form id="checkoutForm" onsubmit="processOrderSubmit(event)">
+          <div style="display:flex; gap:1rem; margin-bottom:1.2rem">
+            <div style="flex:1">
+              <label style="font-size:0.8rem; font-weight:700">Recipient's Full Name</label>
+              <input type="text" id="shippingName" class="form-input" style="width:100%; padding:0.6rem; border:1px solid var(--border-color); border-radius:6px; margin-top:0.3rem" required>
+            </div>
+            <div style="flex:1">
+              <label style="font-size:0.8rem; font-weight:700">Contact Number</label>
+              <input type="tel" id="shippingPhone" class="form-input" style="width:100%; padding:0.6rem; border:1px solid var(--border-color); border-radius:6px; margin-top:0.3rem" placeholder="10-digit mobile" maxlength="10" required>
+            </div>
+          </div>
+          
+          <div style="margin-bottom:1.2rem">
+            <label style="font-size:0.8rem; font-weight:700">Detailed Shipping Address</label>
+            <input type="text" id="shippingAddress" class="form-input" placeholder="Flat No, Building, Street address" style="width:100%; padding:0.6rem; border:1px solid var(--border-color); border-radius:6px; margin-top:0.3rem" required>
+          </div>
+
+          <div style="display:flex; gap:1rem; margin-bottom:1.5rem">
+            <div style="flex:1">
+              <label style="font-size:0.8rem; font-weight:700">State</label>
+              <select id="shippingState" style="width:100%; padding:0.6rem; border:1px solid var(--border-color); border-radius:6px; margin-top:0.3rem; font-weight:600" required>
+                <option value="">Select State</option>
+                <option value="Karnataka">Karnataka</option>
+                <option value="Maharashtra">Maharashtra</option>
+                <option value="Delhi">Delhi</option>
+                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                <option value="Tamil Nadu">Tamil Nadu</option>
+                <option value="West Bengal">West Bengal</option>
+              </select>
+            </div>
+            <div style="flex:1">
+              <label style="font-size:0.8rem; font-weight:700">Pincode</label>
+              <input type="text" id="shippingPincode" class="form-input" placeholder="560001" maxlength="6" style="width:100%; padding:0.6rem; border:1px solid var(--border-color); border-radius:6px; margin-top:0.3rem" required>
+            </div>
+          </div>
+
+          <h3 style="font-size:1.3rem; color:var(--primary); font-weight:800; margin-bottom:1rem; border-bottom:1px solid #eee; padding-bottom:10px">
+            💳 Select Payment Mode
+          </h3>
+
+          <!-- Option Selector -->
+          <div class="payment-options-grid">
+            <div class="pay-option-card active" data-method="UPI">
+              <i class="fas fa-qrcode"></i>
+              <h4 style="font-size:0.85rem; font-weight:700">UPI QR Code</h4>
+            </div>
+            <div class="pay-option-card" data-method="Card">
+              <i class="far fa-credit-card"></i>
+              <h4 style="font-size:0.85rem; font-weight:700">Card / NetBanking</h4>
+            </div>
+            <div class="pay-option-card" data-method="COD">
+              <i class="fas fa-hand-holding-usd"></i>
+              <h4 style="font-size:0.85rem; font-weight:700">Cash on Delivery</h4>
+            </div>
+          </div>
+
+          <div id="paymentDetailsContainer">
+            <!-- Rendered by payments.js -->
+          </div>
+
+          <button type="submit" class="checkout-btn" style="margin-top:2rem">Place Secure Order</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right panel: Pricing Summary -->
+    <div class="cart-summary-panel">
+      <h3 style="font-size:1.2rem; color:var(--primary); font-weight:800; border-bottom:1px solid var(--border-color); padding-bottom:0.8rem; margin-bottom:1.5rem">Order Pricing</h3>
+      
+      <div id="checkoutSummaryItems" style="border-bottom:1px solid var(--border-color); padding-bottom:1rem; margin-bottom:1rem">
+        <!-- Item lines -->
+      </div>
+
+      <div class="summary-row">
+        <span>Subtotal</span>
+        <span id="checkoutSubtotal">₹0.00</span>
+      </div>
+      <div class="summary-row">
+        <span>Promo Discount</span>
+        <span id="checkoutDiscount" style="color:var(--success)">- ₹0.00</span>
+      </div>
+      <div class="summary-row">
+        <span>Delivery Fee</span>
+        <span id="checkoutShipping">₹0.00</span>
+      </div>
+      <div class="summary-row total">
+        <span>Total Amount</span>
+        <span id="checkoutTotal">₹0.00</span>
+      </div>
+
+      <!-- Coupon engine -->
+      <div class="coupon-section">
+        <input type="text" id="couponInput" placeholder="Enter coupon code (WELCOME10)">
+        <button onclick="applyCoupon()">Apply</button>
+      </div>
+
+      <button id="showCheckoutBtn" class="checkout-btn" onclick="triggerCheckoutFlow()">Proceed to Checkout</button>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer></footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+  <script src="js/chatbot.js"></script>
+  <script src="js/payments.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      renderCartItems();
+      renderPriceSummary();
+    });
+
+    function renderCartItems() {
+      const cart = getCart();
+      const container = document.getElementById('cartItemsContainer');
+
+      if (cart.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:3rem 0">
+            <i class="fas fa-shopping-basket" style="font-size:3.5rem; color:var(--text-light); margin-bottom:1rem"></i>
+            <h3>Your family wardrobe box is empty!</h3>
+            <p style="color:var(--text-light); margin-bottom:1.5rem">Add beautiful ethnic and western wear styles.</p>
+            <a href="products.html" class="btn btn-primary">Go Shop Now</a>
+          </div>
+        `;
+        document.getElementById('showCheckoutBtn').style.display = 'none';
+        return;
+      }
+
+      container.innerHTML = `<h3 style="font-size:1.2rem; color:var(--primary); font-weight:800; border-bottom:1px solid var(--border-color); padding-bottom:0.8rem; margin-bottom:1rem">Items in Box</h3>`;
+      
+      cart.forEach(item => {
+        container.innerHTML += `
+          <div class="cart-item">
+            <img src="${item.image}" alt="${item.name}" class="cart-item-img" onerror="this.src='/images/products/placeholder.jpg'">
+            <div class="cart-item-details">
+              <h4 class="cart-item-title">${item.name}</h4>
+              <p class="cart-item-meta">Size: <strong>${item.size}</strong> | Price: ₹${item.price}</p>
+              
+              <div class="cart-item-actions">
+                <div class="qty-control" style="transform: scale(0.85); transform-origin: left center">
+                  <button onclick="changeCartItemQty('${item.product_id}', '${item.size}', -1)"><i class="fas fa-minus"></i></button>
+                  <span>${item.quantity}</span>
+                  <button onclick="changeCartItemQty('${item.product_id}', '${item.size}', 1)"><i class="fas fa-plus"></i></button>
+                </div>
+                <button class="btn-remove-item" onclick="removeCartItem('${item.product_id}', '${item.size}')">
+                  <i class="far fa-trash-alt"></i> Remove
+                </button>
+              </div>
+            </div>
+            <div style="text-align:right; font-weight:800; color:var(--primary)">
+              ₹${(item.price * item.quantity).toFixed(2)}
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function renderPriceSummary() {
+      const cart = getCart();
+      let subtotal = 0;
+      cart.forEach(it => subtotal += it.price * it.quantity);
+
+      const discount = parseFloat(sessionStorage.getItem('l2l_discount') || 0);
+      const shipping = subtotal > 999 || subtotal === 0 ? 0 : 60;
+      const total = subtotal - discount + shipping;
+
+      document.getElementById('checkoutSubtotal').textContent = `₹${subtotal.toFixed(2)}`;
+      document.getElementById('checkoutDiscount').textContent = `- ₹${discount.toFixed(2)}`;
+      document.getElementById('checkoutShipping').textContent = shipping === 0 ? 'FREE' : `₹${shipping.toFixed(2)}`;
+      document.getElementById('checkoutTotal').textContent = `₹${total.toFixed(2)}`;
+    }
+
+    function changeCartItemQty(prodId, size, diff) {
+      const cart = getCart();
+      const item = cart.find(it => it.product_id === parseInt(prodId) && it.size === size);
+      if (item) {
+        let newQty = item.quantity + diff;
+        if (newQty > item.stock) {
+          showToast(`Only ${item.stock} items in stock!`, 'error');
+          return;
+        }
+        updateCartQty(parseInt(prodId), size, newQty);
+        renderCartItems();
+        renderPriceSummary();
+        renderCheckoutSummary(); // Update checkout lines too if visible
+      }
+    }
+
+    function removeCartItem(prodId, size) {
+      removeFromCart(parseInt(prodId), size);
+      renderCartItems();
+      renderPriceSummary();
+      renderCheckoutSummary();
+    }
+
+    // Coupon Engine
+    function applyCoupon() {
+      const input = document.getElementById('couponInput').value.trim().toUpperCase();
+      const cart = getCart();
+      if (cart.length === 0) return;
+
+      let subtotal = cart.reduce((tot, it) => tot + it.price * it.quantity, 0);
+      let discount = 0;
+
+      if (input === 'WELCOME10') {
+        discount = subtotal * 0.1; // 10%
+        showToast('WELCOME10 Applied! 10% discount subtracted.');
+      } else if (input === 'FAMILY40') {
+        // Flat 40% on accessories
+        const accTotal = cart.filter(it => it.name.toLowerCase().includes('mojari') || it.name.toLowerCase().includes('clutch') || it.name.toLowerCase().includes('wallet'))
+                             .reduce((tot, it) => tot + it.price * it.quantity, 0);
+        if (accTotal > 0) {
+          discount = accTotal * 0.4;
+          showToast('FAMILY40 Applied! 40% accessory discount subtracted.');
+        } else {
+          showToast('FAMILY40 code only valid for Accessories items in cart!', 'error');
+          return;
+        }
+      } else if (input === 'TWINNING500') {
+        const kidsCount = cart.filter(it => it.image.includes('kids') || it.name.toLowerCase().includes('dungaree') || it.name.toLowerCase().includes('lehenga') || it.name.toLowerCase().includes('romper'))
+                              .reduce((tot, it) => tot + it.quantity, 0);
+        if (kidsCount >= 2) {
+          discount = 500;
+          showToast('TWINNING500 Applied! ₹500 discount subtracted.');
+        } else {
+          showToast('Buy at least 2 Kids wear outfits to activate TWINNING500!', 'error');
+          return;
+        }
+      } else {
+        showToast('Invalid Coupon Code entered!', 'error');
+        return;
+      }
+
+      sessionStorage.setItem('l2l_discount', discount);
+      renderPriceSummary();
+      renderCheckoutSummary();
+    }
+
+    // Toggle checkout panel view
+    function triggerCheckoutFlow() {
+      const token = getToken();
+      if (!token) {
+        showToast('Please login or register to check out!', 'error');
+        setTimeout(() => window.location.href = 'login.html', 1200);
+        return;
+      }
+
+      // Show form card
+      document.getElementById('shippingFormCard').style.display = 'block';
+      document.getElementById('showCheckoutBtn').style.display = 'none';
+      
+      initCheckout(); // Setup payment modules from payments.js
+      
+      // Scroll to form
+      document.getElementById('shippingFormCard').scrollIntoView({ behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>

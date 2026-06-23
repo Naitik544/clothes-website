@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Account | Little to Large</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .account-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 3rem;
+      margin: 4rem 0;
+    }
+    .account-sidebar-menu {
+      background-color: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      height: fit-content;
+      box-shadow: var(--shadow-sm);
+    }
+    .account-sidebar-menu li {
+      margin-bottom: 0.8rem;
+    }
+    .account-sidebar-menu a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0.8rem 1rem;
+      font-weight: 700;
+      border-radius: 8px;
+      color: var(--text-light);
+      transition: var(--transition);
+      font-size: 0.92rem;
+    }
+    .account-sidebar-menu a.active, .account-sidebar-menu a:hover {
+      background-color: rgba(30, 27, 75, 0.05);
+      color: var(--primary);
+    }
+    .account-card {
+      background-color: #fff;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: 2.5rem;
+    }
+    .order-summary-card {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      transition: var(--transition);
+    }
+    .order-summary-card:hover {
+      border-color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Injected by app.js -->
+  <header></header>
+
+  <!-- Page Layout -->
+  <main class="container account-layout">
+    
+    <!-- Sidebar -->
+    <aside class="account-sidebar-menu">
+      <div style="text-align:center; margin-bottom:2rem">
+        <div style="width:70px; height:70px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.8rem; font-weight:800; margin:0 auto 10px auto" id="userInitial">U</div>
+        <h4 style="font-size:1.05rem; font-weight:800; color:var(--primary)" id="userDisplayName">User Name</h4>
+        <span style="font-size:0.75rem; color:var(--text-light)" id="userDisplayEmail">user@email.com</span>
+      </div>
+      <ul>
+        <li><a href="#" class="active" onclick="switchAccountTab(this, 'profileTab')"><i class="far fa-id-card"></i> Profile Details</a></li>
+        <li><a href="#" onclick="switchAccountTab(this, 'ordersTab')"><i class="fas fa-box-open"></i> My Orders</a></li>
+        <li><a href="#" onclick="switchAccountTab(this, 'wishlistTab')"><i class="far fa-heart"></i> My Wishlist</a></li>
+        <li><a href="#" onclick="logout()" style="color:var(--danger)"><i class="fas fa-sign-out-alt"></i> Sign Out</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Account Panels -->
+    <div>
+      <!-- Order Success Banner -->
+      <div id="orderSuccessBanner" style="display:none; background-color:var(--success-light); border:1px solid var(--success); padding:1.5rem; border-radius:var(--radius-lg); margin-bottom:2rem; text-align:center">
+        <h2 style="color:var(--primary); font-weight:800; margin-bottom:0.5rem">🎉 Order Placed Successfully!</h2>
+        <p style="color:var(--text-light); font-size:0.95rem" id="successOrderText">Thank you for your purchase. Your order number is #0. You can track this order in the "My Orders" tab below or ask our 24/7 AI chatbot.</p>
+      </div>
+
+      <!-- 1. PROFILE DETAILS TAB -->
+      <div class="account-card" id="profileTab">
+        <h2 style="font-size: 1.5rem; color: var(--primary); font-weight: 800; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+          Manage Profile Address
+        </h2>
+        <form id="profileUpdateForm" style="display:flex; flex-direction:column; gap:1.2rem">
+          <div style="display:flex; gap:1rem">
+            <div style="flex:1">
+              <label style="font-size:0.8rem; font-weight:700">Full Name</label>
+              <input type="text" id="profName" class="form-input" required>
+            </div>
+            <div style="flex:1">
+              <label style="font-size:0.8rem; font-weight:700">Mobile Number</label>
+              <input type="tel" id="profPhone" class="form-input" required>
+            </div>
+          </div>
+          <div>
+            <label style="font-size:0.8rem; font-weight:700">Email Address (Read-only)</label>
+            <input type="email" id="profEmail" class="form-input" style="background:#f4f4f4; color:#888" readonly>
+          </div>
+          <div>
+            <label style="font-size:0.8rem; font-weight:700">Address Line</label>
+            <input type="text" id="profAddress" class="form-input" placeholder="Flat No, Building, Street">
+          </div>
+          <div style="display:flex; gap:1rem">
+            <div style="flex:1">
+              <label style="font-size:0.8rem; font-weight:700">City</label>
+              <input type="text" id="profCity" class="form-input" placeholder="City">
+            </div>
+            <div style="flex:1">
+              <label style="font-size:0.8rem; font-weight:700">State</label>
+              <input type="text" id="profState" class="form-input" placeholder="State">
+            </div>
+            <div style="flex:1">
+              <label style="font-size:0.8rem; font-weight:700">Pincode</label>
+              <input type="text" id="profPincode" class="form-input" placeholder="Pincode" maxlength="6">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="align-self: flex-start; padding: 0.8rem 2rem;">Save Changes</button>
+        </form>
+      </div>
+
+      <!-- 2. MY ORDERS TAB -->
+      <div class="account-card" id="ordersTab" style="display: none;">
+        <h2 style="font-size: 1.5rem; color: var(--primary); font-weight: 800; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+          Your Purchase History
+        </h2>
+        <div id="ordersContainer">
+          <!-- Injected dynamically -->
+          <p style="color:var(--text-light)">Loading orders history...</p>
+        </div>
+      </div>
+
+      <!-- 3. MY WISHLIST TAB -->
+      <div class="account-card" id="wishlistTab" style="display: none;">
+        <h2 style="font-size: 1.5rem; color: var(--primary); font-weight: 800; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+          Saved Outfits
+        </h2>
+        <div class="products-grid" id="wishlistItemsGrid">
+          <!-- Injected dynamically -->
+          <p style="color:var(--text-light)">Loading wishlist items...</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer Injected by app.js -->
+  <footer></footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+  <script src="js/chatbot.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const token = getToken();
+      if (!token) {
+        showToast('Please login to view account page!', 'error');
+        setTimeout(() => window.location.href = 'login.html', 1000);
+        return;
+      }
+
+      // Check success order ID in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const successId = urlParams.get('success_id');
+      if (successId) {
+        document.getElementById('orderSuccessBanner').style.display = 'block';
+        document.getElementById('successOrderText').innerHTML = `Thank you for your purchase! Your order number is <strong>#${successId}</strong>. You can track this order in the "My Orders" tab below.`;
+        switchAccountTab(document.querySelector('a[onclick*="ordersTab"]'), 'ordersTab');
+      }
+
+      const activeTab = urlParams.get('tab');
+      if (activeTab === 'wishlist') {
+        switchAccountTab(document.querySelector('a[onclick*="wishlistTab"]'), 'wishlistTab');
+      }
+
+      loadUserProfile();
+    });
+
+    function switchAccountTab(link, tabId) {
+      document.querySelectorAll('.account-sidebar-menu a').forEach(a => a.classList.remove('active'));
+      link.classList.add('active');
+
+      const tabs = ['profileTab', 'ordersTab', 'wishlistTab'];
+      tabs.forEach(id => {
+        document.getElementById(id).style.display = id === tabId ? 'block' : 'none';
+      });
+
+      if (tabId === 'ordersTab') loadUserOrders();
+      else if (tabId === 'wishlistTab') loadUserWishlist();
+    }
+
+    // Load Profile details
+    async function loadUserProfile() {
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          const u = data.user;
+          // Sidebar displayName
+          document.getElementById('userDisplayName').textContent = u.name;
+          document.getElementById('userDisplayEmail').textContent = u.email;
+          document.getElementById('userInitial').textContent = u.name.charAt(0).toUpperCase();
+
+          // Inputs
+          document.getElementById('profName').value = u.name;
+          document.getElementById('profPhone').value = u.phone;
+          document.getElementById('profEmail').value = u.email;
+          document.getElementById('profAddress').value = u.address_line || '';
+          document.getElementById('profCity').value = u.city || '';
+          document.getElementById('profState').value = u.state || '';
+          document.getElementById('profPincode').value = u.pincode || '';
+        }
+      } catch (err) {
+        showToast('Error loading profile details', 'error');
+      }
+    }
+
+    // Save profile changes
+    document.getElementById('profileUpdateForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const payload = {
+        name: document.getElementById('profName').value.trim(),
+        phone: document.getElementById('profPhone').value.trim(),
+        address_line: document.getElementById('profAddress').value.trim(),
+        city: document.getElementById('profCity').value.trim(),
+        state: document.getElementById('profState').value.trim(),
+        pincode: document.getElementById('profPincode').value.trim()
+      };
+
+      try {
+        const res = await fetch('/api/auth/me', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getToken()}`
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Profile details updated successfully!');
+          loadUserProfile();
+        } else {
+          showToast(data.message, 'error');
+        }
+      } catch (err) {
+        showToast('Failed to save profile changes', 'error');
+      }
+    });
+
+    /* ==========================================================================
+       MY ORDERS HISTORY
+       ========================================================================== */
+    async function loadUserOrders() {
+      const container = document.getElementById('ordersContainer');
+      container.innerHTML = '<p style="color:var(--text-light)">Loading orders history...</p>';
+
+      try {
+        const res = await fetch('/api/orders', {
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+          if (data.orders.length === 0) {
+            container.innerHTML = '<p style="color:var(--text-light)">No orders placed yet. Happy shopping!</p>';
+            return;
+          }
+
+          container.innerHTML = '';
+          data.orders.forEach(o => {
+            const date = new Date(o.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+            
+            let statusColor = 'var(--text-light)';
+            if (o.status === 'Pending') statusColor = '#d97706';
+            else if (o.status === 'Processing') statusColor = '#2563eb';
+            else if (o.status === 'Shipped') statusColor = '#3b82f6';
+            else if (o.status === 'Delivered') statusColor = 'hsl(162, 72%, 41%)';
+
+            container.innerHTML += `
+              <div class="order-summary-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.8rem; margin-bottom:1rem">
+                  <div>
+                    <span style="font-size:0.85rem; color:var(--text-light)">Order ID:</span>
+                    <strong>#${o.id}</strong>
+                  </div>
+                  <div>
+                    <span style="font-size:0.85rem; color:var(--text-light)">Date:</span>
+                    <strong>${date}</strong>
+                  </div>
+                </div>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px">
+                  <div>
+                    <span style="font-size:0.85rem; color:var(--text-light); display:block">Shipping Address:</span>
+                    <span style="font-size:0.9rem; font-weight:600">${o.shipping_address}</span>
+                  </div>
+                  <div style="text-align:right">
+                    <span style="font-size:0.85rem; color:var(--text-light); display:block">Total Amount:</span>
+                    <span style="font-size:1.15rem; font-weight:800; color:var(--primary)">₹${parseFloat(o.total_amount).toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1.2rem; border-top:1px dashed var(--border-color); padding-top:0.8rem">
+                  <span style="font-size:0.88rem">Status: <strong style="color:${statusColor}">${o.status}</strong></span>
+                  <button class="btn btn-primary" onclick="showOrderItemsModal(${o.id})" style="padding:0.4rem 1rem; font-size:0.8rem">View Items</button>
+                </div>
+              </div>
+            `;
+          });
+        }
+      } catch (err) {
+        container.innerHTML = '<p style="color:var(--danger)">Error loading order history.</p>';
+      }
+    }
+
+    // Modal display details for single order items
+    async function showOrderItemsModal(orderId) {
+      try {
+        const res = await fetch(`/api/orders/${orderId}`, {
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+          // Draw standard backdrop
+          let modal = document.getElementById('orderDetailModal');
+          if (!modal) {
+            modal = document.createElement('div');
+            modal.className = 'modal-backdrop';
+            modal.id = 'orderDetailModal';
+            document.body.appendChild(modal);
+          }
+
+          let itemsHtml = '';
+          data.items.forEach(it => {
+            const image = JSON.parse(it.image_urls || '[]')[0] || '/images/products/placeholder.jpg';
+            itemsHtml += `
+              <div style="display:flex; gap:15px; margin-bottom:12px; border-bottom:1px solid #eee; padding-bottom:8px">
+                <img src="${image}" style="width:50px; height:60px; object-fit:cover; border-radius:4px">
+                <div style="flex:1">
+                  <a href="product-detail.html?id=${it.product_id}" style="font-weight:700; color:var(--primary); font-size:0.9rem">${it.name}</a><br>
+                  <span style="font-size:0.8rem; color:var(--text-light)">Size: <strong>${it.size}</strong> | Qty: <strong>${it.quantity}</strong></span>
+                </div>
+                <div style="font-weight:700; font-size:0.9rem">₹${(it.price * it.quantity).toFixed(2)}</div>
+              </div>
+            `;
+          });
+
+          modal.innerHTML = `
+            <div class="modal-content" style="max-width:550px">
+              <button class="modal-close" onclick="closeOrderModal()"><i class="fas fa-times"></i></button>
+              <h3 style="font-size:1.3rem; color:var(--primary); font-weight:800; margin-bottom:1.5rem">Order Details #${data.order.id}</h3>
+              
+              <div style="max-height:220px; overflow-y:auto; margin-bottom:1.5rem">
+                ${itemsHtml}
+              </div>
+
+              <div style="background-color:#fafafa; padding:1rem; border-radius:8px; border:1px solid var(--border-color)">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:0.85rem">
+                  <span>Payment Mode:</span>
+                  <strong>${data.order.payment_method} (${data.order.payment_status})</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:0.85rem">
+                  <span>Transaction ID:</span>
+                  <strong style="font-family:monospace">${data.order.transaction_id}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-top:8px; border-top:1px dashed #ddd; padding-top:8px; font-size:1rem; font-weight:800; color:var(--primary)">
+                  <span>Order Total:</span>
+                  <span>₹${parseFloat(data.order.total_amount).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          `;
+          modal.style.display = 'flex';
+        }
+      } catch (err) {
+        showToast('Error loading order items', 'error');
+      }
+    }
+
+    function closeOrderModal() {
+      document.getElementById('orderDetailModal').style.display = 'none';
+    }
+
+    /* ==========================================================================
+       MY WISHLIST ITEMS
+       ========================================================================== */
+    async function loadUserWishlist() {
+      const grid = document.getElementById('wishlistItemsGrid');
+      grid.innerHTML = '<p style="color:var(--text-light)">Loading wishlist items...</p>';
+
+      try {
+        const res = await fetch('/api/wishlist', {
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          grid.innerHTML = '';
+          if (data.items.length === 0) {
+            grid.innerHTML = '<p style="color:var(--text-light); grid-column:1/-1">Your wishlist is empty. Save outfits for later purchase!</p>';
+            return;
+          }
+
+          data.items.forEach(p => {
+            const images = JSON.parse(p.image_urls || '[]');
+            const mainImg = images[0] || 'images/products/placeholder.jpg';
+            const priceVal = p.discount_price || p.price;
+
+            grid.innerHTML += `
+              <div class="product-card">
+                <div class="product-img-wrapper" onclick="window.location.href='product-detail.html?id=${p.id}'" style="cursor:pointer">
+                  <img src="${mainImg}" alt="${p.name}" onerror="this.src='/images/products/placeholder.jpg'">
+                </div>
+                <button class="wishlist-btn active" onclick="removeWishItem(${p.id})">
+                  <i class="fas fa-heart"></i>
+                </button>
+                <div class="product-details">
+                  <span class="product-cat">${p.category} | ${p.subcategory}</span>
+                  <a href="product-detail.html?id=${p.id}" class="product-name">${p.name}</a>
+                  <div class="product-pricing" style="margin-top:auto; margin-bottom:1rem">
+                    <span class="price">₹${priceVal}</span>
+                    ${p.discount_price ? `<span class="old-price">₹${p.price}</span>` : ''}
+                  </div>
+                  <button class="btn-add-cart" onclick="addWishToCart(${JSON.stringify(p).replace(/"/g, '&quot;')})">
+                    <i class="fas fa-shopping-basket"></i> Add to Box
+                  </button>
+                </div>
+              </div>
+            `;
+          });
+        }
+      } catch (err) {
+        grid.innerHTML = '<p style="color:var(--danger); grid-column:1/-1">Error loading wishlist items.</p>';
+      }
+    }
+
+    async function removeWishItem(productId) {
+      await toggleWishlistItem(productId);
+      loadUserWishlist();
+    }
+
+    function addWishToCart(product) {
+      const sizes = product.size_variants.split(',');
+      const defaultSize = sizes[0] || 'M';
+      addToCart(product, defaultSize, 1);
+    }
+  </script>
+</body>
+</html>
