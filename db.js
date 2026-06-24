@@ -25,7 +25,7 @@ async function initDB() {
         password: process.env.PGPASSWORD,
         database: process.env.PGDATABASE,
         port: process.env.PGPORT || 5432,
-        ssl: process.env.PGSSL === 'true' ? { rejectUnauthorized: false } : false
+        ssl: process.env.PGSSL === 'false' ? false : { rejectUnauthorized: false }
       });
       // Test connection
       await pgPool.query('SELECT NOW()');
