@@ -468,7 +468,7 @@ app.get('/api/wishlist', authenticateToken, async (req, res) => {
 const supportInquiriesTableCheck = async () => {
   await db.run(`
     CREATE TABLE IF NOT EXISTS inquiries (
-      id INTEGER PRIMARY KEY ${dbType === 'mysql' ? 'AUTO_INCREMENT' : 'AUTOINCREMENT'},
+      id INTEGER PRIMARY KEY ${db.getDbType() === 'mysql' ? 'AUTO_INCREMENT' : 'AUTOINCREMENT'},
       name VARCHAR(100) NOT NULL,
       email VARCHAR(100) NOT NULL,
       phone VARCHAR(15),

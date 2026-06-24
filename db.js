@@ -419,5 +419,6 @@ module.exports = {
   initDB,
   query,
   get,
-  run
+  run,
+  getDbType: () => dbType
 };
