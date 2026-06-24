@@ -1,4 +1,8 @@
 const ipRangeCheck = require('ip-range-check');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
+
+const JWT_SECRET = process.env.JWT_SECRET || 'little_to_large_super_secret_key_123';
 
 // Whitelisted subnets and IP ranges for admin access
 const ALLOWED_SUBNETS = [
@@ -9,8 +13,29 @@ const ALLOWED_SUBNETS = [
   '172.16.0.0/12'       // Private Network B
 ];
 
+// Load additional whitelisted IPs from environment variable if defined
+if (process.env.ADMIN_IP_WHITELIST) {
+  const extraIps = process.env.ADMIN_IP_WHITELIST.split(',').map(ip => ip.trim());
+  ALLOWED_SUBNETS.push(...extraIps);
+}
+
 function adminIpFilter(req, res, next) {
-  // Extract client IP, resolving proxies (e.g. Render/Cloudflare)
+  // 1. Bypass IP check if request has a valid admin JWT token
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      if (decoded.email === 'admin@littlelarge.in') {
+        // Authenticated admin session is allowed from any IP
+        return next();
+      }
+    } catch (err) {
+      // Invalid token, fall back to IP check
+    }
+  }
+
+  // 2. Extract client IP, resolving proxies (e.g. Render/Cloudflare)
   const clientIp = req.headers['x-forwarded-for'] 
     ? req.headers['x-forwarded-for'].split(',')[0].trim() 
     : req.socket.remoteAddress;
