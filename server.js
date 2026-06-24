@@ -5,7 +5,9 @@ const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const xlsx = require('xlsx');
 const db = require('./db');
+const adminIpFilter = require('./middleware/ipFilter');
 require('dotenv').config();
 
 const app = express();
@@ -466,17 +468,7 @@ app.get('/api/wishlist', authenticateToken, async (req, res) => {
 
 // Memory store for support inquiries (can also build a simple db table if needed, but lets just use memory or a dynamic SQLite check)
 const supportInquiriesTableCheck = async () => {
-  await db.run(`
-    CREATE TABLE IF NOT EXISTS inquiries (
-      id INTEGER PRIMARY KEY ${db.getDbType() === 'mysql' ? 'AUTO_INCREMENT' : 'AUTOINCREMENT'},
-      name VARCHAR(100) NOT NULL,
-      email VARCHAR(100) NOT NULL,
-      phone VARCHAR(15),
-      subject VARCHAR(150),
-      message TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
+  // Table creation is now handled inside db.js initDB
 };
 
 app.post('/api/inquiries', async (req, res) => {
@@ -495,7 +487,7 @@ app.post('/api/inquiries', async (req, res) => {
   }
 });
 
-app.get('/api/inquiries', authenticateAdmin, async (req, res) => {
+app.get('/api/inquiries', adminIpFilter, authenticateAdmin, async (req, res) => {
   try {
     await supportInquiriesTableCheck();
     const list = await db.query('SELECT * FROM inquiries ORDER BY created_at DESC');
@@ -510,7 +502,7 @@ app.get('/api/inquiries', authenticateAdmin, async (req, res) => {
    ========================================================================== */
 
 // Dashboard Analytics Metrics
-app.get('/api/admin/analytics', authenticateAdmin, async (req, res) => {
+app.get('/api/admin/analytics', adminIpFilter, authenticateAdmin, async (req, res) => {
   try {
     const totalSales = await db.get("SELECT SUM(amount) as sales FROM payments WHERE status = 'Completed'");
     const totalOrders = await db.get("SELECT COUNT(*) as count FROM orders");
@@ -545,7 +537,7 @@ app.get('/api/admin/analytics', authenticateAdmin, async (req, res) => {
 });
 
 // Get All Orders (Admin version)
-app.get('/api/admin/orders', authenticateAdmin, async (req, res) => {
+app.get('/api/admin/orders', adminIpFilter, authenticateAdmin, async (req, res) => {
   try {
     const orders = await db.query(`
       SELECT o.*, c.name as customer_name, c.email as customer_email, p.status as payment_status
@@ -561,7 +553,7 @@ app.get('/api/admin/orders', authenticateAdmin, async (req, res) => {
 });
 
 // Update Order Status
-app.put('/api/orders/:id/status', authenticateAdmin, async (req, res) => {
+app.put('/api/orders/:id/status', adminIpFilter, authenticateAdmin, async (req, res) => {
   const { status } = req.body;
   if (!status) return res.status(400).json({ success: false, message: 'Status is required' });
 
@@ -574,7 +566,7 @@ app.put('/api/orders/:id/status', authenticateAdmin, async (req, res) => {
 });
 
 // Add New Product
-app.post('/api/products', authenticateAdmin, upload.array('images', 5), async (req, res) => {
+app.post('/api/products', adminIpFilter, authenticateAdmin, upload.array('images', 5), async (req, res) => {
   const { name, category, subcategory, price, discount_price, stock, description, size_variants } = req.body;
 
   if (!name || !category || !price) {
@@ -602,7 +594,7 @@ app.post('/api/products', authenticateAdmin, upload.array('images', 5), async (r
 });
 
 // Edit Product
-app.put('/api/products/:id', authenticateAdmin, upload.array('images', 5), async (req, res) => {
+app.put('/api/products/:id', adminIpFilter, authenticateAdmin, upload.array('images', 5), async (req, res) => {
   const { name, category, subcategory, price, discount_price, stock, description, size_variants } = req.body;
   
   try {
@@ -629,13 +621,64 @@ app.put('/api/products/:id', authenticateAdmin, upload.array('images', 5), async
 });
 
 // Delete Product
-app.delete('/api/products/:id', authenticateAdmin, async (req, res) => {
+app.delete('/api/products/:id', adminIpFilter, authenticateAdmin, async (req, res) => {
   try {
     const result = await db.run('DELETE FROM products WHERE id = ?', [req.params.id]);
     if (result.changes === 0) return res.status(404).json({ success: false, message: 'Product not found' });
     res.json({ success: true, message: 'Product deleted successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// One-Click Excel Export of orders, products, and customer data
+app.get('/api/admin/export-excel', adminIpFilter, authenticateAdmin, async (req, res) => {
+  try {
+    // 1. Fetch Orders
+    const orders = await db.query(`
+      SELECT o.id AS "Order ID", o.customer_id AS "Customer ID", o.total_amount AS "Total (INR)",
+             o.status AS "Status", o.shipping_address AS "Shipping Address", o.payment_method AS "Payment Method",
+             o.created_at AS "Order Date"
+      FROM orders o ORDER BY o.id DESC
+    `);
+
+    // 2. Fetch Products
+    const products = await db.query(`
+      SELECT id AS "Product ID", name AS "Product Name", category AS "Category", subcategory AS "Subcategory",
+             price AS "Price (INR)", discount_price AS "Discount Price (INR)", stock AS "Stock", rating AS "Rating"
+      FROM products ORDER BY id DESC
+    `);
+
+    // 3. Fetch Customers
+    const customers = await db.query(`
+      SELECT id AS "Customer ID", name AS "Customer Name", email AS "Email", phone AS "Phone",
+             address_line AS "Address", city AS "City", state AS "State", pincode AS "Pincode",
+             created_at AS "Joined Date"
+      FROM customers ORDER BY id DESC
+    `);
+
+    // Create Excel Workbook
+    const workbook = xlsx.utils.book_new();
+
+    // Create Worksheets
+    const wsOrders = xlsx.utils.json_to_sheet(orders);
+    xlsx.utils.book_append_sheet(workbook, wsOrders, 'Orders Master List');
+
+    const wsProducts = xlsx.utils.json_to_sheet(products);
+    xlsx.utils.book_append_sheet(workbook, wsProducts, 'Products Inventory');
+
+    const wsCustomers = xlsx.utils.json_to_sheet(customers);
+    xlsx.utils.book_append_sheet(workbook, wsCustomers, 'Customer Accounts');
+
+    // Generate Excel binary stream
+    const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=L2L_Master_Export_${Date.now()}.xlsx`);
+    return res.send(buffer);
+  } catch (err) {
+    console.error('Excel Export Error:', err.message);
+    return res.status(500).json({ success: false, message: 'Failed to compile and download report.' });
   }
 });
 

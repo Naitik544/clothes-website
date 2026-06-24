@@ -1,18 +1,49 @@
 const sqlite3 = require('sqlite3');
 const mysql = require('mysql2/promise');
+const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
 
-let dbType = 'sqlite'; // 'mysql' or 'sqlite'
+let dbType = 'sqlite'; // 'postgres', 'mysql', or 'sqlite'
+let pgPool = null;
 let mysqlPool = null;
 let sqliteDb = null;
 
 // Initialize connection
 async function initDB() {
+  const usePG = process.env.PGHOST && process.env.PGUSER && process.env.PGDATABASE;
   const useMySQL = process.env.DB_HOST && process.env.DB_USER && process.env.DB_NAME;
 
+  if (usePG) {
+    try {
+      console.log('Attempting to connect to PostgreSQL database...');
+      pgPool = new Pool({
+        host: process.env.PGHOST,
+        user: process.env.PGUSER,
+        password: process.env.PGPASSWORD,
+        database: process.env.PGDATABASE,
+        port: process.env.PGPORT || 5432,
+        ssl: process.env.PGSSL === 'true' ? { rejectUnauthorized: false } : false
+      });
+      // Test connection
+      await pgPool.query('SELECT NOW()');
+      console.log('Successfully connected to PostgreSQL database.');
+      dbType = 'postgres';
+    } catch (err) {
+      console.error('PostgreSQL connection failed. Trying MySQL...', err.message);
+      await initMySQLFallback(useMySQL);
+    }
+  } else {
+    await initMySQLFallback(useMySQL);
+  }
+
+  await createTables();
+  await seedDatabase();
+}
+
+async function initMySQLFallback(useMySQL) {
   if (useMySQL) {
     try {
       console.log('Attempting to connect to MySQL database...');
@@ -36,12 +67,9 @@ async function initDB() {
       setupSQLite();
     }
   } else {
-    console.log('No MySQL environment variables found. Using SQLite3 for local development...');
+    console.log('No PostgreSQL or MySQL environment variables found. Using SQLite3 for local development...');
     setupSQLite();
   }
-
-  await createTables();
-  await seedDatabase();
 }
 
 function setupSQLite() {
@@ -56,14 +84,25 @@ function setupSQLite() {
   });
 }
 
+// Convert SQLite '?' placeholders to Postgres '$1', '$2' format
+function convertPlaceholders(sql) {
+  if (dbType !== 'postgres') return sql;
+  let index = 1;
+  return sql.replace(/\?/g, () => `$${index++}`);
+}
+
 // Unified Query wrappers
 async function query(sql, params = []) {
-  if (dbType === 'mysql') {
-    const [rows] = await mysqlPool.execute(sql, params);
+  const finalSql = convertPlaceholders(sql);
+  if (dbType === 'postgres') {
+    const res = await pgPool.query(finalSql, params);
+    return res.rows;
+  } else if (dbType === 'mysql') {
+    const [rows] = await mysqlPool.execute(finalSql, params);
     return rows;
   } else {
     return new Promise((resolve, reject) => {
-      sqliteDb.all(sql, params, (err, rows) => {
+      sqliteDb.all(finalSql, params, (err, rows) => {
         if (err) reject(err);
         else resolve(rows);
       });
@@ -72,12 +111,16 @@ async function query(sql, params = []) {
 }
 
 async function get(sql, params = []) {
-  if (dbType === 'mysql') {
-    const [rows] = await mysqlPool.execute(sql, params);
+  const finalSql = convertPlaceholders(sql);
+  if (dbType === 'postgres') {
+    const res = await pgPool.query(finalSql, params);
+    return res.rows[0] || null;
+  } else if (dbType === 'mysql') {
+    const [rows] = await mysqlPool.execute(finalSql, params);
     return rows[0] || null;
   } else {
     return new Promise((resolve, reject) => {
-      sqliteDb.get(sql, params, (err, row) => {
+      sqliteDb.get(finalSql, params, (err, row) => {
         if (err) reject(err);
         else resolve(row || null);
       });
@@ -86,8 +129,19 @@ async function get(sql, params = []) {
 }
 
 async function run(sql, params = []) {
-  if (dbType === 'mysql') {
-    const [result] = await mysqlPool.execute(sql, params);
+  if (dbType === 'postgres') {
+    let finalSql = convertPlaceholders(sql);
+    // Append RETURNING id to INSERT queries to mimic lastID behavior
+    const isInsert = finalSql.trim().toUpperCase().startsWith('INSERT INTO');
+    if (isInsert && !finalSql.toUpperCase().includes('RETURNING')) {
+      finalSql += ' RETURNING id';
+    }
+    const res = await pgPool.query(finalSql, params);
+    const insertId = res.rows[0] ? res.rows[0].id : null;
+    return { insertId, changes: res.rowCount };
+  } else if (dbType === 'mysql') {
+    const finalSql = convertPlaceholders(sql);
+    const [result] = await mysqlPool.execute(finalSql, params);
     return { insertId: result.insertId, changes: result.affectedRows };
   } else {
     return new Promise((resolve, reject) => {
@@ -101,13 +155,17 @@ async function run(sql, params = []) {
 
 async function createTables() {
   const isMySQL = dbType === 'mysql';
+  const isPostgres = dbType === 'postgres';
+  
   const ai = isMySQL ? 'AUTO_INCREMENT' : 'AUTOINCREMENT';
   const textType = isMySQL ? 'LONGTEXT' : 'TEXT';
+  const idType = isPostgres ? 'SERIAL PRIMARY KEY' : `INTEGER PRIMARY KEY ${ai}`;
+  const datetimeType = isPostgres ? 'TIMESTAMP' : 'DATETIME';
   
   // Customers
   await run(`
     CREATE TABLE IF NOT EXISTS customers (
-      id INTEGER PRIMARY KEY ${ai},
+      id ${idType},
       name VARCHAR(100) NOT NULL,
       email VARCHAR(100) UNIQUE NOT NULL,
       phone VARCHAR(15) UNIQUE NOT NULL,
@@ -116,14 +174,14 @@ async function createTables() {
       city VARCHAR(100),
       state VARCHAR(100),
       pincode VARCHAR(10),
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at ${datetimeType} DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
   // Products
   await run(`
     CREATE TABLE IF NOT EXISTS products (
-      id INTEGER PRIMARY KEY ${ai},
+      id ${idType},
       name VARCHAR(150) NOT NULL,
       category VARCHAR(50) NOT NULL,
       subcategory VARCHAR(50),
@@ -134,27 +192,27 @@ async function createTables() {
       size_variants VARCHAR(100),
       image_urls ${textType},
       rating DECIMAL(3, 2) DEFAULT 0.00,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at ${datetimeType} DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
   // Orders
   await run(`
     CREATE TABLE IF NOT EXISTS orders (
-      id INTEGER PRIMARY KEY ${ai},
+      id ${idType},
       customer_id INTEGER,
       total_amount DECIMAL(10, 2) NOT NULL,
       status VARCHAR(50) DEFAULT 'Pending',
       shipping_address TEXT NOT NULL,
       payment_method VARCHAR(50) NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at ${datetimeType} DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
   // Order Items
   await run(`
     CREATE TABLE IF NOT EXISTS order_items (
-      id INTEGER PRIMARY KEY ${ai},
+      id ${idType},
       order_id INTEGER,
       product_id INTEGER,
       size VARCHAR(10),
@@ -166,35 +224,48 @@ async function createTables() {
   // Payments
   await run(`
     CREATE TABLE IF NOT EXISTS payments (
-      id INTEGER PRIMARY KEY ${ai},
+      id ${idType},
       order_id INTEGER,
       transaction_id VARCHAR(100) UNIQUE NOT NULL,
       amount DECIMAL(10, 2) NOT NULL,
       method VARCHAR(50) NOT NULL,
       status VARCHAR(50) DEFAULT 'Pending',
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at ${datetimeType} DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
   // Reviews
   await run(`
     CREATE TABLE IF NOT EXISTS reviews (
-      id INTEGER PRIMARY KEY ${ai},
+      id ${idType},
       customer_id INTEGER,
       product_id INTEGER,
       rating INTEGER NOT NULL,
       comment TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at ${datetimeType} DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
   // Wishlist
   await run(`
     CREATE TABLE IF NOT EXISTS wishlist (
-      id INTEGER PRIMARY KEY ${ai},
+      id ${idType},
       customer_id INTEGER,
       product_id INTEGER,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at ${datetimeType} DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Support Inquiries table centralized here
+  await run(`
+    CREATE TABLE IF NOT EXISTS inquiries (
+      id ${idType},
+      name VARCHAR(100) NOT NULL,
+      email VARCHAR(100) NOT NULL,
+      phone VARCHAR(15),
+      subject VARCHAR(150),
+      message TEXT NOT NULL,
+      created_at ${datetimeType} DEFAULT CURRENT_TIMESTAMP
     )
   `);
 }
@@ -202,7 +273,7 @@ async function createTables() {
 async function seedDatabase() {
   // Check if customers seeded
   const customerCount = await get('SELECT COUNT(*) as count FROM customers');
-  if (customerCount.count === 0) {
+  if (parseInt(customerCount.count) === 0) {
     console.log('Seeding database with default accounts...');
     const customerHash = await bcrypt.hash('password123', 10);
     const adminHash = await bcrypt.hash('admin123', 10);
@@ -222,7 +293,7 @@ async function seedDatabase() {
 
   // Check if products seeded
   const productCount = await get('SELECT COUNT(*) as count FROM products');
-  if (productCount.count === 0) {
+  if (parseInt(productCount.count) === 0) {
     console.log('Seeding premium clothing product inventory...');
 
     const products = [
@@ -356,12 +427,11 @@ async function seedDatabase() {
     }
   }
 
-  // Seed sample orders to show metrics in dashboard immediately
+  // Seed sample orders
   const orderCount = await get('SELECT COUNT(*) as count FROM orders');
-  if (orderCount.count === 0) {
+  if (parseInt(orderCount.count) === 0) {
     console.log('Seeding sample orders for admin dashboard analytics...');
     
-    // Seed 3 orders
     const o1 = await run(`
       INSERT INTO orders (customer_id, total_amount, status, shipping_address, payment_method)
       VALUES (?, ?, ?, ?, ?)
@@ -402,7 +472,7 @@ async function seedDatabase() {
       VALUES (?, ?, ?, ?, ?)
     `, [o3.insertId, 9, 'One Size', 2, 699.00]);
 
-    // Seed some reviews
+    // Seed reviews
     await run(`
       INSERT INTO reviews (customer_id, product_id, rating, comment)
       VALUES (?, ?, ?, ?)
