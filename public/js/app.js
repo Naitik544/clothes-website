@@ -309,52 +309,12 @@ document.addEventListener('DOMContentLoaded', () => {
   setupChatbotUI();
 });
 
-// Chatbot UI dynamic loader
+// Chatbot UI dynamic loader (External Integration)
 function setupChatbotUI() {
-  if (document.querySelector('.chatbot-widget') || window.location.pathname.includes('admin.html')) return;
+  if (window.location.pathname.includes('admin.html')) return;
 
-  const chatDiv = document.createElement('div');
-  chatDiv.className = 'chatbot-widget';
-  chatDiv.innerHTML = `
-    <div class="chatbot-panel" id="chatPanel">
-      <div class="chatbot-header">
-        <div class="chatbot-header-info">
-          <div class="chatbot-avatar">🤖</div>
-          <div class="chatbot-title">
-            <h4>L2L Family Assistant</h4>
-            <span><i class="fas fa-circle" style="font-size: 7px;"></i> Active 24/7</span>
-          </div>
-        </div>
-        <button class="chatbot-close" onclick="toggleChatbot()"><i class="fas fa-times"></i></button>
-      </div>
-      <div class="chatbot-messages" id="chatMessages">
-        <div class="chat-msg bot">
-          Namaste! 🙏 Welcome to Little to Large. I am your family wardrobe assistant. How can I help you today?
-          <div class="chat-chips">
-            <span class="chat-chip" onclick="handleChipClick('Shop Kids Wear')">👶 Kids wear</span>
-            <span class="chat-chip" onclick="handleChipClick('Shop Women Wear')">👗 Women wear</span>
-            <span class="chat-chip" onclick="handleChipClick('Track My Order')">📦 Track Order</span>
-            <span class="chat-chip" onclick="handleChipClick('Offers & Discount')">🏷️ Offers</span>
-          </div>
-        </div>
-      </div>
-      <div class="chatbot-input-area">
-        <input type="text" id="chatInput" placeholder="Ask about products, orders..." onkeypress="handleChatKey(event)">
-        <button onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
-      </div>
-    </div>
-    <button class="chatbot-toggle" onclick="toggleChatbot()">
-      <i class="fas fa-comment-dots"></i>
-    </button>
-  `;
-  document.body.appendChild(chatDiv);
-}
-
-function toggleChatbot() {
-  const panel = document.getElementById('chatPanel');
-  panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
-  if (panel.style.display === 'flex') {
-    const msgs = document.getElementById('chatMessages');
-    msgs.scrollTop = msgs.scrollHeight;
-  }
+  const script = document.createElement('script');
+  script.src = 'https://www.noupe.com/embed/019ef86078af765e89d9a700fd6f73d533b6.js';
+  script.async = true;
+  document.head.appendChild(script);
 }
