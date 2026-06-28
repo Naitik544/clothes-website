@@ -268,6 +268,51 @@ async function createTables() {
       created_at ${datetimeType} DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Promotions table
+  await run(`
+    CREATE TABLE IF NOT EXISTS promotions (
+      id ${idType},
+      title VARCHAR(150) NOT NULL,
+      subtitle VARCHAR(255),
+      bg_color VARCHAR(50) DEFAULT 'var(--primary)',
+      media_url VARCHAR(255),
+      link_url VARCHAR(255),
+      start_date ${datetimeType} NOT NULL,
+      end_date ${datetimeType} NOT NULL,
+      priority INTEGER DEFAULT 0,
+      status VARCHAR(50) DEFAULT 'active',
+      created_at ${datetimeType} DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Homepage Settings table
+  await run(`
+    CREATE TABLE IF NOT EXISTS homepage_settings (
+      id ${idType},
+      hero_title VARCHAR(250) NOT NULL,
+      hero_subtitle VARCHAR(255),
+      media_url VARCHAR(255),
+      media_type VARCHAR(50) DEFAULT 'image', -- 'image' or 'video'
+      festival_mode VARCHAR(50) DEFAULT 'none', -- 'none', 'diwali', 'christmas', etc.
+      created_at ${datetimeType} DEFAULT CURRENT_TIMESTAMP,
+      updated_at ${datetimeType} DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Error Logs table
+  await run(`
+    CREATE TABLE IF NOT EXISTS error_logs (
+      id ${idType},
+      message TEXT NOT NULL,
+      stack_trace TEXT,
+      path VARCHAR(255),
+      severity VARCHAR(50) DEFAULT 'error', -- 'low', 'warning', 'critical'
+      status VARCHAR(50) DEFAULT 'new', -- 'new', 'investigating', 'resolved'
+      suggested_fix TEXT,
+      created_at ${datetimeType} DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 }
 
 async function seedDatabase() {
@@ -482,6 +527,61 @@ async function seedDatabase() {
       INSERT INTO reviews (customer_id, product_id, rating, comment)
       VALUES (?, ?, ?, ?)
     `, [1, 3, 5, 'Absolutely gorgeous saree. The Banarasi borders have a rich feel. High value for money.']);
+  }
+
+  // Seed homepage settings
+  const settingCount = await get('SELECT COUNT(*) as count FROM homepage_settings');
+  if (parseInt(settingCount.count) === 0) {
+    console.log('Seeding default homepage settings...');
+    await run(`
+      INSERT INTO homepage_settings (hero_title, hero_subtitle, media_url, media_type, festival_mode)
+      VALUES (?, ?, ?, ?, ?)
+    `, [
+      'Ethnic Elegance for Every Generation',
+      'Handcrafted ethnic wear and modern western styles matching your family lifestyle.',
+      'images/hero_ethnic.svg',
+      'image',
+      'none'
+    ]);
+  }
+
+  // Seed default promotions
+  const promoCount = await get('SELECT COUNT(*) as count FROM promotions');
+  if (parseInt(promoCount.count) === 0) {
+    console.log('Seeding active holiday promotions...');
+    const now = new Date();
+    const nextMonth = new Date();
+    nextMonth.setMonth(now.getMonth() + 1);
+
+    await run(`
+      INSERT INTO promotions (title, subtitle, bg_color, media_url, link_url, start_date, end_date, priority, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      'Grand Festival Diwali Sale!',
+      'Flat 15% discount on all silk ethnic wear outfits. Use code L2LHOLI.',
+      'hsl(38, 92%, 50%)',
+      'images/hero_ethnic.svg',
+      'products.html?category=ethnic',
+      now.toISOString(),
+      nextMonth.toISOString(),
+      10,
+      'active'
+    ]);
+
+    await run(`
+      INSERT INTO promotions (title, subtitle, bg_color, media_url, link_url, start_date, end_date, priority, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      'Cyber Monday Smart Combos',
+      'Buy 2 kidswear outfits and get a leather mojari set free! Use TWINNING500.',
+      'hsl(243, 75%, 19%)',
+      'images/hero_kids.svg',
+      'products.html?category=kids',
+      now.toISOString(),
+      nextMonth.toISOString(),
+      5,
+      'active'
+    ]);
   }
 }
 

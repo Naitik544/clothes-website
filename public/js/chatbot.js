@@ -43,95 +43,46 @@ async function processBotResponse(text) {
   msgs.appendChild(loader);
   msgs.scrollTop = msgs.scrollHeight;
 
-  // Add subtle delay to feel organic
-  await new Promise(resolve => setTimeout(resolve, 800));
-  loader.remove();
-
-  // 1. Order Tracking Check
+  // 1. Structured Order Tracking Check
   if (query.startsWith('track') || query.includes('order status') || query.includes('track order')) {
     const match = query.match(/\d+/); // Find numeric order id
     if (match) {
+      loader.remove();
       const orderId = match[0];
       await fetchOrderTracking(orderId);
-      return;
-    } else {
-      appendMessage(`📦 <strong>Order Tracking:</strong> Please provide your order number by typing <strong>"track [orderID]"</strong> (e.g., <strong>track 1</strong> or <strong>track 3</strong>).`, 'bot');
       return;
     }
   }
 
-  // 2. Product Search Categories
-  if (query.includes('kid') || query.includes('boy') || query.includes('girl') || query.includes('baby') || query.includes('child')) {
-    await fetchProductRecommendations('Kids');
-    return;
-  }
-  if (query.includes('women') || query.includes('saree') || query.includes('dress') || query.includes('girl clothing')) {
-    await fetchProductRecommendations('Women');
-    return;
-  }
-  if (query.includes('men') || query.includes('kurta') || query.includes('denim') || query.includes('male')) {
-    await fetchProductRecommendations('Men');
-    return;
-  }
-  if (query.includes('accessories') || query.includes('bag') || query.includes('clutch') || query.includes('wallet')) {
-    await fetchProductRecommendations('Accessories');
-    return;
-  }
+  // 2. Dynamic LLM Assistant Call
+  try {
+    const token = getToken(); // From app.js
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  // 3. Offers
-  if (query.includes('offer') || query.includes('discount') || query.includes('coupon') || query.includes('sale') || query.includes('deal')) {
-    appendMessage(`🏷️ <strong>Exclusive Active Coupons:</strong><br>
-    • <strong>WELCOME10</strong> - Get 10% off on your first purchase.<br>
-    • <strong>FAMILY40</strong> - Flat 40% off on all accessories.<br>
-    • <strong>L2LHOLI</strong> - Special 15% discount on traditional ethnic wear.<br><br>
-    Check out our <a href="offers.html" style="color:var(--accent); font-weight:700">Offers Page</a> for active clearance bargains!`, 'bot');
-    return;
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ message: text })
+    });
+    
+    loader.remove();
+    const data = await res.json();
+    
+    if (data.success && data.response) {
+      // Basic markdown replacement for formatting
+      const formatted = data.response
+        .replace(/\n/g, '<br>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>');
+      appendMessage(formatted, 'bot');
+    } else {
+      appendMessage('🤖 I am currently resting. Please try asking me again in a moment!', 'bot');
+    }
+  } catch (err) {
+    loader.remove();
+    appendMessage('🤖 Connection failed. Please check your internet connection and try again.', 'bot');
   }
-
-  // 4. Shipping & Returns FAQ
-  if (query.includes('shipping') || query.includes('delivery') || query.includes('charge') || query.includes('pincode')) {
-    appendMessage(`🚚 <strong>Shipping Policy:</strong><br>
-    - We deliver to over 19,000+ pincodes in India.<br>
-    - Delivery is free for all orders above <strong>₹999</strong>. For orders below ₹999, a flat delivery fee of ₹60 is charged.<br>
-    - Standard delivery takes 3 to 5 business days in metro cities, and 5 to 7 days globally/internationally.`, 'bot');
-    return;
-  }
-
-  if (query.includes('return') || query.includes('refund') || query.includes('exchange')) {
-    appendMessage(`🔄 <strong>Easy 7-Day Returns:</strong><br>
-    - We offer a hassle-free 7-day return and exchange policy on unwashed & unused garments with tags intact.<br>
-    - To initiate a return, go to your <strong>My Orders</strong> tab in the Account profile and click "Return".<br>
-    - Refund is processed to the source account within 48 hours of product pickup.`, 'bot');
-    return;
-  }
-
-  // 5. Size Guide Help
-  if (query.includes('size') || query.includes('fit') || query.includes('measurement')) {
-    appendMessage(`📏 <strong>Size Guide assistance:</strong><br>
-    - We cater to sizes starting from newborn babies (<strong>0-3M</strong>) all the way up to double extra large (<strong>XXL</strong>) for adults.<br>
-    - Every product details page includes a measurement chart link. If you fall between sizes, we recommend choosing one size larger for kids as they grow fast!`, 'bot');
-    return;
-  }
-
-  // Default response
-  appendMessage(`🤖 I'm not sure I understood that request perfectly. I can assist you with:<br>
-  - Finding clothing (e.g. "Show me Men Kurtas" or "Kids wear")<br>
-  - Order tracking (e.g. type "track 1")<br>
-  - Offers and coupons (type "offers")<br>
-  - Shipping & Returns info.<br><br>
-  Alternatively, you can email us at <strong>support@littlelarge.in</strong> or choose an option below:`, 'bot');
-  
-  // Show chips again
-  const chipsDiv = document.createElement('div');
-  chipsDiv.className = 'chat-chips';
-  chipsDiv.innerHTML = `
-    <span class="chat-chip" onclick="handleChipClick('Shop Kids Wear')">👶 Kids wear</span>
-    <span class="chat-chip" onclick="handleChipClick('Shop Women Wear')">👗 Women wear</span>
-    <span class="chat-chip" onclick="handleChipClick('Track My Order')">📦 Track Order</span>
-    <span class="chat-chip" onclick="handleChipClick('Offers & Discount')">🏷️ Offers</span>
-  `;
-  msgs.appendChild(chipsDiv);
-  msgs.scrollTop = msgs.scrollHeight;
 }
 
 // Helper to query products based on category for chatbot

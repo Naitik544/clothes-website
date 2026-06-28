@@ -33,15 +33,21 @@ function setupSidebarNavigation() {
 }
 
 function showSection(sectionId) {
-  const sections = ['analyticsSection', 'ordersSection', 'productsSection', 'inquiriesSection'];
+  const sections = ['analyticsSection', 'ordersSection', 'productsSection', 'inquiriesSection', 'promotionsSection', 'errorSection'];
   sections.forEach(id => {
-    document.getElementById(id).style.display = id === sectionId ? 'block' : 'none';
+    const el = document.getElementById(id);
+    if (el) el.style.display = id === sectionId ? 'block' : 'none';
   });
 
   if (sectionId === 'analyticsSection') loadDashboardAnalytics();
   else if (sectionId === 'ordersSection') loadAdminOrders();
   else if (sectionId === 'productsSection') loadAdminProducts();
   else if (sectionId === 'inquiriesSection') loadAdminInquiries();
+  else if (sectionId === 'promotionsSection') {
+    loadHomepageSettings();
+    loadAdminPromotions();
+  }
+  else if (sectionId === 'errorSection') loadAdminErrors();
 }
 
 /* ==========================================================================
@@ -61,6 +67,8 @@ async function loadDashboardAnalytics() {
 
       renderLowStockAlerts(data.metrics.lowStock);
       renderSalesChart(data.monthlySales);
+      renderInventoryCharts(data.categoryBreakdown); // Render GA charts!
+      loadAudienceSegments(); // Load marketing segments
     }
   } catch (err) {
     showToast('Failed to load dashboard analytics', 'error');
@@ -105,6 +113,165 @@ function renderSalesChart(data) {
       </div>
     `;
   });
+}
+
+let pieChartInstance = null;
+let valuationChartInstance = null;
+
+function renderInventoryCharts(categoryData) {
+  if (!categoryData || categoryData.length === 0) return;
+
+  const categories = categoryData.map(d => d.category);
+  const itemCounts = categoryData.map(d => d.count);
+  const stockLevels = categoryData.map(d => d.total_stock || 0);
+  const stockValuations = categoryData.map(d => d.total_value || 0);
+
+  // 1. Render Pie Chart (Inventory Category Share)
+  const pieCtx = document.getElementById('inventoryPieChart');
+  if (pieCtx) {
+    if (pieChartInstance) pieChartInstance.destroy();
+    pieChartInstance = new Chart(pieCtx, {
+      type: 'pie',
+      data: {
+        labels: categories,
+        datasets: [{
+          data: itemCounts,
+          backgroundColor: [
+            'hsl(243, 75%, 25%)', // Indigo
+            'hsl(38, 92%, 50%)',  // Marigold
+            'hsl(162, 72%, 41%)', // Emerald
+            'hsl(354, 78%, 57%)'  // Crimson
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              boxWidth: 12,
+              font: { weight: 'bold', size: 10 }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // 2. Render Bar Chart (Stock Levels vs Valuations)
+  const valCtx = document.getElementById('inventoryValuationChart');
+  if (valCtx) {
+    if (valuationChartInstance) valuationChartInstance.destroy();
+    valuationChartInstance = new Chart(valCtx, {
+      type: 'bar',
+      data: {
+        labels: categories,
+        datasets: [
+          {
+            label: 'Total Stock (Units)',
+            data: stockLevels,
+            backgroundColor: 'rgba(30, 27, 75, 0.7)',
+            borderColor: 'hsl(243, 75%, 19%)',
+            borderWidth: 1,
+            yAxisID: 'y'
+          },
+          {
+            label: 'Stock Value (₹)',
+            data: stockValuations,
+            backgroundColor: 'rgba(217, 119, 6, 0.7)',
+            borderColor: 'hsl(38, 92%, 50%)',
+            borderWidth: 1,
+            type: 'line',
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            type: 'linear',
+            position: 'left',
+            title: { display: true, text: 'Stock (Units)', font: { weight: 'bold' } }
+          },
+          y1: {
+            type: 'linear',
+            position: 'right',
+            grid: { drawOnChartArea: false },
+            title: { display: true, text: 'Valuation (₹)', font: { weight: 'bold' } }
+          }
+        },
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: { font: { weight: 'bold', size: 10 } }
+          }
+        }
+      }
+    });
+  }
+}
+
+async function exportOrdersToExcel() {
+  try {
+    const res = await fetch('/api/admin/orders', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (!data.success || data.orders.length === 0) {
+      showToast('No orders found to export', 'error');
+      return;
+    }
+
+    // Format the orders data for Excel
+    const formattedRows = data.orders.map(o => {
+      const dateStr = new Date(o.created_at).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+      return {
+        'Order ID': `#${o.id}`,
+        'Customer Name': o.customer_name,
+        'Customer Email': o.customer_email,
+        'Order Date': dateStr,
+        'Total Amount (₹)': parseFloat(o.total_amount),
+        'Payment Method': o.payment_method,
+        'Payment Status': o.payment_status,
+        'Fulfillment Status': o.status,
+        'Shipping Address': o.shipping_address
+      };
+    });
+
+    // Create Excel worksheet using SheetJS
+    const worksheet = XLSX.utils.json_to_sheet(formattedRows);
+    const workbook = XLSX.utils.book_new();
+    Xtarget_sheet_name = "Orders Report";
+    XLSX.utils.book_append_sheet(workbook, worksheet, Xtarget_sheet_name);
+
+    // Adjust column widths automatically
+    worksheet["!cols"] = [
+      { wch: 10 }, // Order ID
+      { wch: 20 }, // Customer Name
+      { wch: 25 }, // Customer Email
+      { wch: 15 }, // Order Date
+      { wch: 18 }, // Total Amount
+      { wch: 16 }, // Payment Method
+      { wch: 16 }, // Payment Status
+      { wch: 18 }, // Fulfillment Status
+      { wch: 45 }  // Shipping Address
+    ];
+
+    // Download file
+    XLSX.writeFile(workbook, `L2L_Orders_Report_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    showToast('Orders report exported to Excel successfully!', 'success');
+  } catch (err) {
+    showToast('Failed to export orders to Excel', 'error');
+  }
 }
 
 /* ==========================================================================
@@ -320,5 +487,233 @@ async function loadAdminInquiries() {
     }
   } catch (err) {
     showToast('Failed to load customer inquiries', 'error');
+  }
+}
+
+/* ==========================================================================
+   5. MARKETING AUDIENCE SEGMENTATION & SEO SITEMAPS
+   ========================================================================== */
+
+async function loadAudienceSegments() {
+  try {
+    const res = await fetch('/api/admin/segments', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.success && data.segments) {
+      document.getElementById('segmentEthnic').textContent = `${data.segments.ethnicFans} users`;
+      document.getElementById('segmentSpender').textContent = `${data.segments.highSpenders} users`;
+      document.getElementById('segmentRepeat').textContent = `${data.segments.repeatBuyers} users`;
+    }
+  } catch (err) {
+    console.error('Failed to load marketing segments:', err);
+  }
+}
+
+async function generateSitemapSEO() {
+  const alertBox = document.getElementById('seoAlertBox');
+  alertBox.style.display = 'block';
+  alertBox.style.color = 'var(--primary)';
+  alertBox.textContent = 'Generating sitemap.xml...';
+
+  try {
+    const res = await fetch('/api/admin/seo-generate', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      alertBox.style.color = 'var(--success)';
+      alertBox.textContent = '🎉 sitemap.xml & robots.txt updated in /public!';
+      showToast('Sitemap compiled successfully!');
+    } else {
+      alertBox.style.color = 'var(--danger)';
+      alertBox.textContent = 'Sitemap compilation failed.';
+      showToast(data.message, 'error');
+    }
+  } catch (err) {
+    alertBox.style.color = 'var(--danger)';
+    alertBox.textContent = 'Connection error.';
+    showToast('SEO Sitemap error', 'error');
+  }
+}
+
+/* ==========================================================================
+   6. DYNAMIC HOMEPAGE CONTENT & CAMPAIGN EDITORS
+   ========================================================================== */
+
+async function loadHomepageSettings() {
+  try {
+    const res = await fetch('/api/homepage-settings');
+    const data = await res.json();
+    if (data.success && data.settings) {
+      const s = data.settings;
+      document.getElementById('heroTitleInput').value = s.hero_title;
+      document.getElementById('heroSubtitleInput').value = s.hero_subtitle || '';
+      document.getElementById('heroMediaUrlInput').value = s.media_url || '';
+      document.getElementById('heroMediaTypeInput').value = s.media_type || 'image';
+      document.getElementById('heroFestivalInput').value = s.festival_mode || 'none';
+    }
+  } catch (err) {
+    showToast('Failed to load homepage settings', 'error');
+  }
+}
+
+async function handleHeroSubmit(e) {
+  e.preventDefault();
+  const payload = {
+    hero_title: document.getElementById('heroTitleInput').value.trim(),
+    hero_subtitle: document.getElementById('heroSubtitleInput').value.trim(),
+    media_url: document.getElementById('heroMediaUrlInput').value.trim(),
+    media_type: document.getElementById('heroMediaTypeInput').value,
+    festival_mode: document.getElementById('heroFestivalInput').value
+  };
+
+  try {
+    const res = await fetch('/api/homepage-settings', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Homepage hero configuration updated!', 'success');
+      loadHomepageSettings();
+    } else {
+      showToast(data.message, 'error');
+    }
+  } catch (err) {
+    showToast('Failed to update homepage settings', 'error');
+  }
+}
+
+async function loadAdminPromotions() {
+  try {
+    const res = await fetch('/api/promotions');
+    const data = await res.json();
+    const tbody = document.querySelector('#adminPromotionsTable tbody');
+    tbody.innerHTML = '';
+
+    if (data.success && data.promotions) {
+      if (data.promotions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-light)">No active campaigns running.</td></tr>';
+        return;
+      }
+
+      data.promotions.forEach(p => {
+        const start = new Date(p.start_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+        const end = new Date(p.end_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${p.priority}</strong></td>
+            <td>
+              <strong>${p.title}</strong><br>
+              <span style="font-size:0.75rem; color:#888">${p.subtitle || ''}</span>
+            </td>
+            <td>${start} - ${end}</td>
+            <td><span style="padding:0.2rem 0.6rem; border-radius:4px; color:#fff; font-size:0.75rem; font-weight:700; background-color:${p.bg_color}">${p.bg_color}</span></td>
+            <td>
+              <button onclick="deletePromo(${p.id})" class="btn btn-accent" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:var(--danger); color:#fff"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+  } catch (err) {
+    showToast('Error loading active campaigns', 'error');
+  }
+}
+
+async function handlePromoSubmit(e) {
+  e.preventDefault();
+  const payload = {
+    title: document.getElementById('promoTitle').value.trim(),
+    subtitle: document.getElementById('promoSubtitle').value.trim(),
+    bg_color: document.getElementById('promoBgColor').value.trim(),
+    priority: parseInt(document.getElementById('promoPriority').value) || 0,
+    start_date: document.getElementById('promoStartDate').value,
+    end_date: document.getElementById('promoEndDate').value,
+    media_url: document.getElementById('promoMediaUrl').value.trim(),
+    link_url: document.getElementById('promoLinkUrl').value.trim()
+  };
+
+  try {
+    const res = await fetch('/api/promotions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Campaign launched successfully!', 'success');
+      document.getElementById('promoCreateForm').reset();
+      loadAdminPromotions();
+    } else {
+      showToast(data.message, 'error');
+    }
+  } catch (err) {
+    showToast('Failed to create promotion campaign', 'error');
+  }
+}
+
+async function deletePromo(id) {
+  if (!confirm('Are you sure you want to delete this promotion campaign?')) return;
+  try {
+    const res = await fetch(`/api/promotions/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Promotion deleted');
+      loadAdminPromotions();
+    } else {
+      showToast(data.message, 'error');
+    }
+  } catch (err) {
+    showToast('Failed to delete campaign', 'error');
+  }
+}
+
+/* ==========================================================================
+   7. DIAGNOSTICS & SYSTEM ERROR LOGS
+   ========================================================================== */
+
+async function loadAdminErrors() {
+  try {
+    const res = await fetch('/api/admin/errors', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    const tbody = document.querySelector('#adminErrorLogsTable tbody');
+    tbody.innerHTML = '';
+
+    if (data.success && data.logs) {
+      if (data.logs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--success); font-weight:700">✅ No system exceptions logged. All systems operational!</td></tr>';
+        return;
+      }
+
+      data.logs.forEach(log => {
+        const time = new Date(log.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        tbody.innerHTML += `
+          <tr>
+            <td style="font-size:0.75rem">${time}</td>
+            <td><code style="background:#eee; padding:2px 4px; border-radius:3px; font-size:0.8rem">${log.path || '/'}</code></td>
+            <td><strong style="color:var(--danger); font-size:0.85rem">${log.message}</strong></td>
+            <td><span style="font-size:0.75rem; text-transform:uppercase; font-weight:700; color:var(--danger)">${log.severity}</span></td>
+            <td><div style="font-size:0.82rem; font-style:italic; color:#444">${log.suggested_fix || 'No solution cached.'}</div></td>
+          </tr>
+        `;
+      });
+    }
+  } catch (err) {
+    showToast('Failed to load system diagnostics logs', 'error');
   }
 }

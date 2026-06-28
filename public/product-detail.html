@@ -132,6 +132,19 @@
     </div>
   </section>
 
+  <!-- Recommended for You (Collaborative Recommendations Engine) -->
+  <section class="container" style="margin-bottom: 5rem;">
+    <div class="section-title">
+      <h2>Recommended for You</h2>
+      <p>Style recommendations matching your family wardrobe needs</p>
+    </div>
+    <div class="products-grid" id="recommendationsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 2rem;">
+      <div style="grid-column: 1/-1; text-align:center; padding: 2rem 0;">
+        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary);"></i>
+      </div>
+    </div>
+  </section>
+
   <!-- Footer -->
   <footer></footer>
 
@@ -168,6 +181,7 @@
           activeProduct = data.product;
           renderProductDetails(data.product);
           renderReviews(data.reviews);
+          loadRecommendations(prodId);
         } else {
           showToast(data.message, 'error');
           setTimeout(() => window.location.href = 'products.html', 1500);
@@ -451,6 +465,42 @@
           showToast('Failed to submit review', 'error');
         }
       });
+    }
+
+    async function loadRecommendations(prodId) {
+      try {
+        const res = await fetch(`/api/products/${prodId}/recommendations`);
+        const data = await res.json();
+        const grid = document.getElementById('recommendationsGrid');
+        if (data.success && data.products && data.products.length > 0) {
+          grid.innerHTML = '';
+          data.products.forEach(p => {
+            const images = JSON.parse(p.image_urls || '[]');
+            const mainImg = images[0] || 'images/products/placeholder.jpg';
+            const priceVal = p.discount_price || p.price;
+            
+            grid.innerHTML += `
+              <div class="product-card" style="box-shadow:var(--shadow-sm); border:1px solid var(--border-color); border-radius:var(--radius-lg); overflow:hidden; background-color:#fff">
+                <div class="product-img-wrapper" onclick="window.location.href='product-detail.html?id=${p.id}'" style="cursor:pointer; position:relative; padding-bottom:125%; background:#fcfcfc">
+                  <img src="${mainImg}" alt="${p.name}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover" onerror="this.src='/images/products/placeholder.jpg'">
+                </div>
+                <div class="product-details" style="padding:1rem">
+                  <span class="product-cat" style="font-size:0.75rem; text-transform:uppercase; color:var(--text-light); font-weight:700">${p.category} | ${p.subcategory}</span>
+                  <a href="product-detail.html?id=${p.id}" class="product-name" style="font-weight:700; color:var(--primary); font-size:0.9rem; margin-top:0.4rem; display:block">${p.name}</a>
+                  <div class="product-pricing" style="margin-top:0.8rem; font-weight:800; color:var(--accent)">
+                    ₹${priceVal}
+                  </div>
+                </div>
+              </div>
+            `;
+          });
+        } else {
+          grid.innerHTML = '<div style="grid-column: 1/-1; color:var(--text-light); text-align:center">No similar style matches found in inventory.</div>';
+        }
+      } catch (err) {
+        console.error('Failed to load style recommendations:', err);
+        document.getElementById('recommendationsGrid').innerHTML = '<div style="grid-column: 1/-1; color:var(--text-light); text-align:center">Failed to connect to recommendation engine.</div>';
+      }
     }
   </script>
 </body>

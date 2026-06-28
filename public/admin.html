@@ -24,6 +24,8 @@
         <li><a href="#" class="active" data-section="analyticsSection"><i class="fas fa-chart-line"></i> Analytics</a></li>
         <li><a href="#" data-section="productsSection"><i class="fas fa-tshirt"></i> Products Inventory</a></li>
         <li><a href="#" data-section="ordersSection"><i class="fas fa-shipping-fast"></i> Order Fulfillment</a></li>
+        <li><a href="#" data-section="promotionsSection"><i class="fas fa-ad"></i> Promotions & Hero</a></li>
+        <li><a href="#" data-section="errorSection"><i class="fas fa-bug"></i> Error Tracking</a></li>
         <li><a href="#" data-section="inquiriesSection"><i class="far fa-envelope-open"></i> Customer Inquiries</a></li>
         <li><a href="index.html" style="color:var(--marigold); margin-top:3rem"><i class="fas fa-home"></i> View Website</a></li>
       </ul>
@@ -88,6 +90,54 @@
             <ul id="lowStockList" style="list-style:none; max-height:230px; overflow-y:auto">
               <!-- Rendered by admin.js -->
             </ul>
+        </div>
+
+        <!-- Google Analytics-Style Inventory & Sales Dashboard -->
+        <div style="display:grid; grid-template-columns:1fr 1.2fr; gap:2rem; margin-bottom:2.5rem">
+          <!-- Inventory Categories Breakdown (Pie Chart) -->
+          <div style="background-color:#fff; padding:2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); display:flex; flex-direction:column; align-items:center">
+            <h3 style="font-size:1.1rem; color:var(--primary); font-weight:800; margin-bottom:1.5rem; width:100%; text-align:left">📊 Category Inventory Share (Pie Chart)</h3>
+            <div style="width:100%; max-width:240px; height:240px; display:flex; justify-content:center">
+              <canvas id="inventoryPieChart"></canvas>
+            </div>
+          </div>
+          
+          <!-- Category Stock Valuation (Bar/Line Chart) -->
+          <div style="background-color:#fff; padding:2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); display:flex; flex-direction:column; align-items:center">
+            <h3 style="font-size:1.1rem; color:var(--primary); font-weight:800; margin-bottom:1.5rem; width:100%; text-align:left">📈 Stock Levels vs Valuation (GA-Style Chart)</h3>
+            <div style="width:100%; height:240px; position:relative">
+              <canvas id="inventoryValuationChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:2rem; margin-bottom:2.5rem">
+          <!-- Marketing Segmentation -->
+          <div style="background-color:#fff; padding:2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm)">
+            <h3 style="font-size:1.1rem; color:var(--primary); font-weight:800; margin-bottom:1.2rem">🎯 Audience Segments (AI Analytics)</h3>
+            <div style="display:flex; flex-direction:column; gap:12px" id="segmentsWrapper">
+              <div style="display:flex; justify-content:space-between; padding:0.5rem; background:#fafafa; border-radius:4px">
+                <span>Traditional Ethnic Fans (Bought Ethnic Wear)</span>
+                <strong id="segmentEthnic">0 users</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; padding:0.5rem; background:#fafafa; border-radius:4px">
+                <span>High Spenders (Order total &gt;= ₹3,000)</span>
+                <strong id="segmentSpender">0 users</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; padding:0.5rem; background:#fafafa; border-radius:4px">
+                <span>Loyal Repeat Shoppers (&gt;1 Order Placed)</span>
+                <strong id="segmentRepeat">0 users</strong>
+              </div>
+            </div>
+          </div>
+          <!-- Marketing & SEO Actions -->
+          <div style="background-color:#fff; padding:2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm)">
+            <h3 style="font-size:1.1rem; color:var(--primary); font-weight:800; margin-bottom:1.2rem">🚀 SEO & Sitemap Automation</h3>
+            <p style="font-size:0.82rem; color:var(--text-light); margin-bottom:1.5rem">Re-generate the Google XML sitemap and update the crawling instructions in robots.txt dynamically.</p>
+            <button onclick="generateSitemapSEO()" class="btn btn-primary" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px">
+              <i class="fas fa-sitemap"></i> Compile & Update sitemap.xml
+            </button>
+            <div id="seoAlertBox" style="display:none; font-size:0.8rem; font-weight:700; color:var(--success); text-align:center; margin-top:10px"></div>
           </div>
         </div>
       </section>
@@ -124,6 +174,7 @@
         <div class="admin-table-card">
           <div class="table-header-row">
             <h3 style="font-size:1.2rem; color:var(--primary); font-weight:800">Customer Orders</h3>
+            <button class="btn btn-primary" onclick="exportOrdersToExcel()" style="padding:0.5rem 1.2rem; font-size:0.85rem; background-color:#10b981; border-color:#10b981"><i class="fas fa-file-excel"></i> Export Orders to Excel</button>
           </div>
           <div style="overflow-x:auto">
             <table class="admin-table" id="adminOrdersTable">
@@ -164,6 +215,137 @@
               </thead>
               <tbody>
                 <!-- Injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+      <!-- 5. PROMOTIONS & BANNER CONFIGURATION SECTION -->
+      <section id="promotionsSection" style="display: none;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem; margin-bottom:2rem">
+          <!-- Update Hero Settings Card -->
+          <div style="background-color:#fff; padding:2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm)">
+            <h3 style="font-size:1.2rem; color:var(--primary); font-weight:800; margin-bottom:1.2rem; border-bottom:1px solid #eee; padding-bottom:8px">⚙️ Dynamic Hero Wallpaper Config</h3>
+            <form id="heroConfigForm" onsubmit="handleHeroSubmit(event)" style="display:flex; flex-direction:column; gap:1rem">
+              <div class="form-group">
+                <label style="font-weight:700; font-size:0.8rem">Hero Banner Main Title</label>
+                <input type="text" id="heroTitleInput" class="form-input" style="width:100%" required>
+              </div>
+              <div class="form-group">
+                <label style="font-weight:700; font-size:0.8rem">Hero Banner Subtitle</label>
+                <input type="text" id="heroSubtitleInput" class="form-input" style="width:100%">
+              </div>
+              <div class="form-group">
+                <label style="font-weight:700; font-size:0.8rem">Media URL (Image SVG/JPG or Video MP4)</label>
+                <input type="text" id="heroMediaUrlInput" class="form-input" style="width:100%">
+              </div>
+              <div style="display:flex; gap:1rem">
+                <div class="form-group" style="flex:1">
+                  <label style="font-weight:700; font-size:0.8rem">Media Type</label>
+                  <select id="heroMediaTypeInput" class="form-input" style="width:100%">
+                    <option value="image">Image</option>
+                    <option value="video">Video</option>
+                  </select>
+                </div>
+                <div class="form-group" style="flex:1">
+                  <label style="font-weight:700; font-size:0.8rem">Festival Event Theme</label>
+                  <select id="heroFestivalInput" class="form-input" style="width:100%">
+                    <option value="none">Standard Mode</option>
+                    <option value="diwali">Diwali Sparkles</option>
+                    <option value="christmas">Christmas Snow</option>
+                    <option value="holi">Holi Colors</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary" style="margin-top:10px">Update Homepage Hero</button>
+            </form>
+          </div>
+
+          <!-- Add Promotion Card -->
+          <div style="background-color:#fff; padding:2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm)">
+            <h3 style="font-size:1.2rem; color:var(--primary); font-weight:800; margin-bottom:1.2rem; border-bottom:1px solid #eee; padding-bottom:8px">🏷️ Create Active Promotion Banner</h3>
+            <form id="promoCreateForm" onsubmit="handlePromoSubmit(event)" style="display:flex; flex-direction:column; gap:0.9rem">
+              <div class="form-group">
+                <label style="font-weight:700; font-size:0.8rem">Promotion Campaign Title</label>
+                <input type="text" id="promoTitle" class="form-input" placeholder="e.g. Diwali Super Offer" required>
+              </div>
+              <div class="form-group">
+                <label style="font-weight:700; font-size:0.8rem">Campaign Subtitle / Details</label>
+                <input type="text" id="promoSubtitle" class="form-input" placeholder="Use coupon code Diwali15">
+              </div>
+              <div style="display:flex; gap:1rem">
+                <div class="form-group" style="flex:1">
+                  <label style="font-weight:700; font-size:0.8rem">BG Color (HSL/CSS)</label>
+                  <input type="text" id="promoBgColor" class="form-input" placeholder="hsl(38, 92%, 50%)">
+                </div>
+                <div class="form-group" style="flex:1">
+                  <label style="font-weight:700; font-size:0.8rem">Priority Level (Sort)</label>
+                  <input type="number" id="promoPriority" class="form-input" placeholder="10">
+                </div>
+              </div>
+              <div style="display:flex; gap:1rem">
+                <div class="form-group" style="flex:1">
+                  <label style="font-weight:700; font-size:0.8rem">Start Date</label>
+                  <input type="datetime-local" id="promoStartDate" class="form-input" required>
+                </div>
+                <div class="form-group" style="flex:1">
+                  <label style="font-weight:700; font-size:0.8rem">End Date</label>
+                  <input type="datetime-local" id="promoEndDate" class="form-input" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label style="font-weight:700; font-size:0.8rem">Media Banner URL (SVG / JPG)</label>
+                <input type="text" id="promoMediaUrl" class="form-input" placeholder="images/hero_ethnic.svg">
+              </div>
+              <div class="form-group">
+                <label style="font-weight:700; font-size:0.8rem">Redirect Link</label>
+                <input type="text" id="promoLinkUrl" class="form-input" placeholder="products.html?category=Men">
+              </div>
+              <button type="submit" class="btn btn-primary" style="margin-top:5px">Launch Campaign</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Active Promotions List -->
+        <div class="admin-table-card">
+          <div class="table-header-row">
+            <h3 style="font-size:1.2rem; color:var(--primary); font-weight:800">Active Campaign Banners</h3>
+          </div>
+          <table class="admin-table" id="adminPromotionsTable">
+            <thead>
+              <tr>
+                <th>Priority</th>
+                <th>Campaign details</th>
+                <th>Duration</th>
+                <th>Theme Color</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Load dynamic promotions -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 6. ERROR MONITORING SECTION -->
+      <section id="errorSection" style="display: none;">
+        <div class="admin-table-card">
+          <div class="table-header-row">
+            <h3 style="font-size:1.2rem; color:var(--primary); font-weight:800">🚨 Automated System Diagnostics & Error Logs</h3>
+          </div>
+          <p style="padding:0 1.5rem; font-size:0.85rem; color:var(--text-light)">Below are unhandled exceptions caught by the server. Review proposed fixes to restore module functionality.</p>
+          <div style="overflow-x:auto; margin-top:1rem">
+            <table class="admin-table" id="adminErrorLogsTable">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Path</th>
+                  <th>Exception Message</th>
+                  <th>Severity</th>
+                  <th>Proposed Bug Fix</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Load dynamic error logs -->
               </tbody>
             </table>
           </div>
@@ -237,6 +419,10 @@
       </form>
     </div>
   </div>
+
+  <!-- Excel Export & Chart.js CDNs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <!-- Scripts -->
   <script src="js/app.js"></script>

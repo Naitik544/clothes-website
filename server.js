@@ -6,6 +6,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const xlsx = require('xlsx');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 const db = require('./db');
 const adminIpFilter = require('./middleware/ipFilter');
 require('dotenv').config();
@@ -402,6 +403,301 @@ app.get('/api/orders/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Get Order Invoice (HTML format)
+app.get('/api/orders/:id/invoice', authenticateToken, async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    // Fetch order details
+    const order = await db.get(`
+      SELECT o.*, p.status as payment_status, p.transaction_id, p.method as payment_method
+      FROM orders o
+      LEFT JOIN payments p ON o.id = p.order_id
+      WHERE o.id = ? AND o.customer_id = ?
+    `, [orderId, req.user.id]);
+
+    if (!order) return res.status(404).send('<h1>Order not found</h1>');
+
+    // Fetch order items
+    const items = await db.query(`
+      SELECT oi.*, p.name
+      FROM order_items oi
+      JOIN products p ON oi.product_id = p.id
+      WHERE oi.order_id = ?
+    `, [orderId]);
+
+    // Fetch customer details
+    const customer = await db.get('SELECT name, email, phone FROM customers WHERE id = ?', [req.user.id]);
+
+    const orderDate = new Date(order.created_at).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    // Calculate subtotal
+    let subtotal = 0;
+    let itemsHtml = '';
+    items.forEach((item, index) => {
+      const itemTotal = item.price * item.quantity;
+      subtotal += itemTotal;
+      itemsHtml += `
+        <tr>
+          <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: center;">${index + 1}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>${item.name}</strong><br><span style="font-size: 0.8rem; color: #666;">Size: ${item.size}</span></td>
+          <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">₹${parseFloat(item.price).toFixed(2)}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: center;">${item.quantity}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">₹${itemTotal.toFixed(2)}</td>
+        </tr>
+      `;
+    });
+
+    const shippingFee = subtotal > 999 ? 0 : 60;
+    const discount = subtotal + shippingFee - parseFloat(order.total_amount);
+
+    const invoiceHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice #L2L-INV-${orderId}</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      color: #333;
+      margin: 0;
+      padding: 30px;
+      background-color: #ffffff;
+    }
+    .invoice-box {
+      max-width: 800px;
+      margin: auto;
+      border: 1px solid #eee;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+      padding: 30px;
+      border-radius: 8px;
+    }
+    .invoice-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid hsl(243, 75%, 19%);
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    .brand-logo {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: hsl(243, 75%, 19%);
+    }
+    .brand-logo span {
+      color: hsl(38, 92%, 50%);
+    }
+    .brand-tagline {
+      font-size: 0.8rem;
+      color: #666;
+      margin: 5px 0 0 0;
+    }
+    .invoice-title {
+      text-align: right;
+    }
+    .invoice-title h2 {
+      margin: 0;
+      color: #333;
+      font-size: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .invoice-title p {
+      margin: 5px 0 0 0;
+      font-size: 0.85rem;
+      color: #777;
+    }
+    .invoice-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 30px;
+      font-size: 0.9rem;
+    }
+    .details-card h3 {
+      margin: 0 0 10px 0;
+      font-size: 0.95rem;
+      color: hsl(243, 75%, 19%);
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+      text-transform: uppercase;
+    }
+    .details-card p {
+      margin: 5px 0;
+      line-height: 1.4;
+    }
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+      font-size: 0.9rem;
+    }
+    .items-table th {
+      background-color: #f8f9fa;
+      padding: 10px;
+      font-weight: 700;
+      border-bottom: 2px solid #ddd;
+      color: hsl(243, 75%, 19%);
+    }
+    .summary-box {
+      float: right;
+      width: 300px;
+      margin-bottom: 30px;
+      font-size: 0.9rem;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+    }
+    .summary-row.total {
+      font-weight: 800;
+      font-size: 1.1rem;
+      border-top: 2px solid #eee;
+      padding-top: 10px;
+      margin-top: 5px;
+      color: hsl(243, 75%, 19%);
+    }
+    .invoice-footer {
+      clear: both;
+      border-top: 1px solid #eee;
+      padding-top: 20px;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #888;
+      line-height: 1.5;
+    }
+    .print-btn {
+      display: block;
+      width: fit-content;
+      margin: 20px auto 0 auto;
+      background-color: hsl(243, 75%, 19%);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+    }
+    @media print {
+      .print-btn {
+        display: none;
+      }
+      body {
+        padding: 0;
+      }
+      .invoice-box {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="invoice-box">
+    <!-- Header -->
+    <div class="invoice-header">
+      <div>
+        <div class="brand-logo">🛍️ Little <span>to Large</span></div>
+        <p class="brand-tagline">Premium Family Wardrobe E-Store</p>
+      </div>
+      <div class="invoice-title">
+        <h2>TAX INVOICE</h2>
+        <p>Invoice No: <strong>#L2L-INV-${orderId}</strong></p>
+        <p>Date: ${orderDate}</p>
+      </div>
+    </div>
+
+    <!-- Billing details -->
+    <div class="invoice-details">
+      <div class="details-card">
+        <h3>Customer Details</h3>
+        <p><strong>Name:</strong> ${customer.name}</p>
+        <p><strong>Email:</strong> ${customer.email}</p>
+        <p><strong>Phone:</strong> +91 ${customer.phone}</p>
+      </div>
+      <div class="details-card">
+        <h3>Delivery Address</h3>
+        <p>${order.shipping_address}</p>
+      </div>
+    </div>
+
+    <!-- Items list -->
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th style="width: 50px;">S.No</th>
+          <th style="text-align: left;">Product Details</th>
+          <th style="text-align: right; width: 120px;">Unit Price</th>
+          <th style="width: 80px;">Qty</th>
+          <th style="text-align: right; width: 120px;">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${itemsHtml}
+      </tbody>
+    </table>
+
+    <!-- Pricing summary -->
+    <div class="summary-box">
+      <div class="summary-row">
+        <span>Subtotal:</span>
+        <span>₹${subtotal.toFixed(2)}</span>
+      </div>
+      <div class="summary-row">
+        <span>Promo Discount:</span>
+        <span style="color: #10b981;">- ₹${discount.toFixed(2)}</span>
+      </div>
+      <div class="summary-row">
+        <span>Shipping Fee:</span>
+        <span>${shippingFee === 0 ? 'FREE' : '₹' + shippingFee.toFixed(2)}</span>
+      </div>
+      <div class="summary-row total">
+        <span>Grand Total:</span>
+        <span>₹${parseFloat(order.total_amount).toFixed(2)}</span>
+      </div>
+    </div>
+
+    <div style="clear: both; margin-bottom: 20px;"></div>
+
+    <!-- Payment info -->
+    <div style="background-color: #fafafa; border: 1px solid #eee; border-radius: 6px; padding: 15px; margin-bottom: 30px; font-size: 0.85rem; line-height: 1.4;">
+      <p style="margin: 0 0 5px 0;"><strong>Payment Method:</strong> ${order.payment_method} (${order.payment_status})</p>
+      ${order.transaction_id ? `<p style="margin: 0;"><strong>Transaction ID:</strong> <code>${order.transaction_id}</code></p>` : ''}
+    </div>
+
+    <!-- Footer -->
+    <div class="invoice-footer">
+      <p>Thank you for shopping with Little to Large! We hope your family loves the new wardrobe styles.</p>
+      <p><strong>Return Policy:</strong> Garments can be returned or exchanged within 7 days of delivery. Keep original tags intact.</p>
+      <p>Need help? Contact our support team at <strong>support@littlelarge.in</strong> or call <strong>+91 9988776655</strong>.</p>
+      <button class="print-btn" onclick="window.print()">Print Invoice</button>
+    </div>
+  </div>
+
+</body>
+</html>
+    `;
+
+    res.send(invoiceHtml);
+  } catch (err) {
+    res.status(500).send(`<h1>Failed to generate invoice</h1><p>${err.message}</p>`);
+  }
+});
+
+
 /* ==========================================================================
    REVIEWS & WISHLIST ENDPOINTS
    ========================================================================== */
@@ -520,6 +816,12 @@ app.get('/api/admin/analytics', adminIpFilter, authenticateAdmin, async (req, re
       { month: 'Jun', sales: (totalSales.sales || 7795.00) }
     ];
 
+    const categoryBreakdown = await db.query(`
+      SELECT category, COUNT(*) as count, SUM(stock) as total_stock, SUM(price * stock) as total_value
+      FROM products
+      GROUP BY category
+    `);
+
     res.json({
       success: true,
       metrics: {
@@ -529,7 +831,8 @@ app.get('/api/admin/analytics', adminIpFilter, authenticateAdmin, async (req, re
         totalCustomers: customersCount.count - 1, // minus admin account
         lowStock: lowStock
       },
-      monthlySales
+      monthlySales,
+      categoryBreakdown
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -682,10 +985,298 @@ app.get('/api/admin/export-excel', adminIpFilter, authenticateAdmin, async (req,
   }
 });
 
-// Global Error Handler
-app.use((err, req, res, next) => {
-  console.error('Express Error:', err.message);
-  res.status(500).json({ success: false, message: err.message || 'Internal Server Error' });
+/* ==========================================================================
+   AI CHAT ASSISTANT & LLM CONTEXTUAL SERVICE
+   ========================================================================== */
+
+app.post('/api/chat', async (req, res) => {
+  const { message } = req.body;
+  if (!message) return res.status(400).json({ success: false, message: 'Message is required' });
+
+  // 1. Fetch customer preferences and shopping history if logged in
+  let historySummary = 'No past order history.';
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      const orders = await db.query(
+        `SELECT p.name, p.category 
+         FROM orders o 
+         JOIN order_items oi ON o.id = oi.order_id 
+         JOIN products p ON oi.product_id = p.id
+         WHERE o.customer_id = ? LIMIT 5`,
+        [decoded.id]
+      );
+      if (orders.length > 0) {
+        historySummary = `Bought previously: ` + orders.map(o => `${o.name} (${o.category})`).join(', ');
+      }
+    } catch (e) {
+      // Token decode error, proceed as guest
+    }
+  }
+
+  // 2. Fetch inventory catalog data
+  let catalogSummary = '';
+  try {
+    const products = await db.query('SELECT id, name, category, price FROM products LIMIT 6');
+    catalogSummary = products.map(p => `#${p.id} ${p.name} (Cat: ${p.category}, Price: ₹${p.price})`).join('; ');
+  } catch (err) {
+    // Ignore catalog fetch failures
+  }
+
+  const geminiKey = process.env.GEMINI_API_KEY;
+  if (geminiKey && geminiKey !== 'YOUR_GEMINI_API_KEY') {
+    try {
+      const genAI = new GoogleGenerativeAI(geminiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      
+      const prompt = `
+        You are "Little to Large Assistant", a friendly AI style consultant.
+        Customer Profile History: ${historySummary}
+        Available Store Catalog: ${catalogSummary}
+        
+        Customer says: "${message}"
+        Provide a customized response. Recommend products from our catalog when relevant.
+        Keep it concise, under 3 paragraphs. Do not mention code placeholders.
+      `;
+      
+      const result = await model.generateContent(prompt);
+      const responseText = result.response.text();
+      return res.json({ success: true, response: responseText });
+    } catch (err) {
+      console.error('Gemini API Error:', err.message);
+    }
+  }
+
+  // Local sandbox fallback mode
+  const query = message.toLowerCase();
+  let reply = `🤖 [Local Assistant Sandbox Mode - Configure GEMINI_API_KEY in .env for full AI] \n\n`;
+  if (query.includes('ethnic') || query.includes('kurta') || query.includes('saree')) {
+    reply += `✨ We have beautiful ethnic collections like "Men's Saffron Silk Kurta" and "Women's Emerald Banarasi Saree". Check out the ethnic catalog!`;
+  } else if (query.includes('kids') || query.includes('baby') || query.includes('boy') || query.includes('girl')) {
+    reply += `👶 For kids, our "Cotton Dungaree Set" and "Girl's Lehenga Choli Set" are very popular family selections!`;
+  } else if (query.includes('offer') || query.includes('discount') || query.includes('coupon')) {
+    reply += `🏷️ Use coupon code **WELCOME10** for 10% off, or **FAMILY40** for 40% off accessories!`;
+  } else if (query.includes('shipping') || query.includes('delivery')) {
+    reply += `🚚 We offer free shipping on orders above ₹999. Normal delivery takes 3-5 business days.`;
+  } else {
+    reply += `Hello! I'm your fashion consultant. I see your history matches: "${historySummary}". Tell me, are you shopping for Men, Women, or Kids outfits today?`;
+  }
+
+  return res.json({ success: true, response: reply });
+});
+
+/* ==========================================================================
+   COLLABORATIVE RECOMMENDATIONS ENGINE
+   ========================================================================== */
+
+app.get('/api/products/:id/recommendations', async (req, res) => {
+  const prodId = parseInt(req.params.id);
+  try {
+    const product = await db.get('SELECT category, subcategory FROM products WHERE id = ?', [prodId]);
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+
+    // Recommendation logic: find other products in the same category (limit 4)
+    const recommendations = await db.query(
+      `SELECT * FROM products 
+       WHERE id != ? AND category = ? 
+       ORDER BY rating DESC LIMIT 4`,
+      [prodId, product.category]
+    );
+
+    res.json({ success: true, products: recommendations });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+/* ==========================================================================
+   DYNAMIC PROMOTIONS & BANNER CONFIGURATION
+   ========================================================================== */
+
+// Get Active Promotions
+app.get('/api/promotions', async (req, res) => {
+  try {
+    const now = new Date().toISOString();
+    const activePromos = await db.query(
+      `SELECT * FROM promotions 
+       WHERE start_date <= ? AND end_date >= ? AND status = 'active'
+       ORDER BY priority DESC`,
+      [now, now]
+    );
+    res.json({ success: true, promotions: activePromos });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Create Promotion (Admin only)
+app.post('/api/promotions', adminIpFilter, authenticateAdmin, async (req, res) => {
+  const { title, subtitle, bg_color, media_url, link_url, start_date, end_date, priority } = req.body;
+  if (!title || !start_date || !end_date) {
+    return res.status(400).json({ success: false, message: 'Title and dates are required' });
+  }
+  try {
+    await db.run(
+      `INSERT INTO promotions (title, subtitle, bg_color, media_url, link_url, start_date, end_date, priority, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
+      [title, subtitle, bg_color || 'var(--primary)', media_url, link_url, start_date, end_date, priority || 0]
+    );
+    res.json({ success: true, message: 'Promotion added successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Delete Promotion (Admin only)
+app.delete('/api/promotions/:id', adminIpFilter, authenticateAdmin, async (req, res) => {
+  try {
+    await db.run('DELETE FROM promotions WHERE id = ?', [req.params.id]);
+    res.json({ success: true, message: 'Promotion deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Get Homepage settings
+app.get('/api/homepage-settings', async (req, res) => {
+  try {
+    const settings = await db.get('SELECT * FROM homepage_settings WHERE id = 1');
+    res.json({ success: true, settings });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Update Homepage settings (Admin only)
+app.put('/api/homepage-settings', adminIpFilter, authenticateAdmin, async (req, res) => {
+  const { hero_title, hero_subtitle, media_url, media_type, festival_mode } = req.body;
+  if (!hero_title) return res.status(400).json({ success: false, message: 'Hero title is required' });
+  try {
+    await db.run(
+      `UPDATE homepage_settings 
+       SET hero_title = ?, hero_subtitle = ?, media_url = ?, media_type = ?, festival_mode = ?, updated_at = CURRENT_TIMESTAMP
+       WHERE id = 1`,
+      [hero_title, hero_subtitle, media_url, media_type || 'image', festival_mode || 'none']
+    );
+    res.json({ success: true, message: 'Homepage hero updated successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+/* ==========================================================================
+   AUDIENCE SEGMENTATION & ERROR LOGS (ADMIN-ONLY)
+   ========================================================================== */
+
+// Get Audience Segments
+app.get('/api/admin/segments', adminIpFilter, authenticateAdmin, async (req, res) => {
+  try {
+    const ethnicCount = await db.get(`
+      SELECT COUNT(DISTINCT orders.customer_id) as count
+      FROM orders
+      JOIN order_items ON orders.id = order_items.order_id
+      JOIN products ON order_items.product_id = products.id
+      WHERE products.subcategory = 'Ethnic'
+    `);
+
+    const spenderCount = await db.get(`
+      SELECT COUNT(DISTINCT customer_id) as count
+      FROM orders
+      WHERE total_amount >= 3000
+    `);
+
+    const repeatCount = await db.get(`
+      SELECT COUNT(*) as count FROM (
+        SELECT customer_id FROM orders GROUP BY customer_id HAVING COUNT(id) > 1
+      ) as t
+    `);
+
+    res.json({
+      success: true,
+      segments: {
+        ethnicFans: ethnicCount.count || 0,
+        highSpenders: spenderCount.count || 0,
+        repeatBuyers: repeatCount.count || 0
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Get System Error Logs
+app.get('/api/admin/errors', adminIpFilter, authenticateAdmin, async (req, res) => {
+  try {
+    const logs = await db.query('SELECT * FROM error_logs ORDER BY created_at DESC LIMIT 30');
+    res.json({ success: true, logs });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Dynamic XML Sitemap Generator
+app.post('/api/admin/seo-generate', adminIpFilter, authenticateAdmin, async (req, res) => {
+  try {
+    const products = await db.query('SELECT id FROM products');
+    let sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+    
+    // Add static html routes
+    const pages = ['index.html', 'products.html', 'cart.html', 'login.html', 'account.html', 'offers.html', 'about.html'];
+    pages.forEach(p => {
+      sitemap += `  <url>\n    <loc>https://little-to-large.onrender.com/${p}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+    });
+
+    // Add dynamic products
+    products.forEach(p => {
+      sitemap += `  <url>\n    <loc>https://little-to-large.onrender.com/product-detail.html?id=${p.id}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+    });
+
+    sitemap += `</urlset>\n`;
+
+    fs.writeFileSync(path.join(__dirname, 'public', 'sitemap.xml'), sitemap, 'utf8');
+    fs.writeFileSync(path.join(__dirname, 'public', 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: https://little-to-large.onrender.com/sitemap.xml\n`, 'utf8');
+
+    res.json({ success: true, message: 'sitemap.xml and robots.txt compiled successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+/* ==========================================================================
+   GLOBAL ERROR BOUNDARY & DEVELOPER ALERTS MIDDLEWARE
+   ========================================================================== */
+
+app.use(async (err, req, res, next) => {
+  console.error('[SYSTEM EXCEPTION]:', err.message);
+  try {
+    let fix = 'Check database query syntax, input payload values, or network connections.';
+    if (err.message.includes('unique')) fix = 'Unique key constraint violated. The input identifier already exists.';
+    if (err.message.includes('null')) fix = 'Required column contains null values. Ensure all fields are filled.';
+
+    // Insert log to database
+    await db.run(
+      `INSERT INTO error_logs (message, stack_trace, path, severity, status, suggested_fix)
+       VALUES (?, ?, ?, 'critical', 'new', ?)`,
+      [err.message, err.stack || '', req.originalUrl || '', fix]
+    );
+
+    // Simulated alerts logger to developer (in logs)
+    console.log(`=========================================`);
+    console.log(`🚨 ALERT DISPATCHED TO DEV TEAM!`);
+    console.log(`Path: ${req.originalUrl}`);
+    console.log(`Message: ${err.message}`);
+    console.log(`Proposed Fix: ${fix}`);
+    console.log(`=========================================`);
+  } catch (logErr) {
+    console.error('Failed to log error to DB error_logs:', logErr.message);
+  }
+
+  res.status(500).json({ 
+    success: false, 
+    message: 'An internal server error occurred. The development team has been automatically alerted!' 
+  });
 });
 
 // Connect DB and Start Server
