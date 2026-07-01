@@ -1,0 +1,258 @@
+/* ==========================================================================
+   LITTLE TO LARGE - PREMIUM FASHION UX & ANIMATIONS ENGINE
+   ========================================================================== */
+
+/* 1. SKELETON SHIMMER LOADER */
+.skeleton-box {
+  position: relative;
+  overflow: hidden;
+  background-color: #e5e7eb;
+  border-radius: 8px;
+}
+
+.skeleton-box::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 20%,
+    rgba(255, 255, 255, 0.6) 60%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 1.6s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-img {
+  height: 250px;
+  width: 100%;
+  border-radius: var(--radius-lg);
+  margin-bottom: 1rem;
+}
+
+.skeleton-title {
+  height: 20px;
+  width: 80%;
+  margin-bottom: 0.6rem;
+}
+
+.skeleton-text {
+  height: 14px;
+  width: 60%;
+  margin-bottom: 1rem;
+}
+
+.skeleton-btn {
+  height: 40px;
+  width: 100%;
+  border-radius: 8px;
+}
+
+/* 2. GLOBAL PROGRESS BAR (Apple / Nike style navigation) */
+#globalProgressBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0;
+  background: linear-gradient(90deg, var(--marigold) 0%, var(--accent) 50%, var(--success) 100%);
+  z-index: 10000;
+  transition: width 0.4s cubic-bezier(0.1, 0.8, 0.3, 1), opacity 0.2s ease;
+  box-shadow: 0 1px 8px rgba(217, 119, 6, 0.4);
+}
+
+/* 3. GLASSMORPHISM GLOBAL LOADING OVERLAY */
+.global-loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.global-loader-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.loader-brand {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  animation: logoPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes logoPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.loader-brand span {
+  color: var(--marigold);
+}
+
+/* Motion Clothing Icon */
+.floating-clothing-icon {
+  font-size: 2rem;
+  color: var(--primary);
+  animation: floatClothing 2s ease-in-out infinite;
+}
+
+@keyframes floatClothing {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(15deg); }
+}
+
+/* 4. PREMIUM BUTTON STATE LOADING SPINNERS */
+.btn-loading-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: btnSpinner 0.6s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+@keyframes btnSpinner {
+  to { transform: rotate(360deg); }
+}
+
+.btn-success-state {
+  background-color: var(--success) !important;
+  border-color: var(--success) !important;
+  color: #fff !important;
+}
+
+.btn-error-state {
+  background-color: var(--danger) !important;
+  border-color: var(--danger) !important;
+  color: #fff !important;
+}
+
+/* 5. FLY-TO-CART PARABOLIC THUMBNAILS */
+.fly-item {
+  position: fixed;
+  z-index: 9999;
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  object-fit: contain;
+  background-color: #fff;
+  border: 2px solid var(--marigold);
+  box-shadow: var(--shadow-md);
+  pointer-events: none;
+  transition: transform 0.8s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.8s ease;
+}
+
+/* 6. CART ICON BOUNCE GLOW GLIDE */
+.cart-badge-bounce {
+  animation: badgeBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.cart-icon-glow {
+  box-shadow: 0 0 15px var(--marigold) !important;
+  transition: box-shadow 0.3s ease;
+}
+
+@keyframes badgeBounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+
+/* 7. PREMIUM MICRO-INTERACTIONS */
+/* Card Hover Tilt Lift */
+.tilt-hover {
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.4s ease;
+}
+
+.tilt-hover:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Material Click Ripple Effect */
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-ripple .ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(0);
+  animation: rippleAnimation 0.5s linear;
+  pointer-events: none;
+}
+
+@keyframes rippleAnimation {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* 8. OFFLINE WARNING BANNER */
+.offline-banner {
+  position: fixed;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10001;
+  background-color: var(--danger);
+  color: #fff;
+  padding: 0.8rem 2rem;
+  font-weight: 700;
+  border-radius: 0 0 12px 12px;
+  box-shadow: var(--shadow-md);
+  transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.offline-banner.active {
+  top: 0;
+}
+
+/* 9. PROGRESSIVE IMAGE LAZY FADE */
+.lazy-image {
+  filter: blur(8px);
+  transition: filter 0.5s ease, opacity 0.5s ease;
+  opacity: 0.6;
+}
+
+.lazy-image.loaded {
+  filter: blur(0);
+  opacity: 1;
+}

@@ -212,31 +212,38 @@ function renderHeaderFooter() {
   const footerTag = document.querySelector('footer');
 
   if (headerTag) {
+    const avatarImg = user && user.avatar_url ? user.avatar_url : 'https://cdn-icons-png.flaticon.com/512/147/147144.png';
     headerTag.innerHTML = `
       <div class="top-bar">
         🚚 Free Shipping across India on orders above ₹999 | <span>Festive Sale: Up to 40% OFF</span>
       </div>
       <div class="container navbar">
+        <button class="hamburger-btn" onclick="toggleNavDrawer()"><i class="fas fa-bars"></i></button>
+        
         <a href="index.html" class="logo">
           🛍️ Little <span>to Large</span>
         </a>
+        
         <nav class="nav-links">
           <a href="index.html">Home</a>
           <a href="products.html">Shop All</a>
           <a href="products.html?category=Men">Men</a>
           <a href="products.html?category=Women">Women</a>
           <a href="products.html?category=Kids">Kids</a>
-          <a href="offers.html">Offers</a>
-          <a href="about.html">About Us</a>
+          <a href="products.html?style=Ethnic">Festival Wear</a>
+          <a href="products.html?sort=newest">New Trends</a>
         </nav>
+        
         <div class="nav-actions">
+          <button class="mobile-search-toggle" onclick="toggleMobileSearch()"><i class="fas fa-search"></i></button>
+          
           <form class="search-bar" action="products.html" method="GET">
-            <input type="text" name="search" placeholder="Search ethnic, western, kids..." required>
+            <input type="text" name="search" placeholder="Search clothes..." required>
             <button type="submit"><i class="fas fa-search"></i></button>
           </form>
           
-          <a href="account.html" class="action-icon" title="My Account">
-            <i class="far fa-user"></i>
+          <a href="account.html" class="action-icon" title="My Account" style="display:flex; align-items:center">
+            ${user ? `<img src="${avatarImg}" class="header-avatar" alt="Avatar">` : `<i class="far fa-user"></i>`}
           </a>
           
           <a href="account.html?tab=wishlist" class="action-icon" title="Wishlist">
@@ -248,9 +255,33 @@ function renderHeaderFooter() {
             <span class="badge cart-badge">0</span>
           </a>
 
-          ${isAdmin ? `<a href="admin.html" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Admin Portal</a>` : ''}
+          ${isAdmin ? `<a href="admin.html" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Admin</a>` : ''}
           ${user ? `<button onclick="logout()" class="btn btn-accent" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Logout</button>` : `<a href="login.html" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Login</a>`}
         </div>
+      </div>
+      
+      <!-- Mobile Search Container -->
+      <div class="mobile-search-container" id="mobileSearchContainer">
+        <form style="display:flex; width:100%; gap:10px" action="products.html" method="GET">
+          <input type="text" name="search" placeholder="Search clothes..." style="flex:1; padding:0.5rem 1rem; border:1px solid var(--border-color); border-radius:50px" required>
+          <button type="submit" class="btn btn-primary" style="padding:0.5rem 1.2rem; border-radius:50px"><i class="fas fa-search"></i></button>
+        </form>
+      </div>
+
+      <!-- Slide-out Drawer Overlay & Container for Mobile -->
+      <div class="drawer-overlay" id="drawerOverlay" onclick="toggleNavDrawer()"></div>
+      <div class="nav-drawer" id="navDrawer">
+        <button class="drawer-close" onclick="toggleNavDrawer()"><i class="fas fa-times"></i></button>
+        <h3 style="font-weight:800; border-bottom:1px solid #eee; padding-bottom:8px">Categories</h3>
+        <a href="index.html" onclick="toggleNavDrawer()">Home</a>
+        <a href="products.html" onclick="toggleNavDrawer()">Shop All</a>
+        <a href="products.html?category=Men" onclick="toggleNavDrawer()">Men's Wear</a>
+        <a href="products.html?category=Women" onclick="toggleNavDrawer()">Women's Wear</a>
+        <a href="products.html?category=Kids" onclick="toggleNavDrawer()">Children's Wear</a>
+        <a href="products.html?style=Ethnic" onclick="toggleNavDrawer()">Festival Wear</a>
+        <a href="products.html?sort=newest" onclick="toggleNavDrawer()">New Trends</a>
+        <a href="offers.html" onclick="toggleNavDrawer()">Promo Offers</a>
+        <a href="about.html" onclick="toggleNavDrawer()">About Us</a>
       </div>
     `;
   }
@@ -317,4 +348,20 @@ function setupChatbotUI() {
   script.src = 'https://www.noupe.com/embed/019ef86078af765e89d9a700fd6f73d533b6.js';
   script.async = true;
   document.head.appendChild(script);
+}
+
+function toggleNavDrawer() {
+  const drawer = document.getElementById('navDrawer');
+  const overlay = document.getElementById('drawerOverlay');
+  if (drawer && overlay) {
+    drawer.classList.toggle('active');
+    overlay.classList.toggle('active');
+  }
+}
+
+function toggleMobileSearch() {
+  const searchContainer = document.getElementById('mobileSearchContainer');
+  if (searchContainer) {
+    searchContainer.classList.toggle('active');
+  }
 }

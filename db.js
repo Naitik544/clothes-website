@@ -174,6 +174,12 @@ async function createTables() {
       city VARCHAR(100),
       state VARCHAR(100),
       pincode VARCHAR(10),
+      avatar_url VARCHAR(255),
+      phone_alt VARCHAR(15),
+      address_line_2 VARCHAR(255),
+      city_2 VARCHAR(100),
+      state_2 VARCHAR(100),
+      pincode_2 VARCHAR(10),
       created_at ${datetimeType} DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -192,6 +198,11 @@ async function createTables() {
       size_variants VARCHAR(100),
       image_urls ${textType},
       rating DECIMAL(3, 2) DEFAULT 0.00,
+      video_url VARCHAR(255),
+      fabric VARCHAR(100),
+      color VARCHAR(100),
+      style VARCHAR(100),
+      gender VARCHAR(50),
       created_at ${datetimeType} DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -313,6 +324,30 @@ async function createTables() {
       created_at ${datetimeType} DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Alter tables to add new columns for user settings and dynamic product details
+  const alterQueries = [
+    `ALTER TABLE customers ADD COLUMN phone_alt VARCHAR(15)`,
+    `ALTER TABLE customers ADD COLUMN address_line_2 VARCHAR(255)`,
+    `ALTER TABLE customers ADD COLUMN city_2 VARCHAR(100)`,
+    `ALTER TABLE customers ADD COLUMN state_2 VARCHAR(100)`,
+    `ALTER TABLE customers ADD COLUMN pincode_2 VARCHAR(10)`,
+    `ALTER TABLE customers ADD COLUMN avatar_url VARCHAR(255)`,
+    
+    `ALTER TABLE products ADD COLUMN video_url VARCHAR(255)`,
+    `ALTER TABLE products ADD COLUMN fabric VARCHAR(100)`,
+    `ALTER TABLE products ADD COLUMN color VARCHAR(100)`,
+    `ALTER TABLE products ADD COLUMN style VARCHAR(100)`,
+    `ALTER TABLE products ADD COLUMN gender VARCHAR(50)`
+  ];
+
+  for (const q of alterQueries) {
+    try {
+      await run(q);
+    } catch (e) {
+      // Ignore if columns already exist
+    }
+  }
 }
 
 async function seedDatabase() {
@@ -582,6 +617,17 @@ async function seedDatabase() {
       5,
       'active'
     ]);
+  }
+  
+  // Backfill products details if null
+  try {
+    await run(`UPDATE products SET fabric = 'Cotton', color = 'Saffron', style = 'Ethnic', gender = 'Men', video_url = 'https://www.w3schools.com/html/mov_bbb.mp4' WHERE name LIKE '%kurta%'`);
+    await run(`UPDATE products SET fabric = 'Cotton', color = 'Indigo', style = 'Western', gender = 'Men', video_url = 'https://www.w3schools.com/html/mov_bbb.mp4' WHERE name LIKE '%denim%'`);
+    await run(`UPDATE products SET fabric = 'Silk', color = 'Emerald', style = 'Ethnic', gender = 'Women', video_url = 'https://www.w3schools.com/html/mov_bbb.mp4' WHERE name LIKE '%saree%'`);
+    await run(`UPDATE products SET fabric = 'Cotton', color = 'Blue', style = 'Western', gender = 'Kids', video_url = 'https://www.w3schools.com/html/mov_bbb.mp4' WHERE name LIKE '%shorts%'`);
+    await run(`UPDATE products SET fabric = 'Cotton', color = 'Red', style = 'Ethnic', gender = 'Women', video_url = 'https://www.w3schools.com/html/mov_bbb.mp4' WHERE fabric IS NULL`);
+  } catch (e) {
+    console.error('Failed to backfill product values:', e.message);
   }
 }
 

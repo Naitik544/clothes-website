@@ -56,6 +56,7 @@
       border-color: var(--primary);
     }
   </style>
+  <link rel="stylesheet" href="css/ux-premium.css">
 </head>
 <body>
 
@@ -94,6 +95,20 @@
           Manage Profile Address
         </h2>
         <form id="profileUpdateForm" style="display:flex; flex-direction:column; gap:1.2rem">
+          <!-- Avatar Picker Selector -->
+          <div style="margin-bottom:0.5rem">
+            <label style="font-size:0.8rem; font-weight:700; display:block; margin-bottom:8px">Select Profile Avatar</label>
+            <div class="avatar-picker-grid" id="avatarPickerGrid">
+              <img src="https://cdn-icons-png.flaticon.com/512/147/147144.png" class="avatar-option" data-url="https://cdn-icons-png.flaticon.com/512/147/147144.png" alt="Male 1" onclick="selectAvatarOption(this)">
+              <img src="https://cdn-icons-png.flaticon.com/512/4140/4140048.png" class="avatar-option" data-url="https://cdn-icons-png.flaticon.com/512/4140/4140048.png" alt="Male 2" onclick="selectAvatarOption(this)">
+              <img src="https://cdn-icons-png.flaticon.com/512/1154/1154448.png" class="avatar-option" data-url="https://cdn-icons-png.flaticon.com/512/1154/1154448.png" alt="Female 1" onclick="selectAvatarOption(this)">
+              <img src="https://cdn-icons-png.flaticon.com/512/163/163810.png" class="avatar-option" data-url="https://cdn-icons-png.flaticon.com/512/163/163810.png" alt="Female 2" onclick="selectAvatarOption(this)">
+              <img src="https://cdn-icons-png.flaticon.com/512/1154/1154472.png" class="avatar-option" data-url="https://cdn-icons-png.flaticon.com/512/1154/1154472.png" alt="Child 1" onclick="selectAvatarOption(this)">
+              <img src="https://cdn-icons-png.flaticon.com/512/145/145843.png" class="avatar-option" data-url="https://cdn-icons-png.flaticon.com/512/145/145843.png" alt="Child 2" onclick="selectAvatarOption(this)">
+            </div>
+            <input type="hidden" id="profAvatarUrl" value="">
+          </div>
+
           <div style="display:flex; gap:1rem">
             <div style="flex:1">
               <label style="font-size:0.8rem; font-weight:700">Full Name</label>
@@ -108,8 +123,10 @@
             <label style="font-size:0.8rem; font-weight:700">Email Address (Read-only)</label>
             <input type="email" id="profEmail" class="form-input" style="background:#f4f4f4; color:#888" readonly>
           </div>
+          
+          <h3 style="font-size:0.95rem; font-weight:800; border-bottom:1px solid #eee; padding-bottom:4px; margin-top:8px">Primary Address</h3>
           <div>
-            <label style="font-size:0.8rem; font-weight:700">Address Line</label>
+            <label style="font-size:0.8rem; font-weight:700">Address Line 1</label>
             <input type="text" id="profAddress" class="form-input" placeholder="Flat No, Building, Street">
           </div>
           <div style="display:flex; gap:1rem">
@@ -126,7 +143,33 @@
               <input type="text" id="profPincode" class="form-input" placeholder="Pincode" maxlength="6">
             </div>
           </div>
-          <button type="submit" class="btn btn-primary" style="align-self: flex-start; padding: 0.8rem 2rem;">Save Changes</button>
+
+          <h3 style="font-size:0.95rem; font-weight:800; border-bottom:1px solid #eee; padding-bottom:4px; margin-top:8px">Alternative Contact & Shipping Address</h3>
+          <div style="display:flex; gap:1rem">
+            <div style="flex:1">
+              <label style="font-size:0.8rem; font-weight:700">Alternative Phone</label>
+              <input type="tel" id="profPhoneAlt" class="form-input" placeholder="Alternative contact number">
+            </div>
+            <div style="flex:1">
+              <label style="font-size:0.8rem; font-weight:700">Address Line 2 (Alt Shipping)</label>
+              <input type="text" id="profAddressAlt" class="form-input" placeholder="Flat No, Building, Street 2">
+            </div>
+          </div>
+          <div style="display:flex; gap:1rem">
+            <div style="flex:1">
+              <label style="font-size:0.8rem; font-weight:700">City 2</label>
+              <input type="text" id="profCityAlt" class="form-input" placeholder="City 2">
+            </div>
+            <div style="flex:1">
+              <label style="font-size:0.8rem; font-weight:700">State 2</label>
+              <input type="text" id="profStateAlt" class="form-input" placeholder="State 2">
+            </div>
+            <div style="flex:1">
+              <label style="font-size:0.8rem; font-weight:700">Pincode 2</label>
+              <input type="text" id="profPincodeAlt" class="form-input" placeholder="Pincode 2" maxlength="6">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="align-self: flex-start; padding: 0.8rem 2rem; cursor:pointer">Save Changes</button>
         </form>
       </div>
 
@@ -159,6 +202,7 @@
   <footer></footer>
 
   <!-- Scripts -->
+  <script src="js/ux-premium.js"></script>
   <script src="js/app.js"></script>
   <script src="js/chatbot.js"></script>
   <script>
@@ -226,10 +270,34 @@
           document.getElementById('profCity').value = u.city || '';
           document.getElementById('profState').value = u.state || '';
           document.getElementById('profPincode').value = u.pincode || '';
+
+          // Avatar sync
+          const userAvatar = u.avatar_url || '';
+          document.getElementById('profAvatarUrl').value = userAvatar;
+          document.querySelectorAll('.avatar-option').forEach(el => {
+            if (el.getAttribute('data-url') === userAvatar) {
+              el.classList.add('active');
+            } else {
+              el.classList.remove('active');
+            }
+          });
+
+          // Alternate values
+          document.getElementById('profPhoneAlt').value = u.phone_alt || '';
+          document.getElementById('profAddressAlt').value = u.address_line_2 || '';
+          document.getElementById('profCityAlt').value = u.city_2 || '';
+          document.getElementById('profStateAlt').value = u.state_2 || '';
+          document.getElementById('profPincodeAlt').value = u.pincode_2 || '';
         }
       } catch (err) {
         showToast('Error loading profile details', 'error');
       }
+    }
+
+    function selectAvatarOption(img) {
+      document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('active'));
+      img.classList.add('active');
+      document.getElementById('profAvatarUrl').value = img.getAttribute('data-url');
     }
 
     // Save profile changes
@@ -242,7 +310,13 @@
         address_line: document.getElementById('profAddress').value.trim(),
         city: document.getElementById('profCity').value.trim(),
         state: document.getElementById('profState').value.trim(),
-        pincode: document.getElementById('profPincode').value.trim()
+        pincode: document.getElementById('profPincode').value.trim(),
+        avatar_url: document.getElementById('profAvatarUrl').value,
+        phone_alt: document.getElementById('profPhoneAlt').value.trim(),
+        address_line_2: document.getElementById('profAddressAlt').value.trim(),
+        city_2: document.getElementById('profCityAlt').value.trim(),
+        state_2: document.getElementById('profStateAlt').value.trim(),
+        pincode_2: document.getElementById('profPincodeAlt').value.trim()
       };
 
       try {
@@ -258,6 +332,11 @@
         if (data.success) {
           showToast('Profile details updated successfully!');
           loadUserProfile();
+          // Update header avatar if present
+          const headerAv = document.querySelector('.header-avatar');
+          if (headerAv) {
+            headerAv.src = payload.avatar_url || 'https://cdn-icons-png.flaticon.com/512/147/147144.png';
+          }
         } else {
           showToast(data.message, 'error');
         }

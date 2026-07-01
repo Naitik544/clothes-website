@@ -40,12 +40,12 @@ const storage = multer.diskStorage({
 const upload = multer({ 
   storage: storage,
   fileFilter: (req, file, cb) => {
-    const allowed = ['.jpg', '.jpeg', '.png', '.webp'];
+    const allowed = ['.jpg', '.jpeg', '.png', '.webp', '.svg'];
     const ext = path.extname(file.originalname).toLowerCase();
     if (allowed.includes(ext)) {
       cb(null, true);
     } else {
-      cb(new Error('Only images (.jpg, .jpeg, .png, .webp) are allowed!'));
+      cb(new Error('Only images (.jpg, .jpeg, .png, .webp, .svg) are allowed!'));
     }
   }
 });
@@ -217,7 +217,7 @@ app.post('/api/auth/otp-verify', async (req, res) => {
 // Get Current User Profile
 app.get('/api/auth/me', authenticateToken, async (req, res) => {
   try {
-    const user = await db.get('SELECT id, name, email, phone, address_line, city, state, pincode, created_at FROM customers WHERE id = ?', [req.user.id]);
+    const user = await db.get('SELECT id, name, email, phone, address_line, city, state, pincode, avatar_url, phone_alt, address_line_2, city_2, state_2, pincode_2, created_at FROM customers WHERE id = ?', [req.user.id]);
     res.json({ success: true, user });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -226,13 +226,14 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
 
 // Update Profile
 app.put('/api/auth/me', authenticateToken, async (req, res) => {
-  const { name, phone, address_line, city, state, pincode } = req.body;
+  const { name, phone, address_line, city, state, pincode, avatar_url, phone_alt, address_line_2, city_2, state_2, pincode_2 } = req.body;
   try {
     await db.run(`
       UPDATE customers 
-      SET name = ?, phone = ?, address_line = ?, city = ?, state = ?, pincode = ?
+      SET name = ?, phone = ?, address_line = ?, city = ?, state = ?, pincode = ?,
+          avatar_url = ?, phone_alt = ?, address_line_2 = ?, city_2 = ?, state_2 = ?, pincode_2 = ?
       WHERE id = ?
-    `, [name, phone, address_line, city, state, pincode, req.user.id]);
+    `, [name, phone, address_line, city, state, pincode, avatar_url, phone_alt, address_line_2, city_2, state_2, pincode_2, req.user.id]);
     res.json({ success: true, message: 'Profile updated successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -245,7 +246,7 @@ app.put('/api/auth/me', authenticateToken, async (req, res) => {
 
 // Get all products (with rich filtering & search)
 app.get('/api/products', async (req, res) => {
-  const { category, subcategory, search, size, minPrice, maxPrice, sort } = req.query;
+  const { category, subcategory, search, size, minPrice, maxPrice, sort, fabric, color, style, gender } = req.query;
   
   let sql = 'SELECT * FROM products WHERE 1=1';
   const params = [];
@@ -280,6 +281,26 @@ app.get('/api/products', async (req, res) => {
     params.push(parseFloat(maxPrice));
   }
 
+  if (fabric) {
+    sql += ' AND fabric = ?';
+    params.push(fabric);
+  }
+
+  if (color) {
+    sql += ' AND color = ?';
+    params.push(color);
+  }
+
+  if (style) {
+    sql += ' AND style = ?';
+    params.push(style);
+  }
+
+  if (gender) {
+    sql += ' AND gender = ?';
+    params.push(gender);
+  }
+
   if (sort) {
     if (sort === 'price_asc') sql += ' ORDER BY price ASC';
     else if (sort === 'price_desc') sql += ' ORDER BY price DESC';
@@ -295,6 +316,57 @@ app.get('/api/products', async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
+});
+
+// Search Products by Image (AI similarity matching)
+app.post('/api/products/search-by-image', upload.single('image'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: 'Please upload an image file.' });
+  }
+
+  const tempFilePath = req.file.path;
+  const pythonScript = path.join(__dirname, 'image_search.py');
+  const { exec } = require('child_process');
+
+  exec(`python "${pythonScript}" "${tempFilePath}"`, async (err, stdout, stderr) => {
+    // Delete temporary file
+    try {
+      fs.unlinkSync(tempFilePath);
+    } catch (e) {
+      console.error('Failed to delete temp file:', e.message);
+    }
+
+    if (err || stderr) {
+      console.error('Python execution error:', err || stderr);
+      return res.status(500).json({ success: false, message: 'AI search execution failed.' });
+    }
+
+    const matchLine = stdout.split('\n').find(l => l.startsWith('MATCH:'));
+    if (!matchLine) {
+      return res.json({ success: true, products: [] });
+    }
+
+    const matchFile = matchLine.replace('MATCH:', '').trim();
+    if (matchFile === 'NONE') {
+      return res.json({ success: true, products: [] });
+    }
+
+    try {
+      let products = await db.query('SELECT * FROM products WHERE image_urls LIKE ?', [`%${matchFile}%`]);
+      
+      // Fallback: if no products found by image_urls, check if the matched file is a template name
+      if (products.length === 0 && matchFile.includes('/images/products/')) {
+        const basename = path.basename(matchFile, path.extname(matchFile)); // e.g. men_ethnic_kurta
+        const terms = basename.split('_');
+        const keyword = terms[terms.length - 1]; // e.g. kurta, denim, saree, mojari
+        products = await db.query('SELECT * FROM products WHERE name LIKE ? OR category LIKE ?', [`%${keyword}%`, `%${keyword}%`]);
+      }
+      
+      res.json({ success: true, products });
+    } catch (dbErr) {
+      res.status(500).json({ success: false, message: dbErr.message });
+    }
+  });
 });
 
 // Get Single Product by ID (with average reviews and item reviews list)

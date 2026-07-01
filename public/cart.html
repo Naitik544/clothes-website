@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Shopping Cart | Little to Large</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/ux-premium.css">
 </head>
 <body>
 
@@ -148,6 +149,7 @@
   <footer></footer>
 
   <!-- Scripts -->
+  <script src="js/ux-premium.js"></script>
   <script src="js/app.js"></script>
   <script src="js/chatbot.js"></script>
   <script src="js/payments.js"></script>
@@ -285,7 +287,7 @@
     }
 
     // Toggle checkout panel view
-    function triggerCheckoutFlow() {
+    async function triggerCheckoutFlow() {
       const token = getToken();
       if (!token) {
         showToast('Please login or register to check out!', 'error');
@@ -293,14 +295,21 @@
         return;
       }
 
-      // Show form card
-      document.getElementById('shippingFormCard').style.display = 'block';
-      document.getElementById('showCheckoutBtn').style.display = 'none';
-      
-      initCheckout(); // Setup payment modules from payments.js
-      
-      // Scroll to form
-      document.getElementById('shippingFormCard').scrollIntoView({ behavior: 'smooth' });
+      const btn = document.getElementById('showCheckoutBtn');
+      const promise = new Promise(resolve => {
+        setTimeout(() => {
+          // Show form card
+          document.getElementById('shippingFormCard').style.display = 'block';
+          document.getElementById('showCheckoutBtn').style.display = 'none';
+          initCheckout(); // Setup payment modules from payments.js
+          
+          // Scroll to form
+          document.getElementById('shippingFormCard').scrollIntoView({ behavior: 'smooth' });
+          resolve();
+        }, 600);
+      });
+
+      await wrapButtonLoader(btn, promise);
     }
   </script>
 </body>

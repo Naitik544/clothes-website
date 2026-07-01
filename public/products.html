@@ -6,6 +6,7 @@
   <title>Shop Collections | Little to Large Clothing</title>
   <meta name="description" content="Browse our wide selection of Indian family clothing. Filters by Men, Women, Kids, Accessories, sizes, and prices. Direct global shipping.">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/ux-premium.css">
 </head>
 <body>
 
@@ -13,23 +14,47 @@
   <header></header>
 
   <!-- Page Banner -->
-  <section style="background-color: var(--primary); color:#fff; padding: 2rem 0; margin-bottom: 2.5rem;">
-    <div class="container" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px">
-      <div>
-        <h1 id="shopPageTitle" style="font-size:1.8rem; font-weight:800">Our Collections</h1>
-        <p style="font-size:0.85rem; color:var(--marigold)">Home &gt; Shop</p>
+  <section style="background-color: var(--primary); color:#fff; padding: 2.5rem 0; margin-bottom: 2.5rem;">
+    <div class="container" style="display:flex; flex-direction:column; gap:1.5rem">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px">
+        <div>
+          <h1 id="shopPageTitle" style="font-size:1.8rem; font-weight:800">Our Collections</h1>
+          <p style="font-size:0.85rem; color:var(--marigold)">Home &gt; Shop</p>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px">
+          <label style="font-size:0.85rem; font-weight:700">Sort By:</label>
+          <select id="sortSelector" style="padding:0.4rem 1rem; border-radius:6px; border:none; font-weight:600; color:var(--primary)">
+            <option value="">Latest Arrivals</option>
+            <option value="price_asc">Price: Low to High</option>
+            <option value="price_desc">Price: High to Low</option>
+            <option value="rating">Top Rated</option>
+          </select>
+        </div>
       </div>
-      <div style="display:flex; align-items:center; gap:10px">
-        <label style="font-size:0.85rem; font-weight:700">Sort By:</label>
-        <select id="sortSelector" style="padding:0.4rem 1rem; border-radius:6px; border:none; font-weight:600; color:var(--primary)">
-          <option value="">Latest Arrivals</option>
-          <option value="price_asc">Price: Low to High</option>
-          <option value="price_desc">Price: High to Low</option>
-          <option value="rating">Top Rated</option>
-        </select>
+      
+      <!-- Premium Multi-Modal Search Bar (Voice + Image AI + Text) -->
+      <div style="background:#fff; border-radius:50px; padding:0.4rem 1.2rem; display:flex; align-items:center; box-shadow:var(--shadow-md); max-width:650px; width:100%; margin:0 auto">
+        <i class="fas fa-search" style="color:var(--text-light); font-size:1.1rem; margin-right:10px"></i>
+        <input type="text" id="catalogSearchInput" placeholder="Search ethnic, western, cotton, silk, Gujarati style..." style="flex:1; border:none; padding:0.6rem 0; font-size:0.95rem; color:var(--text-dark); background:none" onkeypress="handleCatalogSearchKeyPress(event)">
+        
+        <!-- Voice Search Trigger -->
+        <button onclick="startVoiceSearch()" style="background:none; border:none; color:var(--primary); font-size:1.2rem; margin:0 8px; cursor:pointer" title="Voice Search">
+          <i class="fas fa-microphone" id="micIcon"></i>
+        </button>
+        
+        <!-- Image Search Trigger -->
+        <button onclick="triggerCameraUpload()" style="background:none; border:none; color:var(--primary); font-size:1.2rem; cursor:pointer" title="Search by Image">
+          <i class="fas fa-camera"></i>
+        </button>
+        <input type="file" id="cameraUploadInput" accept="image/*" style="display:none" onchange="handleCameraUpload(this)">
       </div>
     </div>
   </section>
+
+  <!-- Mobile Filter Toggle Button -->
+  <div class="container">
+    <button class="filter-btn-mobile" onclick="toggleFiltersBottomSheet()"><i class="fas fa-sliders-h"></i> Filter Products</button>
+  </div>
 
   <!-- Main Catalog Grid Layout -->
   <section class="container" style="display:grid; grid-template-columns: 260px 1fr; gap: 2.5rem; margin-bottom: 5rem;">
@@ -92,6 +117,53 @@
         </style>
       </div>
 
+      <!-- Dynamic Fabric Filter -->
+      <div style="margin-bottom:1.5rem">
+        <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.8rem; text-transform:uppercase">Fabric</h4>
+        <ul style="display:flex; flex-direction:column; gap:0.5rem; font-size:0.9rem">
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="fabric-filter" value="Cotton"> Cotton</label></li>
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="fabric-filter" value="Nylon"> Nylon</label></li>
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="fabric-filter" value="Semi Cotton"> Semi Cotton</label></li>
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="fabric-filter" value="Silk"> Silk</label></li>
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="fabric-filter" value="Georgette"> Georgette</label></li>
+        </ul>
+      </div>
+
+      <!-- Dynamic Colors Filter -->
+      <div style="margin-bottom:1.5rem">
+        <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.8rem; text-transform:uppercase">Color</h4>
+        <ul style="display:flex; flex-direction:column; gap:0.5rem; font-size:0.9rem">
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="color-filter" value="Saffron"> Saffron</label></li>
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="color-filter" value="Indigo"> Indigo</label></li>
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="color-filter" value="Emerald"> Emerald</label></li>
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="color-filter" value="Pink"> Pink</label></li>
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="color-filter" value="Red"> Red</label></li>
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="color-filter" value="Blue"> Blue</label></li>
+        </ul>
+      </div>
+
+      <!-- Dynamic Origin Style Filter -->
+      <div style="margin-bottom:1.5rem">
+        <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.8rem; text-transform:uppercase">Origin Style</h4>
+        <ul style="display:flex; flex-direction:column; gap:0.5rem; font-size:0.9rem">
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="style-filter" value="Ethnic"> Ethnic</label></li>
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="style-filter" value="Western"> Western</label></li>
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="style-filter" value="Gujarati"> Gujarati</label></li>
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="style-filter" value="Italian"> Italian</label></li>
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="style-filter" value="European"> European</label></li>
+        </ul>
+      </div>
+
+      <!-- Dynamic Gender Filter -->
+      <div style="margin-bottom:1.5rem">
+        <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.8rem; text-transform:uppercase">Gender</h4>
+        <ul style="display:flex; flex-direction:column; gap:0.5rem; font-size:0.9rem">
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="gender-filter" value="Men"> Men</label></li>
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="gender-filter" value="Women"> Women</label></li>
+          <li><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" class="gender-filter" value="Kids"> Kids</label></li>
+        </ul>
+      </div>
+
       <!-- Price Bound Filter -->
       <div>
         <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.8rem; text-transform:uppercase">Max Price</h4>
@@ -115,10 +187,27 @@
     </div>
   </section>
 
+  <!-- Bottom Sheet for Mobile Filters -->
+  <div class="bottom-sheet-overlay" id="filtersOverlay" onclick="toggleFiltersBottomSheet()"></div>
+  <div class="bottom-sheet" id="filtersBottomSheet">
+    <div class="bottom-sheet-header">
+      <h3 style="font-size:1.1rem; color:var(--primary); font-weight:800"><i class="fas fa-filter"></i> Filters</h3>
+      <button onclick="toggleFiltersBottomSheet()" style="background:none; border:none; font-size:1.3rem; color:var(--text-light); cursor:pointer"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="bottom-sheet-content" id="mobileFiltersContainer">
+      <!-- Cloned dynamically by javascript -->
+    </div>
+    <div style="display:flex; gap:10px; margin-top:10px">
+      <button onclick="clearFilters(); toggleFiltersBottomSheet()" class="btn" style="flex:1; background:#eee; color:var(--text-dark); border:none; padding:0.6rem; font-weight:700; border-radius:8px; cursor:pointer">Clear All</button>
+      <button onclick="toggleFiltersBottomSheet()" class="btn btn-primary" style="flex:1; padding:0.6rem; font-weight:700; border-radius:8px; cursor:pointer">Apply Filters</button>
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer></footer>
 
   <!-- Scripts -->
+  <script src="js/ux-premium.js"></script>
   <script src="js/app.js"></script>
   <script src="js/chatbot.js"></script>
   <script>
@@ -149,11 +238,16 @@
       }
 
       // Add listeners to elements
-      document.querySelectorAll('.cat-filter, .subcat-filter').forEach(el => {
+      document.querySelectorAll('.cat-filter, .subcat-filter, .fabric-filter, .color-filter, .style-filter, .gender-filter').forEach(el => {
         el.addEventListener('change', fetchProducts);
       });
       document.getElementById('sortSelector').addEventListener('change', fetchProducts);
       document.getElementById('priceRange').addEventListener('change', fetchProducts);
+
+      // Check URL parameters for text search on load
+      if (searchParam) {
+        document.getElementById('catalogSearchInput').value = searchParam;
+      }
 
       fetchProducts();
     });
@@ -176,16 +270,20 @@
     }
 
     function clearFilters() {
-      document.querySelectorAll('.cat-filter, .subcat-filter').forEach(chk => chk.checked = false);
+      document.querySelectorAll('.cat-filter, .subcat-filter, .fabric-filter, .color-filter, .style-filter, .gender-filter').forEach(chk => chk.checked = false);
       document.querySelectorAll('.size-filter-chip').forEach(c => c.classList.remove('active'));
       activeSizeFilter = null;
       document.getElementById('priceRange').value = 6000;
       updatePriceLabel(6000);
       document.getElementById('sortSelector').value = '';
+      document.getElementById('catalogSearchInput').value = '';
       
       // Reset page title if query params were cleared
       history.pushState(null, '', 'products.html');
       document.getElementById('shopPageTitle').textContent = 'Our Collections';
+
+      const mobileContainer = document.getElementById('mobileFiltersContainer');
+      if (mobileContainer) mobileContainer.innerHTML = ''; // Reset cloned mobile sheet
 
       fetchProducts();
     }
@@ -193,23 +291,17 @@
     // Core catalog query execution
     async function fetchProducts() {
       const grid = document.getElementById('catalogGrid');
-      grid.innerHTML = `
-        <div style="grid-column: 1/-1; text-align:center; padding:3rem">
-          <i class="fas fa-spinner fa-spin" style="font-size:2rem; color:var(--primary)"></i>
-          <p style="margin-top:10px">Loading clothing items...</p>
-        </div>
-      `;
+      startGlobalProgressBar();
+      injectProductGridSkeleton(grid, 8);
 
       // Build url query
       const urlParams = new URLSearchParams();
       
-      // Get category checkboxes checked
+      // Get category checkboxes checked (including mobile clones if active)
       const checkedCats = Array.from(document.querySelectorAll('.cat-filter:checked')).map(c => c.value);
-      // SQLite/MySQL support single category value. If multiple checked, we query each, but let's fetch first category, or fetch all and filter in JS. Let's send first category or all.
       if (checkedCats.length > 0) {
-        urlParams.set('category', checkedCats[0]); // Simple single filter matching REST endpoint
+        urlParams.set('category', checkedCats[0]);
       } else {
-        // Fallback checks for URL params
         const pathParams = new URLSearchParams(window.location.search);
         if (pathParams.get('category')) urlParams.set('category', pathParams.get('category'));
       }
@@ -222,8 +314,27 @@
         if (pathParams.get('subcategory')) urlParams.set('subcategory', pathParams.get('subcategory'));
       }
 
-      const pathParams = new URLSearchParams(window.location.search);
-      if (pathParams.get('search')) urlParams.set('search', pathParams.get('search'));
+      // Check text search
+      const textSearch = document.getElementById('catalogSearchInput').value.trim();
+      if (textSearch) {
+        urlParams.set('search', textSearch);
+      } else {
+        const pathParams = new URLSearchParams(window.location.search);
+        if (pathParams.get('search')) urlParams.set('search', pathParams.get('search'));
+      }
+
+      // Grab new filters
+      const checkedFabrics = Array.from(document.querySelectorAll('.fabric-filter:checked')).map(c => c.value);
+      if (checkedFabrics.length > 0) urlParams.set('fabric', checkedFabrics[0]);
+
+      const checkedColors = Array.from(document.querySelectorAll('.color-filter:checked')).map(c => c.value);
+      if (checkedColors.length > 0) urlParams.set('color', checkedColors[0]);
+
+      const checkedStyles = Array.from(document.querySelectorAll('.style-filter:checked')).map(c => c.value);
+      if (checkedStyles.length > 0) urlParams.set('style', checkedStyles[0]);
+
+      const checkedGenders = Array.from(document.querySelectorAll('.gender-filter:checked')).map(c => c.value);
+      if (checkedGenders.length > 0) urlParams.set('gender', checkedGenders[0]);
 
       if (activeSizeFilter) urlParams.set('size', activeSizeFilter);
 
@@ -237,6 +348,8 @@
         const res = await fetch(`/api/products?${urlParams.toString()}`);
         const data = await res.json();
         
+        completeGlobalProgressBar();
+
         if (data.success) {
           grid.innerHTML = '';
           if (data.products.length === 0) {
@@ -274,10 +387,11 @@
             const isInWishlist = wishlist.includes(p.id);
 
             grid.innerHTML += `
-              <div class="product-card">
+              <div class="product-card tilt-hover">
                 ${p.discount_price ? `<span class="badge-tag">Sale</span>` : ''}
-                <div class="product-img-wrapper" onclick="window.location.href='product-detail.html?id=${p.id}'" style="cursor:pointer">
-                  <img src="${mainImg}" alt="${p.name}" onerror="this.src='/images/products/placeholder.jpg'">
+                <div class="product-img-wrapper" onclick="handleProductCardClick(event, ${p.id}, this)" style="cursor:pointer; position:relative">
+                  <img class="lazy-image" src="/images/products/placeholder.svg" data-src="${mainImg}" alt="${p.name}" onerror="this.src='/images/products/placeholder.jpg'">
+                  ${p.video_url ? `<video class="product-video-overlay" src="${p.video_url}" muted loop playsinline></video>` : ''}
                 </div>
                 <button class="wishlist-btn ${isInWishlist ? 'active' : ''}" onclick="event.stopPropagation(); handleWishlistToggle(${p.id}, this)">
                   <i class="fas fa-heart"></i>
@@ -289,20 +403,23 @@
                     ${stars}
                     <span class="rating-num">(${p.rating || '5.0'})</span>
                   </div>
+                  ${p.stock > 0 && p.stock < 10 ? `<span style="color:var(--danger); font-size:0.8rem; font-weight:700; display:block; margin:4px 0">🔴 Only ${p.stock} left!</span>` : ''}
                   <div class="product-pricing">
                     <span class="price">₹${priceVal}</span>
                     ${oldPriceHtml}
                     ${discountPercentHtml}
                   </div>
-                  <button class="btn-add-cart" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')})">
+                  <button class="btn-add-cart" onclick="handleAddCartClick(event, this, ${JSON.stringify(p).replace(/"/g, '&quot;')})">
                     <i class="fas fa-shopping-basket"></i> Add to Box
                   </button>
                 </div>
               </div>
             `;
           });
+          setupLazyImages();
         }
       } catch (err) {
+        completeGlobalProgressBar();
         grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:3rem; color:var(--danger)">Error loading products catalog.</div>';
       }
     }
@@ -317,6 +434,227 @@
       const sizes = product.size_variants.split(',');
       const defaultSize = sizes[0] || 'M';
       addToCart(product, defaultSize, 1);
+    }
+
+    async function handleAddCartClick(event, button, product) {
+      event.stopPropagation();
+      const card = button.closest('.product-card');
+      const img = card ? card.querySelector('.product-img-wrapper img') : null;
+      
+      const addToCartPromise = new Promise((resolve) => {
+        setTimeout(() => {
+          const sizes = product.size_variants.split(',');
+          const defaultSize = sizes[0] || 'M';
+          addToCart(product, defaultSize, 1);
+          if (img) {
+            animateFlyToCart(img);
+          }
+          resolve();
+        }, 600);
+      });
+      
+      await wrapButtonLoader(button, addToCartPromise);
+    }
+
+    // Voice & Image AI Searches & Bottom Sheets
+    function handleProductCardClick(event, productId, wrapper) {
+      const video = wrapper.querySelector('video');
+      if (window.innerWidth <= 768 && video) {
+        event.stopPropagation();
+        if (video.paused) {
+          // Play video on first tap
+          document.querySelectorAll('video').forEach(v => { v.pause(); v.style.opacity = '0'; });
+          video.play();
+          video.style.opacity = '1';
+        } else {
+          // Navigate to details on second tap
+          video.pause();
+          video.style.opacity = '0';
+          window.location.href = `product-detail.html?id=${productId}`;
+        }
+      } else {
+        window.location.href = `product-detail.html?id=${productId}`;
+      }
+    }
+
+    // Search input Enter key trigger
+    function handleCatalogSearchKeyPress(event) {
+      if (event.key === 'Enter') {
+        fetchProducts();
+      }
+    }
+
+    // Bottom filters toggle
+    function toggleFiltersBottomSheet() {
+      const sheet = document.getElementById('filtersBottomSheet');
+      const overlay = document.getElementById('filtersOverlay');
+      const container = document.getElementById('mobileFiltersContainer');
+      const originalAside = document.querySelector('aside');
+      
+      if (sheet && overlay) {
+        if (!sheet.classList.contains('active') && container && originalAside) {
+          if (container.children.length === 0) {
+            container.innerHTML = originalAside.innerHTML;
+            
+            // Remove top duplicate filter header
+            const dupHeader = container.querySelector('div[style*="justify-content:space-between"]');
+            if (dupHeader) dupHeader.remove();
+            
+            // Bind mobile listener events
+            container.querySelectorAll('.cat-filter, .subcat-filter, .fabric-filter, .color-filter, .style-filter, .gender-filter').forEach(el => {
+              el.addEventListener('change', fetchProducts);
+            });
+            const mobilePrice = container.querySelector('#priceRange');
+            if (mobilePrice) {
+              mobilePrice.addEventListener('change', fetchProducts);
+              mobilePrice.addEventListener('input', (e) => {
+                const label = container.querySelector('#priceValDisplay');
+                if (label) label.textContent = `₹${parseInt(e.target.value).toLocaleString('en-IN')}`;
+                
+                const deskPrice = originalAside.querySelector('#priceRange');
+                if (deskPrice) {
+                  deskPrice.value = e.target.value;
+                  originalAside.querySelector('#priceValDisplay').textContent = label.textContent;
+                }
+              });
+            }
+          }
+        }
+        sheet.classList.toggle('active');
+        overlay.classList.toggle('active');
+      }
+    }
+
+    // Voice Speech Search recognition API
+    let recognition;
+    function startVoiceSearch() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("Voice search is not supported in this browser. Please use Chrome or Safari.");
+        return;
+      }
+      const mic = document.getElementById('micIcon');
+      if (recognition && mic.classList.contains('fa-spinner')) return;
+
+      recognition = new SpeechRecognition();
+      recognition.lang = 'en-IN';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        mic.className = 'fas fa-spinner fa-spin';
+        mic.style.color = 'var(--accent)';
+      };
+      recognition.onerror = () => {
+        mic.className = 'fas fa-microphone';
+        mic.style.color = 'var(--primary)';
+      };
+      recognition.onend = () => {
+        mic.className = 'fas fa-microphone';
+        mic.style.color = 'var(--primary)';
+      };
+      recognition.onresult = (event) => {
+        const queryText = event.results[0][0].transcript;
+        document.getElementById('catalogSearchInput').value = queryText;
+        fetchProducts();
+      };
+      recognition.start();
+    }
+
+    // Camera matching triggers
+    function triggerCameraUpload() {
+      document.getElementById('cameraUploadInput').click();
+    }
+
+    async function handleCameraUpload(input) {
+      if (!input.files || input.files.length === 0) return;
+      const file = input.files[0];
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const grid = document.getElementById('catalogGrid');
+      grid.innerHTML = `
+        <div style="grid-column:1/-1; text-align:center; padding:3rem">
+          <i class="fas fa-spinner fa-spin" style="font-size:2rem; color:var(--primary)"></i>
+          <p style="margin-top:10px">AI is matching colors & patterns with catalog garments...</p>
+        </div>
+      `;
+
+      try {
+        const res = await fetch('/api/products/search-by-image', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          renderMatchingProducts(data.products);
+        } else {
+          grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--danger)">AI search failed: ${data.message}</div>`;
+        }
+      } catch (err) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--danger)">Error during image match.</div>';
+      }
+    }
+
+    function renderMatchingProducts(products) {
+      const grid = document.getElementById('catalogGrid');
+      grid.innerHTML = '';
+
+      if (products.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1/-1; text-align:center; padding:3rem">
+            <i class="far fa-sad-tear" style="font-size:3rem; color:var(--text-light); margin-bottom:1rem"></i>
+            <h3>No matching clothing outfits found</h3>
+            <p style="color:var(--text-light)">Try uploading another photo with different color shades.</p>
+          </div>
+        `;
+        return;
+      }
+
+      document.getElementById('shopPageTitle').textContent = `AI Image Match Results (${products.length})`;
+
+      products.forEach(p => {
+        const images = JSON.parse(p.image_urls || '[]');
+        const mainImg = images[0] || 'images/products/placeholder.jpg';
+        const oldPriceHtml = p.discount_price ? `<span class="old-price">₹${p.price}</span>` : '';
+        const discountPercentHtml = p.discount_price ? `<span class="discount-pct">${Math.round(((p.price - p.discount_price) / p.price) * 100)}% OFF</span>` : '';
+        const priceVal = p.discount_price || p.price;
+
+        let stars = '';
+        const floorRating = Math.floor(p.rating || 0);
+        for (let i = 1; i <= 5; i++) {
+          if (i <= floorRating) stars += '<i class="fas fa-star"></i>';
+          else if (i - 0.5 <= (p.rating || 0)) stars += '<i class="fas fa-star-half-alt"></i>';
+          else stars += '<i class="far fa-star"></i>';
+        }
+
+        grid.innerHTML += `
+          <div class="product-card">
+            ${p.discount_price ? `<span class="badge-tag">Sale</span>` : ''}
+            <div class="product-img-wrapper" onclick="handleProductCardClick(event, ${p.id}, this)" style="cursor:pointer; position:relative">
+              <img src="${mainImg}" alt="${p.name}" onerror="this.src='/images/products/placeholder.jpg'">
+              ${p.video_url ? `<video class="product-video-overlay" src="${p.video_url}" muted loop playsinline></video>` : ''}
+            </div>
+            <div class="product-details">
+              <span class="product-cat">${p.category} | ${p.subcategory}</span>
+              <a href="product-detail.html?id=${p.id}" class="product-name">${p.name}</a>
+              <div class="product-rating">
+                ${stars}
+                <span class="rating-num">(${p.rating || '5.0'})</span>
+              </div>
+              ${p.stock > 0 && p.stock < 10 ? `<span style="color:var(--danger); font-size:0.8rem; font-weight:700; display:block; margin:4px 0">🔴 Only ${p.stock} left!</span>` : ''}
+              <div class="product-pricing">
+                <span class="price">₹${priceVal}</span>
+                ${oldPriceHtml}
+                ${discountPercentHtml}
+              </div>
+              <button class="btn-add-cart" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')})">
+                <i class="fas fa-shopping-basket"></i> Add to Box
+              </button>
+            </div>
+          </div>
+        `;
+      });
     }
   </script>
 </body>

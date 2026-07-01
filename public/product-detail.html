@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Product Details | Little to Large</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/ux-premium.css">
 </head>
 <body>
 
@@ -16,8 +17,11 @@
     <a href="index.html">Home</a> &gt; <a href="products.html">Shop</a> &gt; <span id="breadcrumbProdName" style="color:var(--primary); font-weight:700">Product</span>
   </section>
 
+  <!-- Skeleton Loader (shows during fetch) -->
+  <div id="detailSkeletonContainer" class="container"></div>
+
   <!-- Main Product Detail View -->
-  <main class="container product-detail-container">
+  <main class="container product-detail-container" style="display:none">
     
     <!-- Gallery Component -->
     <div class="product-gallery">
@@ -149,6 +153,7 @@
   <footer></footer>
 
   <!-- Scripts -->
+  <script src="js/ux-premium.js"></script>
   <script src="js/app.js"></script>
   <script src="js/chatbot.js"></script>
   <script>
@@ -173,12 +178,20 @@
         return;
       }
 
+      startGlobalProgressBar();
+      injectProductDetailSkeleton(document.getElementById('detailSkeletonContainer'));
+
       try {
         const res = await fetch(`/api/products/${prodId}`);
         const data = await res.json();
         
+        completeGlobalProgressBar();
+        document.getElementById('detailSkeletonContainer').style.display = 'none';
+        document.querySelector('.product-detail-container').style.display = 'grid';
+
         if (data.success) {
           activeProduct = data.product;
+          recordProductInHistory(data.product); // Save in history for Smart Loader
           renderProductDetails(data.product);
           renderReviews(data.reviews);
           loadRecommendations(prodId);
@@ -187,6 +200,9 @@
           setTimeout(() => window.location.href = 'products.html', 1500);
         }
       } catch (err) {
+        completeGlobalProgressBar();
+        document.getElementById('detailSkeletonContainer').style.display = 'none';
+        document.querySelector('.product-detail-container').style.display = 'grid';
         showToast('Error connecting to product server', 'error');
       }
     }
@@ -345,13 +361,27 @@
     }
 
     // Cart Placement
-    function handleAddClick() {
+    async function handleAddClick() {
       if (!activeProduct) return;
       if (activeProduct.stock <= 0) {
         showToast('Sorry, this product is currently out of stock!', 'error');
         return;
       }
-      addToCart(activeProduct, selectedSize, selectedQty);
+      
+      const button = document.querySelector('.detail-actions .btn-primary');
+      const img = document.getElementById('mainProdImage');
+      
+      const addPromise = new Promise((resolve) => {
+        setTimeout(() => {
+          addToCart(activeProduct, selectedSize, selectedQty);
+          if (img) {
+            animateFlyToCart(img);
+          }
+          resolve();
+        }, 600);
+      });
+      
+      await wrapButtonLoader(button, addPromise);
     }
 
     /* ==========================================================================
