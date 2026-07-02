@@ -613,118 +613,36 @@ app.get('/api/orders/:id/invoice', authenticateToken, async (req, res) => {
       font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
       color: #333;
       margin: 0;
-      padding: 30px;
+      padding: 15px;
       background-color: #ffffff;
+      -webkit-print-color-adjust: exact;
     }
     .invoice-box {
       max-width: 800px;
       margin: auto;
       border: 1px solid #eee;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
-      padding: 30px;
+      padding: 20px;
       border-radius: 8px;
-    }
-    .invoice-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 3px solid hsl(243, 75%, 19%);
-      padding-bottom: 20px;
-      margin-bottom: 30px;
-    }
-    .brand-logo {
-      font-size: 1.8rem;
-      font-weight: 800;
-      color: hsl(243, 75%, 19%);
-    }
-    .brand-logo span {
-      color: hsl(38, 92%, 50%);
-    }
-    .brand-tagline {
-      font-size: 0.8rem;
-      color: #666;
-      margin: 5px 0 0 0;
-    }
-    .invoice-title {
-      text-align: right;
-    }
-    .invoice-title h2 {
-      margin: 0;
-      color: #333;
-      font-size: 1.5rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .invoice-title p {
-      margin: 5px 0 0 0;
-      font-size: 0.85rem;
-      color: #777;
-    }
-    .invoice-details {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 30px;
-      font-size: 0.9rem;
-    }
-    .details-card h3 {
-      margin: 0 0 10px 0;
-      font-size: 0.95rem;
-      color: hsl(243, 75%, 19%);
-      border-bottom: 1px solid #eee;
-      padding-bottom: 5px;
-      text-transform: uppercase;
-    }
-    .details-card p {
-      margin: 5px 0;
-      line-height: 1.4;
+      box-sizing: border-box;
     }
     .items-table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 30px;
+      margin-bottom: 25px;
       font-size: 0.9rem;
     }
     .items-table th {
-      background-color: #f8f9fa;
+      background-color: #f8f9fa !important;
       padding: 10px;
       font-weight: 700;
       border-bottom: 2px solid #ddd;
-      color: hsl(243, 75%, 19%);
-    }
-    .summary-box {
-      float: right;
-      width: 300px;
-      margin-bottom: 30px;
-      font-size: 0.9rem;
-    }
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 6px 0;
-    }
-    .summary-row.total {
-      font-weight: 800;
-      font-size: 1.1rem;
-      border-top: 2px solid #eee;
-      padding-top: 10px;
-      margin-top: 5px;
-      color: hsl(243, 75%, 19%);
-    }
-    .invoice-footer {
-      clear: both;
-      border-top: 1px solid #eee;
-      padding-top: 20px;
-      text-align: center;
-      font-size: 0.8rem;
-      color: #888;
-      line-height: 1.5;
+      color: #1e1b4b;
     }
     .print-btn {
       display: block;
       width: fit-content;
       margin: 20px auto 0 auto;
-      background-color: hsl(243, 75%, 19%);
+      background-color: #1e1b4b;
       color: white;
       border: none;
       padding: 10px 20px;
@@ -733,6 +651,31 @@ app.get('/api/orders/:id/invoice', authenticateToken, async (req, res) => {
       cursor: pointer;
       text-transform: uppercase;
       font-size: 0.85rem;
+    }
+    @media (max-width: 600px) {
+      body {
+        padding: 5px;
+      }
+      .invoice-box {
+        padding: 10px;
+        border: none;
+      }
+      .billing-table td {
+        display: block !important;
+        width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin-bottom: 15px;
+      }
+      .billing-card {
+        height: auto !important;
+      }
+      .summary-table td:first-child {
+        width: 10% !important;
+      }
+      .summary-table td:last-child {
+        width: 90% !important;
+      }
     }
     @media print {
       .print-btn {
@@ -743,7 +686,6 @@ app.get('/api/orders/:id/invoice', authenticateToken, async (req, res) => {
       }
       .invoice-box {
         border: none;
-        box-shadow: none;
         padding: 0;
       }
     }
@@ -752,41 +694,49 @@ app.get('/api/orders/:id/invoice', authenticateToken, async (req, res) => {
 <body>
 
   <div class="invoice-box">
-    <!-- Header -->
-    <div class="invoice-header">
-      <div>
-        <div class="brand-logo">🛍️ Little <span>to Large</span></div>
-        <p class="brand-tagline">Premium Family Wardrobe E-Store</p>
-      </div>
-      <div class="invoice-title">
-        <h2>TAX INVOICE</h2>
-        <p>Invoice No: <strong>#L2L-INV-${orderId}</strong></p>
-        <p>Date: ${orderDate}</p>
-      </div>
-    </div>
+    <!-- Header Table -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; border-bottom: 3px solid #1e1b4b;">
+      <tr>
+        <td style="padding-bottom: 15px; vertical-align: top;">
+          <div style="font-size: 1.8rem; font-weight: 800; color: #1e1b4b; font-family: sans-serif;">🛍️ Little <span style="color: #d97706;">to Large</span></div>
+          <p style="font-size: 0.8rem; color: #666; margin: 5px 0 0 0; font-family: sans-serif;">Premium Family Wardrobe E-Store</p>
+        </td>
+        <td style="text-align: right; padding-bottom: 15px; vertical-align: top; font-family: sans-serif;">
+          <h2 style="margin: 0; color: #333; font-size: 1.5rem; letter-spacing: 1px; font-weight: 800;">TAX INVOICE</h2>
+          <p style="margin: 5px 0 0 0; font-size: 0.85rem; color: #777;">Invoice No: <strong>#L2L-INV-${orderId}</strong></p>
+          <p style="margin: 5px 0 0 0; font-size: 0.85rem; color: #777;">Date: ${orderDate}</p>
+        </td>
+      </tr>
+    </table>
 
-    <!-- Billing details -->
-    <div class="invoice-details">
-      <div class="details-card">
-        <h3>Customer Details</h3>
-        <p><strong>Name:</strong> ${customer.name}</p>
-        <p><strong>Email:</strong> ${customer.email}</p>
-        <p><strong>Phone:</strong> +91 ${customer.phone}</p>
-      </div>
-      <div class="details-card">
-        <h3>Delivery Address</h3>
-        <p>${order.shipping_address}</p>
-      </div>
-    </div>
+    <!-- Billing Details Table -->
+    <table class="billing-table" style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-family: sans-serif;">
+      <tr>
+        <td style="width: 50%; padding-right: 10px; vertical-align: top;">
+          <div class="billing-card" style="border: 1px solid #eee; border-radius: 6px; padding: 15px; background: #fafafa; height: 120px; box-sizing: border-box;">
+            <h3 style="margin: 0 0 10px 0; font-size: 0.95rem; color: #1e1b4b; border-bottom: 1px solid #eee; padding-bottom: 5px; text-transform: uppercase; font-weight: 700;">Customer Details</h3>
+            <p style="margin: 5px 0; font-size: 0.85rem; line-height: 1.4;"><strong>Name:</strong> ${customer.name}</p>
+            <p style="margin: 5px 0; font-size: 0.85rem; line-height: 1.4;"><strong>Email:</strong> ${customer.email}</p>
+            <p style="margin: 5px 0; font-size: 0.85rem; line-height: 1.4;"><strong>Phone:</strong> +91 ${customer.phone}</p>
+          </div>
+        </td>
+        <td style="width: 50%; padding-left: 10px; vertical-align: top;">
+          <div class="billing-card" style="border: 1px solid #eee; border-radius: 6px; padding: 15px; background: #fafafa; height: 120px; box-sizing: border-box;">
+            <h3 style="margin: 0 0 10px 0; font-size: 0.95rem; color: #1e1b4b; border-bottom: 1px solid #eee; padding-bottom: 5px; text-transform: uppercase; font-weight: 700;">Delivery Address</h3>
+            <p style="margin: 5px 0; font-size: 0.85rem; line-height: 1.4;">${order.shipping_address}</p>
+          </div>
+        </td>
+      </tr>
+    </table>
 
-    <!-- Items list -->
-    <table class="items-table">
+    <!-- Items Table -->
+    <table class="items-table" style="font-family: sans-serif;">
       <thead>
         <tr>
           <th style="width: 50px;">S.No</th>
           <th style="text-align: left;">Product Details</th>
           <th style="text-align: right; width: 120px;">Unit Price</th>
-          <th style="width: 80px;">Qty</th>
+          <th style="width: 80px; text-align: center;">Qty</th>
           <th style="text-align: right; width: 120px;">Total</th>
         </tr>
       </thead>
@@ -795,36 +745,41 @@ app.get('/api/orders/:id/invoice', authenticateToken, async (req, res) => {
       </tbody>
     </table>
 
-    <!-- Pricing summary -->
-    <div class="summary-box">
-      <div class="summary-row">
-        <span>Subtotal:</span>
-        <span>₹${subtotal.toFixed(2)}</span>
-      </div>
-      <div class="summary-row">
-        <span>Promo Discount:</span>
-        <span style="color: #10b981;">- ₹${discount.toFixed(2)}</span>
-      </div>
-      <div class="summary-row">
-        <span>Shipping Fee:</span>
-        <span>${shippingFee === 0 ? 'FREE' : '₹' + shippingFee.toFixed(2)}</span>
-      </div>
-      <div class="summary-row total">
-        <span>Grand Total:</span>
-        <span>₹${parseFloat(order.total_amount).toFixed(2)}</span>
-      </div>
-    </div>
-
-    <div style="clear: both; margin-bottom: 20px;"></div>
+    <!-- Pricing Summary Table -->
+    <table class="summary-table" style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-family: sans-serif;">
+      <tr>
+        <td style="width: 55%;"></td>
+        <td style="width: 45%; vertical-align: top;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+            <tr>
+              <td style="padding: 5px 0; color: #666;">Subtotal:</td>
+              <td style="padding: 5px 0; text-align: right; font-weight: 600;">₹${subtotal.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0; color: #666;">Promo Discount:</td>
+              <td style="padding: 5px 0; text-align: right; font-weight: 600; color: #10b981;">- ₹${discount.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 0; color: #666;">Shipping Fee:</td>
+              <td style="padding: 5px 0; text-align: right; font-weight: 600;">${shippingFee === 0 ? 'FREE' : '₹' + shippingFee.toFixed(2)}</td>
+            </tr>
+            <tr style="border-top: 2px solid #eee;">
+              <td style="padding: 10px 0 5px 0; font-weight: 800; font-size: 1.1rem; color: #1e1b4b;">Grand Total:</td>
+              <td style="padding: 10px 0 5px 0; text-align: right; font-weight: 800; font-size: 1.1rem; color: #1e1b4b;">₹${parseFloat(order.total_amount).toFixed(2)}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
 
     <!-- Payment info -->
-    <div style="background-color: #fafafa; border: 1px solid #eee; border-radius: 6px; padding: 15px; margin-bottom: 30px; font-size: 0.85rem; line-height: 1.4;">
+    <div style="background-color: #fafafa; border: 1px solid #eee; border-radius: 6px; padding: 15px; margin-bottom: 25px; font-size: 0.85rem; line-height: 1.4; font-family: sans-serif;">
       <p style="margin: 0 0 5px 0;"><strong>Payment Method:</strong> ${order.payment_method} (${order.payment_status})</p>
       ${order.transaction_id ? `<p style="margin: 0;"><strong>Transaction ID:</strong> <code>${order.transaction_id}</code></p>` : ''}
     </div>
 
     <!-- Footer -->
-    <div class="invoice-footer">
+    <div style="border-top: 1px solid #eee; padding-top: 20px; text-align: center; font-size: 0.8rem; color: #888; line-height: 1.5; font-family: sans-serif;">
       <p>Thank you for shopping with Little to Large! We hope your family loves the new wardrobe styles.</p>
       <p><strong>Return Policy:</strong> Garments can be returned or exchanged within 7 days of delivery. Keep original tags intact.</p>
       <p>Need help? Contact our support team at <strong>support@littlelarge.in</strong> or call <strong>+91 9988776655</strong>.</p>

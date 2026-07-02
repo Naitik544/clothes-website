@@ -222,27 +222,9 @@
   }
 }
 
-/* 8. OFFLINE WARNING BANNER */
+/* 8. OFFLINE WARNING BANNER DISABLED */
 .offline-banner {
-  position: fixed;
-  top: -60px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10001;
-  background-color: var(--danger);
-  color: #fff;
-  padding: 0.8rem 2rem;
-  font-weight: 700;
-  border-radius: 0 0 12px 12px;
-  box-shadow: var(--shadow-md);
-  transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.offline-banner.active {
-  top: 0;
+  display: none !important;
 }
 
 /* 9. PROGRESSIVE IMAGE LAZY FADE */

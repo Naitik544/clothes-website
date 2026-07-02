@@ -228,26 +228,7 @@ function setupLazyImages() {
 
 // 7. OFFLINE CONNECTION WARNING MONITOR
 function initOfflineMonitor() {
-  if (!document.getElementById('offlineWarningBanner')) {
-    const banner = document.createElement('div');
-    banner.id = 'offlineWarningBanner';
-    banner.className = 'offline-banner';
-    banner.innerHTML = `<i class="fas fa-exclamation-triangle"></i> You are currently offline. Check your internet connection.`;
-    document.body.appendChild(banner);
-  }
-
-  window.addEventListener('offline', () => {
-    document.getElementById('offlineWarningBanner').classList.add('active');
-  });
-
-  window.addEventListener('online', () => {
-    const banner = document.getElementById('offlineWarningBanner');
-    banner.classList.remove('active');
-    // Briefly show green reconnect toast
-    if (typeof showToast === 'function') {
-      showToast('Connection restored! Re-syncing data...', 'success');
-    }
-  });
+  // Offline monitoring disabled to prevent mobile false-positives
 }
 
 // 8. BTN CLICK RIPPLE EFFECTS
