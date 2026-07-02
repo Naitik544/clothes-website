@@ -248,10 +248,6 @@ function initOfflineMonitor() {
       showToast('Connection restored! Re-syncing data...', 'success');
     }
   });
-  
-  if (!navigator.onLine) {
-    document.getElementById('offlineWarningBanner').classList.add('active');
-  }
 }
 
 // 8. BTN CLICK RIPPLE EFFECTS

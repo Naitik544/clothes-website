@@ -186,9 +186,10 @@ app.post('/api/auth/google-login', async (req, res) => {
       // 3. User does not exist, create new user entry
       const dummyPassword = Math.random().toString(36).substring(2, 15);
       const passwordHash = await bcrypt.hash(dummyPassword, 10);
-      const defaultPhone = '0000000000'; // Default placeholder
+      // Generate a unique 12-character guest phone to satisfy VARCHAR(15) UNIQUE NOT NULL constraint
+      const defaultPhone = 'G' + Math.floor(Math.random() * 90000000000 + 10000000000);
       
-      await db.query(
+      await db.run(
         'INSERT INTO customers (name, email, password_hash, phone, avatar_url) VALUES (?, ?, ?, ?, ?)',
         [name, email, passwordHash, defaultPhone, picture]
       );
@@ -198,7 +199,7 @@ app.post('/api/auth/google-login', async (req, res) => {
     } else {
       // If user exists, check if we should update their avatar if they don't have one
       if (!user.avatar_url && picture) {
-        await db.query('UPDATE customers SET avatar_url = ? WHERE id = ?', [picture, user.id]);
+        await db.run('UPDATE customers SET avatar_url = ? WHERE id = ?', [picture, user.id]);
         user.avatar_url = picture;
       }
     }
@@ -219,7 +220,16 @@ app.post('/api/auth/google-login', async (req, res) => {
     });
 
   } catch (err) {
-    console.error('Google login backend error:', err.message);
+    console.error('Google login backend error:', err.stack || err.message);
+    try {
+      const stack = err.stack || '';
+      await db.run(
+        'INSERT INTO error_logs (message, stack_trace, path, severity, suggested_fix) VALUES (?, ?, ?, ?, ?)',
+        [err.message, stack, '/api/auth/google-login', 'critical', 'Check Google Client ID credentials, SQLite constraint errors, or clock skew issues.']
+      );
+    } catch (dbLogErr) {
+      console.error('Failed to log error to DB:', dbLogErr.message);
+    }
     res.status(500).json({ success: false, message: 'Google Authentication failed on server' });
   }
 });
