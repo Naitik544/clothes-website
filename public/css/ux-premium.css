@@ -272,6 +272,16 @@
 
 /* 11. RESPONSIVE CONTACT US / INQUIRY OVERRIDES */
 @media (max-width: 768px) {
+  .logo {
+    font-size: 1.3rem !important;
+    gap: 0.3rem !important;
+    white-space: nowrap !important;
+  }
+  .logo span {
+    white-space: nowrap !important;
+    display: inline !important;
+  }
+
   #contact {
     grid-template-columns: 1fr !important;
     gap: 2rem !important;
