@@ -94,7 +94,7 @@ function injectProductGridSkeleton(container, count = 4) {
 function injectProductDetailSkeleton(container) {
   if (!container) return;
   container.innerHTML = `
-    <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:3.5rem; margin:3rem 0; pointer-events:none">
+    <div class="skeleton-detail-grid" style="margin:3rem 0; pointer-events:none">
       <div style="display:flex; flex-direction:column; gap:1rem">
         <div class="skeleton-box" style="height:500px; border-radius:20px"></div>
         <div style="display:flex; gap:1rem">
