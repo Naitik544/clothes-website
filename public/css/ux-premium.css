@@ -269,3 +269,23 @@
     gap: 2.5rem !important;
   }
 }
+
+/* 11. RESPONSIVE CONTACT US / INQUIRY OVERRIDES */
+@media (max-width: 768px) {
+  #contact {
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+    margin: 2rem auto !important;
+  }
+  
+  #contact div[style*="padding:3rem"],
+  #contact div[style*="padding: 3rem"] {
+    padding: 1.5rem !important;
+  }
+  
+  #inquiryForm div[style*="display:flex"],
+  #inquiryForm div[style*="display: flex"] {
+    flex-direction: column !important;
+    gap: 0.8rem !important;
+  }
+}
