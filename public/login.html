@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login / Register | Little to Large</title>
   <link rel="stylesheet" href="css/style.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     .auth-container {
       max-width: 480px;
@@ -209,6 +210,12 @@
         </form>
       </div>
 
+      <!-- Google Auth Single Sign-In Button Container -->
+      <div style="border-top:1px solid #eee; padding:1.5rem; text-align:center; display:flex; flex-direction:column; align-items:center; gap:10px; background:#fafafa">
+        <span style="font-size:0.8rem; font-weight:700; color:var(--text-light)">OR QUICK ACCESS</span>
+        <div id="googleSignInButton" style="width:100%; display:flex; justify-content:center"></div>
+      </div>
+
     </div>
   </main>
 
@@ -383,6 +390,52 @@
         showToast('Server registration failed', 'error');
       }
     });
+
+    // Google Sign-In Callback
+    async function handleGoogleSignInResponse(response) {
+      startGlobalProgressBar();
+      
+      try {
+        const res = await fetch('/api/auth/google-login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ credential: response.credential })
+        });
+        const data = await res.json();
+        
+        completeGlobalProgressBar();
+        
+        if (data.success) {
+          showToast('Google Authentication Successful!');
+          saveToken(data.token, data.user);
+          
+          setTimeout(() => {
+            window.location.href = 'account.html';
+          }, 1000);
+        } else {
+          showToast(data.message || 'Google Login failed', 'error');
+        }
+      } catch (err) {
+        completeGlobalProgressBar();
+        showToast('Failed to connect to Google Auth API', 'error');
+      }
+    }
+
+    // Google Sign-In SDK Initialization
+    window.onload = function () {
+      if (typeof google !== 'undefined') {
+        google.accounts.id.initialize({
+          client_id: "873618492049-dummyclientid.apps.googleusercontent.com", // Temporary developer Client ID
+          callback: handleGoogleSignInResponse
+        });
+        google.accounts.id.renderButton(
+          document.getElementById("googleSignInButton"),
+          { theme: "outline", size: "large", width: "320px" }
+        );
+      }
+    };
   </script>
 </body>
 </html>

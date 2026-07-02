@@ -161,6 +161,69 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// Google Sign-In Login/Register
+app.post('/api/auth/google-login', async (req, res) => {
+  const { credential } = req.body;
+  if (!credential) {
+    return res.status(400).json({ success: false, message: 'Google credential token is required' });
+  }
+
+  try {
+    // 1. Verify Google Credential token via Google tokeninfo endpoint
+    const verifyRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
+    const tokenInfo = await verifyRes.json();
+
+    if (tokenInfo.error_description || !tokenInfo.email) {
+      return res.status(400).json({ success: false, message: 'Invalid Google credential token' });
+    }
+
+    const { email, name, picture } = tokenInfo;
+    
+    // 2. Check if user already exists
+    let user = await db.get('SELECT * FROM customers WHERE email = ?', [email]);
+    
+    if (!user) {
+      // 3. User does not exist, create new user entry
+      const dummyPassword = Math.random().toString(36).substring(2, 15);
+      const passwordHash = await bcrypt.hash(dummyPassword, 10);
+      const defaultPhone = '0000000000'; // Default placeholder
+      
+      await db.query(
+        'INSERT INTO customers (name, email, password_hash, phone, avatar_url) VALUES (?, ?, ?, ?, ?)',
+        [name, email, passwordHash, defaultPhone, picture]
+      );
+      
+      // Get the newly created user
+      user = await db.get('SELECT * FROM customers WHERE email = ?', [email]);
+    } else {
+      // If user exists, check if we should update their avatar if they don't have one
+      if (!user.avatar_url && picture) {
+        await db.query('UPDATE customers SET avatar_url = ? WHERE id = ?', [picture, user.id]);
+        user.avatar_url = picture;
+      }
+    }
+
+    // 4. Generate local JWT token session
+    const token = jwt.sign({ id: user.id, email: user.email, name: user.name }, JWT_SECRET, { expiresIn: '24h' });
+    
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        avatar_url: user.avatar_url
+      }
+    });
+
+  } catch (err) {
+    console.error('Google login backend error:', err.message);
+    res.status(500).json({ success: false, message: 'Google Authentication failed on server' });
+  }
+});
+
 // Send OTP
 app.post('/api/auth/otp-send', async (req, res) => {
   const { phone } = req.body;
