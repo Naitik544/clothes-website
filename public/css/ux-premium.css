@@ -298,4 +298,17 @@
     flex-direction: column !important;
     gap: 0.8rem !important;
   }
+
+  /* Hide text buttons in mobile navbar to prevent horizontal squishing */
+  .nav-actions .btn-accent,
+  .nav-actions .btn-primary {
+    display: none !important;
+  }
+}
+
+/* 12. GLOBAL HORIZONTAL OVERFLOW PREVENTION */
+html, body {
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  width: 100% !important;
 }
