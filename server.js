@@ -587,7 +587,14 @@ app.get('/api/orders/:id/invoice', authenticateToken, async (req, res) => {
     `, [orderId]);
 
     // Fetch customer details
-    const customer = await db.get('SELECT name, email, phone FROM customers WHERE id = ?', [req.user.id]);
+    let customer = await db.get('SELECT name, email, phone FROM customers WHERE id = ?', [req.user.id]);
+    if (!customer) {
+      customer = {
+        name: order.guest_email ? order.guest_email.split('@')[0] : 'Valued Customer',
+        email: order.guest_email || 'customer@littlelarge.in',
+        phone: '0000000000'
+      };
+    }
 
     const orderDate = new Date(order.created_at).toLocaleDateString('en-IN', {
       day: 'numeric',
@@ -809,6 +816,7 @@ app.get('/api/orders/:id/invoice', authenticateToken, async (req, res) => {
 
     res.send(invoiceHtml);
   } catch (err) {
+    console.error('Invoice Generation Error:', err.stack || err.message);
     res.status(500).send(`<h1>Failed to generate invoice</h1><p>${err.message}</p>`);
   }
 });

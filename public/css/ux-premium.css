@@ -304,6 +304,12 @@
   .nav-actions .btn-primary {
     display: none !important;
   }
+
+  /* Stack reviews layout vertically on mobile */
+  .reviews-grid {
+    grid-template-columns: 1fr !important;
+    gap: 2.5rem !important;
+  }
 }
 
 /* 12. GLOBAL HORIZONTAL OVERFLOW PREVENTION */
