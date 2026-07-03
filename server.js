@@ -293,6 +293,7 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
     const user = await db.get('SELECT id, name, email, phone, address_line, city, state, pincode, avatar_url, phone_alt, address_line_2, city_2, state_2, pincode_2, created_at FROM customers WHERE id = ?', [req.user.id]);
     res.json({ success: true, user });
   } catch (err) {
+    console.error('Get Profile SQL Error:', err.stack || err.message);
     res.status(500).json({ success: false, message: err.message });
   }
 });
@@ -306,9 +307,24 @@ app.put('/api/auth/me', authenticateToken, async (req, res) => {
       SET name = ?, phone = ?, address_line = ?, city = ?, state = ?, pincode = ?,
           avatar_url = ?, phone_alt = ?, address_line_2 = ?, city_2 = ?, state_2 = ?, pincode_2 = ?
       WHERE id = ?
-    `, [name, phone, address_line, city, state, pincode, avatar_url, phone_alt, address_line_2, city_2, state_2, pincode_2, req.user.id]);
+    `, [
+      name || null,
+      phone || null,
+      address_line || null,
+      city || null,
+      state || null,
+      pincode || null,
+      avatar_url || null,
+      phone_alt || null,
+      address_line_2 || null,
+      city_2 || null,
+      state_2 || null,
+      pincode_2 || null,
+      req.user.id
+    ]);
     res.json({ success: true, message: 'Profile updated successfully' });
   } catch (err) {
+    console.error('Update Profile SQL Error:', err.stack || err.message);
     res.status(500).json({ success: false, message: err.message });
   }
 });
