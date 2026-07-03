@@ -312,3 +312,132 @@ html, body {
   overflow-x: hidden !important;
   width: 100% !important;
 }
+
+/* 13. PREMIUM NAVIGATION DRAWER STYLING */
+.nav-drawer {
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  overflow-y: auto !important;
+}
+.drawer-header {
+  background: var(--primary, #1e1b4b);
+  padding: 2.5rem 1.5rem 1.5rem 1.5rem;
+  color: #fff;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  box-sizing: border-box;
+}
+.drawer-header .drawer-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+.drawer-user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+.drawer-user-info img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  object-fit: cover;
+}
+.drawer-user-info .guest-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  color: #fff;
+}
+.drawer-user-name {
+  font-weight: 800;
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+.drawer-user-email {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.75);
+}
+.drawer-login-btn {
+  display: inline-block;
+  padding: 0.5rem 1.2rem;
+  background: var(--marigold, #d97706);
+  color: #fff !important;
+  font-weight: 700;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  text-decoration: none;
+  width: fit-content;
+  text-align: center;
+  transition: opacity 0.2s ease;
+}
+.drawer-login-btn:hover {
+  opacity: 0.9;
+}
+.drawer-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-sizing: border-box;
+}
+.drawer-section-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #999;
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin-bottom: 0.2rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+.drawer-links-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.drawer-link {
+  display: flex !important;
+  align-items: center;
+  gap: 0.8rem;
+  color: #333 !important;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  padding: 0.2rem 0;
+}
+.drawer-link i {
+  width: 20px;
+  color: var(--primary, #1e1b4b);
+  text-align: center;
+  font-size: 1.05rem;
+}
+.drawer-link:hover {
+  color: var(--marigold, #d97706) !important;
+}
+.drawer-link.logout-link {
+  color: var(--danger, #ef4444) !important;
+  margin-top: 0.5rem;
+  border-top: 1px solid #eee;
+  padding-top: 1rem;
+}
+.drawer-link.logout-link i {
+  color: var(--danger, #ef4444);
+}

@@ -271,17 +271,62 @@ function renderHeaderFooter() {
       <!-- Slide-out Drawer Overlay & Container for Mobile -->
       <div class="drawer-overlay" id="drawerOverlay" onclick="toggleNavDrawer()"></div>
       <div class="nav-drawer" id="navDrawer">
-        <button class="drawer-close" onclick="toggleNavDrawer()"><i class="fas fa-times"></i></button>
-        <h3 style="font-weight:800; border-bottom:1px solid #eee; padding-bottom:8px">Categories</h3>
-        <a href="index.html" onclick="toggleNavDrawer()">Home</a>
-        <a href="products.html" onclick="toggleNavDrawer()">Shop All</a>
-        <a href="products.html?category=Men" onclick="toggleNavDrawer()">Men's Wear</a>
-        <a href="products.html?category=Women" onclick="toggleNavDrawer()">Women's Wear</a>
-        <a href="products.html?category=Kids" onclick="toggleNavDrawer()">Children's Wear</a>
-        <a href="products.html?style=Ethnic" onclick="toggleNavDrawer()">Festival Wear</a>
-        <a href="products.html?sort=newest" onclick="toggleNavDrawer()">New Trends</a>
-        <a href="offers.html" onclick="toggleNavDrawer()">Promo Offers</a>
-        <a href="about.html" onclick="toggleNavDrawer()">About Us</a>
+        <!-- Header Profile Block -->
+        <div class="drawer-header">
+          <button class="drawer-close-btn" onclick="toggleNavDrawer()"><i class="fas fa-times"></i></button>
+          ${user ? `
+            <div class="drawer-user-info">
+              <img src="${avatarImg}" alt="User Avatar" onerror="this.src='https://cdn-icons-png.flaticon.com/512/147/147144.png'">
+              <div>
+                <div class="drawer-user-name">${user.name}</div>
+                <div class="drawer-user-email">${user.email}</div>
+              </div>
+            </div>
+          ` : `
+            <div class="drawer-user-info">
+              <div class="guest-icon"><i class="far fa-user"></i></div>
+              <div>
+                <div class="drawer-user-name">Welcome Guest</div>
+                <div class="drawer-user-email">Shop premium clothes</div>
+              </div>
+            </div>
+            <a href="login.html" class="drawer-login-btn" onclick="toggleNavDrawer()">Login / Sign Up</a>
+          `}
+        </div>
+
+        <div class="drawer-body">
+          <!-- Section 1: Quick Actions -->
+          <div class="drawer-links-group">
+            <a href="index.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-home"></i> Home</a>
+            <a href="products.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-shopping-bag"></i> Shop All Collections</a>
+            <a href="account.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-box"></i> My Orders & Profile</a>
+            <a href="account.html?tab=wishlist" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-heart"></i> My Wishlist</a>
+            <a href="cart.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-shopping-cart"></i> My Shopping Bag</a>
+          </div>
+
+          <!-- Section 2: Shop by Category -->
+          <div class="drawer-section-title">Shop Categories</div>
+          <div class="drawer-links-group">
+            <a href="products.html?category=Men" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-male"></i> Men's Wear</a>
+            <a href="products.html?category=Women" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-female"></i> Women's Wear</a>
+            <a href="products.html?category=Kids" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-child"></i> Children's Wear</a>
+            <a href="products.html?style=Ethnic" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-star"></i> Festival Wear</a>
+            <a href="products.html?sort=newest" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-fire"></i> New Trends</a>
+          </div>
+
+          <!-- Section 3: More Info -->
+          <div class="drawer-section-title">More Info</div>
+          <div class="drawer-links-group">
+            <a href="offers.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-tags"></i> Promo Offers & Deals</a>
+            <a href="about.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-info-circle"></i> Our Brand Story</a>
+            <a href="about.html#contact" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-headset"></i> Contact Support</a>
+          </div>
+
+          <!-- Section 4: Logout (If logged in) -->
+          ${user ? `
+            <a href="#" class="drawer-link logout-link" onclick="toggleNavDrawer(); logout();"><i class="fas fa-sign-out-alt"></i> Logout</a>
+          ` : ''}
+        </div>
       </div>
     `;
   }
