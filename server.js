@@ -329,6 +329,34 @@ app.put('/api/auth/me', authenticateToken, async (req, res) => {
   }
 });
 
+// Change Password
+app.put('/api/auth/password', authenticateToken, async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  if (!oldPassword || !newPassword) {
+    return res.status(400).json({ success: false, message: 'Please enter old and new passwords' });
+  }
+
+  try {
+    const user = await db.get('SELECT password_hash FROM customers WHERE id = ?', [req.user.id]);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const valid = await bcrypt.compare(oldPassword, user.password_hash);
+    if (!valid) {
+      return res.status(400).json({ success: false, message: 'Incorrect old password' });
+    }
+
+    const newHash = await bcrypt.hash(newPassword, 10);
+    await db.run('UPDATE customers SET password_hash = ? WHERE id = ?', [newHash, req.user.id]);
+    
+    res.json({ success: true, message: 'Password updated successfully' });
+  } catch (err) {
+    console.error('Password Update Error:', err.stack || err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 /* ==========================================================================
    PRODUCT CATALOG ENDPOINTS
    ========================================================================== */
