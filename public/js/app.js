@@ -141,6 +141,11 @@ function updateCartBadge() {
   badges.forEach(badge => {
     badge.textContent = count;
     badge.style.display = count > 0 ? 'flex' : 'none';
+    
+    // Trigger CSS bounce animation
+    badge.classList.remove('badge-bounce');
+    void badge.offsetWidth; // Force reflow
+    badge.classList.add('badge-bounce');
   });
 }
 
