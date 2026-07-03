@@ -10,7 +10,14 @@
       display: grid;
       grid-template-columns: 240px 1fr;
       gap: 3rem;
-      margin: 4rem 0;
+      margin: 4rem auto;
+    }
+    @media (max-width: 991px) {
+      .account-layout {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        margin: 2rem auto;
+      }
     }
     .account-sidebar-menu {
       background-color: #fff;

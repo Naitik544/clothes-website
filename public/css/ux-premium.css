@@ -567,3 +567,40 @@ html, body {
 .switch-toggle input:checked + .switch-slider:before {
   transform: translateX(24px);
 }
+
+/* 15. MOBILE GRID RESPONSIVENESS OVERRIDES */
+@media (max-width: 991px) {
+  .catalog-layout {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+    margin-top: 1.5rem !important;
+  }
+  .desktop-sidebar {
+    display: none !important; /* Hide desktop catalog filters on mobile/tablet */
+  }
+  .about-grid, .contact-layout {
+    grid-template-columns: 1fr !important;
+    gap: 2.5rem !important;
+    margin: 2.5rem auto !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .detail-actions {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    margin-bottom: 2rem !important;
+  }
+  .detail-actions button {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  .pincode-checker {
+    flex-direction: column !important;
+    gap: 0.8rem !important;
+  }
+  .pincode-checker input, .pincode-checker button {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
