@@ -690,3 +690,59 @@ html, body {
 .badge-bounce {
   animation: badgeBounce 0.4s cubic-bezier(0.25, 1, 0.5, 1) !important;
 }
+
+/* 17. COOKIE CONSENT BANNER MODERN STYLES */
+.cookie-banner {
+  position: fixed !important;
+  bottom: 24px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 90% !important;
+  max-width: 580px !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(30, 27, 75, 0.15) !important;
+  box-shadow: 0 12px 32px rgba(30, 27, 75, 0.15) !important;
+  border-radius: 14px !important;
+  padding: 1.2rem !important;
+  z-index: 10002 !important;
+  box-sizing: border-box !important;
+}
+.cookie-content {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+.cookie-content p {
+  font-size: 0.82rem !important;
+  color: var(--text-light, #4b5563) !important;
+  line-height: 1.4 !important;
+  margin: 0 !important;
+  font-weight: 500 !important;
+}
+.cookie-buttons {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+}
+.btn-cookie {
+  padding: 0.5rem 1.2rem !important;
+  border-radius: 50px !important;
+  font-weight: 700 !important;
+  font-size: 0.8rem !important;
+  cursor: pointer !important;
+  border: none !important;
+  transition: opacity 0.2s ease !important;
+}
+.btn-cookie.accept {
+  background-color: var(--primary, #1e1b4b) !important;
+  color: #fff !important;
+}
+.btn-cookie.reject {
+  background-color: #e4e4e7 !important;
+  color: #27272a !important;
+}
+.btn-cookie:hover {
+  opacity: 0.9 !important;
+}

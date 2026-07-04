@@ -21,7 +21,40 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+// Custom Rate Limiter to protect endpoints from DOS/brute-force
+const ipRequestCounts = {};
+setInterval(() => {
+  for (const ip in ipRequestCounts) {
+    delete ipRequestCounts[ip];
+  }
+}, 15 * 60 * 1000); // Reset count every 15 minutes
+
+function rateLimiter(req, res, next) {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  if (!ipRequestCounts[ip]) {
+    ipRequestCounts[ip] = 0;
+  }
+  ipRequestCounts[ip]++;
+  if (ipRequestCounts[ip] > 180) {
+    return res.status(429).json({ success: false, message: 'Too many requests from this IP. Please try again later.' });
+  }
+  next();
+}
+
+// Custom Security Headers middleware (Helmet alternative for local dependency safety)
+function securityHeaders(req, res, next) {
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  // Content Security Policy for modern browser sandboxing
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com https://www.noupe.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https://cdn-icons-png.flaticon.com https://lh3.googleusercontent.com https://www.noupe.com; connect-src 'self' https://identitytoolkit.googleapis.com; frame-src https://accounts.google.com;");
+  next();
+}
+
 // Middleware
+app.use(securityHeaders);
+app.use('/api/', rateLimiter);
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

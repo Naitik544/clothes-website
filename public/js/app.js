@@ -378,16 +378,41 @@ function renderHeaderFooter() {
           <p>&copy; 2026 Little to Large E-Commerce. Made with ❤️ in India. All Rights Reserved.</p>
         </div>
       </div>
+      <!-- Cookie Consent Banner -->
+      <div id="cookieConsentBanner" class="cookie-banner" style="display: none;">
+        <div class="cookie-content">
+          <p>🍪 We use cookies to optimize your family shopping experience, manage your active bag, and secure payments. By continuing, you agree to our privacy policy.</p>
+          <div class="cookie-buttons">
+            <button onclick="acceptCookies(true)" class="btn-cookie accept">Accept All</button>
+            <button onclick="acceptCookies(false)" class="btn-cookie reject">Essential Only</button>
+          </div>
+        </div>
+      </div>
     `;
   }
 
   updateCartBadge();
 }
 
+// Global Cookie Consent actions
+window.acceptCookies = function(allowAll) {
+  localStorage.setItem("cookie_preference", allowAll ? "accepted" : "essential_only");
+  const banner = document.getElementById("cookieConsentBanner");
+  if (banner) banner.style.display = "none";
+};
+
+window.checkCookiePreference = function() {
+  if (!localStorage.getItem("cookie_preference")) {
+    const banner = document.getElementById("cookieConsentBanner");
+    if (banner) banner.style.display = "block";
+  }
+};
+
 // Injected Header/Footer execution on DOM load
 document.addEventListener('DOMContentLoaded', () => {
   renderHeaderFooter();
   setupChatbotUI();
+  checkCookiePreference();
 });
 
 // Chatbot UI dynamic loader (External Integration)
