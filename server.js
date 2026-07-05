@@ -48,7 +48,7 @@ function securityHeaders(req, res, next) {
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   // Content Security Policy for modern browser sandboxing
-  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com https://www.noupe.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https://cdn-icons-png.flaticon.com https://lh3.googleusercontent.com https://www.noupe.com; connect-src 'self' https://identitytoolkit.googleapis.com; frame-src https://accounts.google.com;");
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com https://www.noupe.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https://cdn-icons-png.flaticon.com https://lh3.googleusercontent.com https://www.noupe.com https://noupe.com; connect-src 'self' https://identitytoolkit.googleapis.com https://www.noupe.com https://noupe.com; frame-src 'self' https://accounts.google.com https://www.noupe.com https://noupe.com;");
   next();
 }
 
