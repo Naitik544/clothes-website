@@ -394,7 +394,7 @@ function renderHeaderFooter() {
         </div>
         <div class="footer-col">
           <h3>Customer Trust</h3>
-          <p>📞 Support: +91 9988776655<br>✉️ Email: support@littlelarge.in</p>
+          <p>📞 Support: +91 7383874045<br>✉️ Email: indiancloths980@gmail.com</p>
           <p style="margin-top: 1rem; font-size: 0.8rem; color: rgba(255,255,255,0.5)">🔒 Safe Payments: UPI, Credit Card, Cash on Delivery</p>
         </div>
       </div>
