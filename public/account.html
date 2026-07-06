@@ -149,55 +149,71 @@
 
         <!-- SUB-TAB 2: ADDRESSES -->
         <div id="subtab-address" class="profile-subtab-content">
-          <form id="profileAddressForm" style="display:flex; flex-direction:column; gap:1.2rem">
-            <h3 style="font-size:0.95rem; font-weight:800; border-bottom:1px solid #eee; padding-bottom:4px; margin-top:8px">Primary Address</h3>
-            <div>
-              <label style="font-size:0.8rem; font-weight:700">Address Line 1</label>
-              <input type="text" id="profAddress" class="form-input" placeholder="Flat No, Building, Street" required>
-            </div>
-            <div style="display:flex; gap:1rem; flex-wrap:wrap">
-              <div style="flex:1; min-width:180px">
-                <label style="font-size:0.8rem; font-weight:700">City</label>
-                <input type="text" id="profCity" class="form-input" placeholder="City" required>
+          <form id="profileAddressForm" style="display:flex; flex-direction:column; gap:2rem">
+            
+            <!-- Primary Address Card -->
+            <div style="background:#fff; border:1px solid var(--border-color); border-radius:12px; padding:2rem; box-shadow:var(--shadow-sm); display:flex; flex-direction:column; gap:1.2rem">
+              <h3 style="font-size:1.05rem; font-weight:800; border-bottom:1px solid #f1f5f9; padding-bottom:10px; color:var(--primary); display:flex; align-items:center; gap:8px; margin:0">
+                <i class="fas fa-home" style="color:var(--primary)"></i> Primary Delivery Address
+              </h3>
+              
+              <div class="validation-input-group">
+                <label style="font-size:0.8rem; font-weight:700">Address Line (Flat, Street, Area)</label>
+                <input type="text" id="profAddress" class="form-input" placeholder="Flat No, Building name, Street address" required>
               </div>
-              <div style="flex:1; min-width:180px">
-                <label style="font-size:0.8rem; font-weight:700">State</label>
-                <input type="text" id="profState" class="form-input" placeholder="State" required>
-              </div>
-              <div style="flex:1; min-width:180px" class="validation-input-group">
-                <label style="font-size:0.8rem; font-weight:700">Pincode</label>
-                <input type="text" id="profPincode" class="form-input" placeholder="Pincode" maxlength="6" required oninput="validateField(this, /^\d{6}$/, 'Enter valid 6-digit Pincode')">
-                <span class="error-msg"></span>
+              
+              <div style="display:flex; gap:1rem; flex-wrap:wrap">
+                <div style="flex:1; min-width:180px" class="validation-input-group">
+                  <label style="font-size:0.8rem; font-weight:700">City</label>
+                  <input type="text" id="profCity" class="form-input" placeholder="City name" required>
+                </div>
+                <div style="flex:1; min-width:180px" class="validation-input-group">
+                  <label style="font-size:0.8rem; font-weight:700">State</label>
+                  <input type="text" id="profState" class="form-input" placeholder="State" required>
+                </div>
+                <div style="flex:1; min-width:180px" class="validation-input-group">
+                  <label style="font-size:0.8rem; font-weight:700">Pincode</label>
+                  <input type="text" id="profPincode" class="form-input" placeholder="6-digit pincode" maxlength="6" required oninput="validateField(this, /^\d{6}$/, 'Enter valid 6-digit Pincode')">
+                  <span class="error-msg"></span>
+                </div>
               </div>
             </div>
 
-            <h3 style="font-size:0.95rem; font-weight:800; border-bottom:1px solid #eee; padding-bottom:4px; margin-top:8px">Alternative Contact & Shipping Address</h3>
-            <div style="display:flex; gap:1rem; flex-wrap:wrap">
-              <div style="flex:1; min-width:240px" class="validation-input-group">
-                <label style="font-size:0.8rem; font-weight:700">Alternative Phone</label>
-                <input type="tel" id="profPhoneAlt" class="form-input" placeholder="Alternative contact number" maxlength="10" oninput="validateField(this, /^([6-9]\d{9})?$/, 'Please enter a valid 10-digit alternate number')">
-                <span class="error-msg"></span>
+            <!-- Alternative Address Card -->
+            <div style="background:#fff; border:1px solid var(--border-color); border-radius:12px; padding:2rem; box-shadow:var(--shadow-sm); display:flex; flex-direction:column; gap:1.2rem">
+              <h3 style="font-size:1.05rem; font-weight:800; border-bottom:1px solid #f1f5f9; padding-bottom:10px; color:var(--primary); display:flex; align-items:center; gap:8px; margin:0">
+                <i class="fas fa-truck-moving" style="color:var(--accent)"></i> Alternative Contact & Shipping Address
+              </h3>
+              
+              <div style="display:flex; gap:1rem; flex-wrap:wrap">
+                <div style="flex:1; min-width:240px" class="validation-input-group">
+                  <label style="font-size:0.8rem; font-weight:700">Alternative Phone Number</label>
+                  <input type="tel" id="profPhoneAlt" class="form-input" placeholder="10-digit mobile number" maxlength="10" oninput="validateField(this, /^([6-9]\d{9})?$/, 'Please enter a valid 10-digit alternate number')">
+                  <span class="error-msg"></span>
+                </div>
+                <div style="flex:1; min-width:240px" class="validation-input-group">
+                  <label style="font-size:0.8rem; font-weight:700">Address Line 2 (Alt Shipping)</label>
+                  <input type="text" id="profAddressAlt" class="form-input" placeholder="Flat No, Building, Street 2">
+                </div>
               </div>
-              <div style="flex:1; min-width:240px">
-                <label style="font-size:0.8rem; font-weight:700">Address Line 2 (Alt Shipping)</label>
-                <input type="text" id="profAddressAlt" class="form-input" placeholder="Flat No, Building, Street 2">
+              
+              <div style="display:flex; gap:1rem; flex-wrap:wrap">
+                <div style="flex:1; min-width:180px" class="validation-input-group">
+                  <label style="font-size:0.8rem; font-weight:700">City 2</label>
+                  <input type="text" id="profCityAlt" class="form-input" placeholder="City 2">
+                </div>
+                <div style="flex:1; min-width:180px" class="validation-input-group">
+                  <label style="font-size:0.8rem; font-weight:700">State 2</label>
+                  <input type="text" id="profStateAlt" class="form-input" placeholder="State 2">
+                </div>
+                <div style="flex:1; min-width:180px" class="validation-input-group">
+                  <label style="font-size:0.8rem; font-weight:700">Pincode 2</label>
+                  <input type="text" id="profPincodeAlt" class="form-input" placeholder="Pincode 2" maxlength="6" oninput="validateField(this, /^(\d{6})?$/, 'Enter valid 6-digit Pincode')">
+                  <span class="error-msg"></span>
+                </div>
               </div>
             </div>
-            <div style="display:flex; gap:1rem; flex-wrap:wrap">
-              <div style="flex:1; min-width:180px">
-                <label style="font-size:0.8rem; font-weight:700">City 2</label>
-                <input type="text" id="profCityAlt" class="form-input" placeholder="City 2">
-              </div>
-              <div style="flex:1; min-width:180px">
-                <label style="font-size:0.8rem; font-weight:700">State 2</label>
-                <input type="text" id="profStateAlt" class="form-input" placeholder="State 2">
-              </div>
-              <div style="flex:1; min-width:180px" class="validation-input-group">
-                <label style="font-size:0.8rem; font-weight:700">Pincode 2</label>
-                <input type="text" id="profPincodeAlt" class="form-input" placeholder="Pincode 2" maxlength="6" oninput="validateField(this, /^(\d{6})?$/, 'Enter valid 6-digit Pincode')">
-                <span class="error-msg"></span>
-              </div>
-            </div>
+
             <button type="submit" class="btn btn-primary" style="align-self: flex-start; padding: 0.8rem 2rem; cursor:pointer">Save Address Details</button>
           </form>
         </div>
