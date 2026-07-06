@@ -657,12 +657,19 @@ app.get('/api/orders/:id/invoice', authenticateToken, async (req, res) => {
       };
     }
 
-    const orderDate = new Date(order.created_at).toLocaleDateString('en-IN', {
+    // Safely parse raw SQLite UTC timestamp and format to Indian Standard Time (IST)
+    let dateObj = new Date(order.created_at);
+    if (typeof order.created_at === 'string' && !order.created_at.includes('Z') && !order.created_at.includes('+')) {
+      dateObj = new Date(order.created_at + ' UTC');
+    }
+
+    const orderDate = dateObj.toLocaleString('en-IN', {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'Asia/Kolkata'
     });
 
     // Calculate subtotal

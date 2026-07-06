@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Account | Little to Large</title>
   <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     .account-layout {
       display: grid;
@@ -703,12 +704,30 @@
           return;
         }
         const htmlText = await res.text();
-        const blob = new Blob([htmlText], { type: 'text/html' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `Invoice_L2L_#${orderId}.html`;
-        link.click();
-        showToast('Invoice downloaded successfully!', 'success');
+        
+        // Parse raw invoice HTML text to DOM element
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlText, 'text/html');
+        const element = doc.querySelector('.invoice-box') || doc.body;
+        
+        // Remove Print button inside PDF for aesthetics
+        const printBtn = element.querySelector('.print-btn');
+        if (printBtn) printBtn.remove();
+
+        const opt = {
+          margin:       0.3,
+          filename:     `Invoice_L2L_#${orderId}.pdf`,
+          image:        { type: 'jpeg', quality: 0.98 },
+          html2canvas:  { scale: 2, useCORS: true },
+          jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        
+        showToast('Generating PDF Invoice...', 'info');
+        html2pdf().from(element).set(opt).save().then(() => {
+          showToast('Invoice PDF downloaded successfully!', 'success');
+        }).catch(err => {
+          showToast('PDF conversion failed.', 'error');
+        });
       } catch (err) {
         showToast('Error downloading invoice', 'error');
       }
