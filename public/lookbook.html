@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive 3D Lookbook | Little to Large</title>
+  <meta name="description" content="Flip through our interactive 3D family apparel catalogue and match outfits across generations.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/ux-premium.css">
+  <style>
+    /* 3D Flipbook Core Styling */
+    .flipbook-section {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 4rem 1rem;
+      background: radial-gradient(circle, #faf8f5 0%, #f4f0e6 100%);
+      min-height: 70vh;
+    }
+
+    .flipbook-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      perspective: 2000px; /* Gives the 3D depth effect */
+      margin: 2rem 0;
+    }
+
+    .book {
+      position: relative;
+      width: 450px;
+      height: 600px;
+      transition: transform 0.5s;
+      transform-style: preserve-3d;
+    }
+
+    .page {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      transform-origin: left center;
+      transform-style: preserve-3d;
+      transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+      cursor: pointer;
+    }
+
+    .front, .back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.1), 0 8px 25px rgba(0,0,0,0.15);
+      backface-visibility: hidden; /* Hides reverse side during rotation */
+      border-radius: 0 8px 8px 0;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .back {
+      transform: rotateY(180deg);
+      border-radius: 8px 0 0 8px;
+    }
+
+    /* 3D Animation Classes managed by JavaScript */
+    .page.flipped {
+      transform: rotateY(-180deg);
+    }
+
+    /* Controls Panel */
+    .lookbook-controls {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .page-indicator {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--primary);
+      min-width: 100px;
+      text-align: center;
+    }
+
+    /* Mobile Responsive Scale Overrides */
+    @media (max-width: 576px) {
+      .book {
+        width: 320px !important;
+        height: 426px !important; /* Keep the aspect ratio 3:4 */
+      }
+      .flipbook-section {
+        padding: 2rem 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Dynamic Header Injected by app.js -->
+  <header></header>
+
+  <main class="fade-slide-up">
+    <!-- Intro Header -->
+    <section class="container" style="margin-top: 3rem; text-align: center;">
+      <span style="background-color: rgba(217, 119, 6, 0.1); color: var(--marigold); padding: 0.4rem 1.2rem; border-radius: 50px; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Interactive Catalog</span>
+      <h1 style="font-size: 2.5rem; font-weight: 800; color: var(--primary); margin-top: 1rem;">Family Style Lookbook</h1>
+      <p style="color: var(--text-light); max-width: 600px; margin: 0.5rem auto 0 auto;">Click or tap the pages to flip through our premium matching collections in real-time 3D.</p>
+    </section>
+
+    <!-- 3D Flipbook Arena -->
+    <section class="flipbook-section">
+      <div class="flipbook-container">
+        <div class="book" id="book">
+          
+          <!-- PAGE 1: COVER -->
+          <div class="page" onclick="flipPage(this, 1)">
+            <div class="front" style="background-image: url('1000171461.png'); background-color: #e2e8f0;"></div>
+            <div class="back" style="background-image: url('1000170851.png'); background-color: #cbd5e1;"></div>
+          </div>
+
+          <!-- PAGE 2: CASUAL & ACTIVE WEAR -->
+          <div class="page" onclick="flipPage(this, 2)">
+            <div class="front" style="background-image: url('1000170852.png'); background-color: #e2e8f0;"></div>
+            <div class="back" style="background-image: url('1000170853.png'); background-color: #cbd5e1;"></div>
+          </div>
+
+          <!-- PAGE 3: ETHNIC & VACATION COMBOS -->
+          <div class="page" onclick="flipPage(this, 3)">
+            <div class="front" style="background-image: url('1000170854.png'); background-color: #e2e8f0;"></div>
+            <div class="back" style="background-image: url('1000170855.png'); background-color: #cbd5e1;"></div>
+          </div>
+
+          <!-- PAGE 4: BACK COVER / SIZING -->
+          <div class="page" onclick="flipPage(this, 4)">
+            <div class="front" style="background-image: url('1000172621.png'); background-color: #e2e8f0;"></div>
+            <div class="back" style="background-color: #f6f3ea; display: flex; align-items: center; justify-content: center; font-family: sans-serif;">
+              <div style="text-align: center; color: #3d2327; padding: 2rem;">
+                <h2 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem;">LITTLE TO LARGE</h2>
+                <p style="font-size: 0.9rem; letter-spacing: 1px; color: var(--marigold); font-weight: 700;">www.littletolarge.in</p>
+                <div style="margin-top: 2rem; border-top: 1px solid rgba(61, 35, 39, 0.1); padding-top: 1.5rem;">
+                  <a href="products.html" class="btn btn-primary" style="padding: 0.6rem 1.5rem !important; font-size: 0.8rem !important;">Explore Outfits</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Controls Panel -->
+      <div class="lookbook-controls">
+        <button class="btn btn-accent" id="prevBtn" onclick="turnPrev()" style="padding: 0.6rem 1.5rem !important; font-size: 0.85rem !important;"><i class="fas fa-chevron-left"></i> Prev</button>
+        <span class="page-indicator" id="pageIndicator">Cover Page</span>
+        <button class="btn btn-primary" id="nextBtn" onclick="turnNext()" style="padding: 0.6rem 1.5rem !important; font-size: 0.85rem !important;">Next <i class="fas fa-chevron-right"></i></button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Dynamic Footer Injected by app.js -->
+  <footer></footer>
+
+  <!-- Scripts -->
+  <script src="js/ux-premium.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/chatbot.js"></script>
+  <script>
+    const pages = document.querySelectorAll('.page');
+    let activePageIndex = 0; // 0 means closed cover, 1, 2, 3, 4 are pages turned
+
+    function setupDynamicZIndex() {
+      pages.forEach((page, index) => {
+        page.style.zIndex = pages.length - index;
+      });
+    }
+    setupDynamicZIndex();
+
+    function updateIndicator() {
+      const indicator = document.getElementById('pageIndicator');
+      if (activePageIndex === 0) {
+        indicator.textContent = 'Cover Page';
+      } else if (activePageIndex === pages.length) {
+        indicator.textContent = 'Back Cover';
+      } else {
+        indicator.textContent = `Page ${activePageIndex} of ${pages.length - 1}`;
+      }
+    }
+
+    function flipPage(pageElement, pageNum) {
+      if (!pageElement.classList.contains('flipped')) {
+        // Turning forward
+        pageElement.classList.add('flipped');
+        pageElement.style.zIndex = pageNum;
+        activePageIndex = pageNum;
+      } else {
+        // Turning backward
+        pageElement.classList.remove('flipped');
+        // Restore dynamic Z index based on initial layout order
+        pageElement.style.zIndex = pages.length - pageNum + 1;
+        activePageIndex = pageNum - 1;
+      }
+      updateIndicator();
+    }
+
+    function turnNext() {
+      if (activePageIndex < pages.length) {
+        const targetPage = pages[activePageIndex];
+        flipPage(targetPage, activePageIndex + 1);
+      }
+    }
+
+    function turnPrev() {
+      if (activePageIndex > 0) {
+        const targetPage = pages[activePageIndex - 1];
+        flipPage(targetPage, activePageIndex);
+      }
+    }
+  </script>
+</body>
+</html>

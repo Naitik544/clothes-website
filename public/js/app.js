@@ -243,6 +243,7 @@ function renderHeaderFooter() {
         <nav class="nav-links">
           <a href="index.html">Home</a>
           <a href="products.html">Shop All</a>
+          <a href="lookbook.html">Lookbook</a>
           <a href="products.html?category=Men">Men</a>
           <a href="products.html?category=Women">Women</a>
           <a href="products.html?category=Kids">Kids</a>
@@ -329,6 +330,7 @@ function renderHeaderFooter() {
           <div class="drawer-links-group">
             <a href="index.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-home"></i> Home</a>
             <a href="products.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-shopping-bag"></i> Shop All Collections</a>
+            <a href="lookbook.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-book-open"></i> Interactive Lookbook</a>
             <a href="account.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-box"></i> My Orders & Profile</a>
             <a href="account.html?tab=wishlist" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-heart"></i> My Wishlist</a>
             <a href="cart.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-shopping-cart"></i> My Shopping Bag</a>
