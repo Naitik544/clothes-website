@@ -649,13 +649,11 @@ app.get('/api/orders/:id/invoice', authenticateToken, async (req, res) => {
 
     // Fetch customer details
     let customer = await db.get('SELECT name, email, phone FROM customers WHERE id = ?', [req.user.id]);
-    if (!customer) {
-      customer = {
-        name: order.guest_email ? order.guest_email.split('@')[0] : 'Valued Customer',
-        email: order.guest_email || 'customer@littlelarge.in',
-        phone: '0000000000'
-      };
-    }
+    
+    // Safely extract individual variables to prevent null strings
+    const custName = (customer && customer.name) ? customer.name : (order.guest_email ? order.guest_email.split('@')[0] : 'Valued Customer');
+    const custEmail = (customer && customer.email) ? customer.email : (order.guest_email || 'customer@littlelarge.in');
+    const custPhone = (customer && customer.phone) ? customer.phone : '';
 
     // Safely parse raw SQLite UTC timestamp and format to Indian Standard Time (IST)
     let dateObj = new Date(order.created_at);
@@ -806,9 +804,9 @@ app.get('/api/orders/:id/invoice', authenticateToken, async (req, res) => {
         <td style="width: 50%; padding-right: 10px; vertical-align: top;">
           <div class="billing-card" style="border: 1px solid #eee; border-radius: 6px; padding: 15px; background: #fafafa; height: 120px; box-sizing: border-box;">
             <h3 style="margin: 0 0 10px 0; font-size: 0.95rem; color: #1e1b4b; border-bottom: 1px solid #eee; padding-bottom: 5px; text-transform: uppercase; font-weight: 700;">Customer Details</h3>
-            <p style="margin: 5px 0; font-size: 0.85rem; line-height: 1.4;"><strong>Name:</strong> ${customer.name}</p>
-            <p style="margin: 5px 0; font-size: 0.85rem; line-height: 1.4;"><strong>Email:</strong> ${customer.email}</p>
-            <p style="margin: 5px 0; font-size: 0.85rem; line-height: 1.4;"><strong>Phone:</strong> +91 ${customer.phone}</p>
+            <p style="margin: 5px 0; font-size: 0.85rem; line-height: 1.4;"><strong>Name:</strong> ${custName}</p>
+            <p style="margin: 5px 0; font-size: 0.85rem; line-height: 1.4;"><strong>Email:</strong> ${custEmail}</p>
+            <p style="margin: 5px 0; font-size: 0.85rem; line-height: 1.4;"><strong>Phone:</strong> ${custPhone ? '+91 ' + custPhone : 'N/A'}</p>
           </div>
         </td>
         <td style="width: 50%; padding-left: 10px; vertical-align: top;">

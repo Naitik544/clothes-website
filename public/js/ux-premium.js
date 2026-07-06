@@ -253,10 +253,56 @@ function setupRippleEffects() {
   });
 }
 
+// 9. 3D PERSPECTIVE TILT HOVER EFFECTS
+function initPremium3DEffects() {
+  const applyTilt = () => {
+    document.querySelectorAll('.product-card').forEach(card => {
+      if (card.classList.contains('tilt-card-3d')) return;
+      card.classList.add('tilt-card-3d');
+
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const xc = rect.width / 2;
+        const yc = rect.height / 2;
+        const angleX = (yc - y) / 12; // tilt up/down
+        const angleY = (x - xc) / 12; // tilt left/right
+        
+        card.style.transform = `perspective(1000px) rotateX(${angleX}deg) rotateY(${angleY}deg) translateY(-8px) scale(1.02)`;
+        card.style.transition = 'transform 0.05s ease';
+      });
+      
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0) scale(1)`;
+        card.style.transition = 'transform 0.5s ease';
+      });
+    });
+  };
+
+  applyTilt();
+  
+  // Watch for dynamic DOM changes (catalog filters / sorting)
+  const grid = document.getElementById('catalogGrid') || document.getElementById('featuredProductsGrid') || document.querySelector('.products-grid');
+  if (grid) {
+    const observer = new MutationObserver(applyTilt);
+    observer.observe(grid, { childList: true });
+  }
+}
+
+// 10. SMOOTH FADE SLIDE UP ENTRANCE ANIMATIONS
+function initEntranceAnimations() {
+  document.querySelectorAll('main, section.container, .about-hero, .cart-container, .account-layout, .login-container').forEach(el => {
+    el.classList.add('fade-slide-up');
+  });
+}
+
 // Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
   initGlobalProgressBar();
   initOfflineMonitor();
   setupRippleEffects();
   setupLazyImages();
+  initPremium3DEffects();
+  initEntranceAnimations();
 });

@@ -284,9 +284,23 @@ function renderHeaderFooter() {
         </form>
       </div>
 
-      <!-- Slide-out Drawer Overlay & Container for Mobile -->
-      <div class="drawer-overlay" id="drawerOverlay" onclick="toggleNavDrawer()"></div>
-      <div class="nav-drawer" id="navDrawer">
+    `;
+  }
+
+  // Inject mobile drawer to body if missing so it has global viewport stacking context
+  if (!document.getElementById('navDrawer')) {
+    const overlay = document.createElement('div');
+    overlay.className = 'drawer-overlay';
+    overlay.id = 'drawerOverlay';
+    overlay.onclick = toggleNavDrawer;
+    document.body.appendChild(overlay);
+
+    const drawer = document.createElement('div');
+    drawer.className = 'nav-drawer';
+    drawer.id = 'navDrawer';
+    
+    const avatarImg = user && user.avatar_url ? user.avatar_url : 'https://cdn-icons-png.flaticon.com/512/147/147144.png';
+    drawer.innerHTML = `
         <!-- Header Profile Block -->
         <div class="drawer-header">
           <button class="drawer-close-btn" onclick="toggleNavDrawer()"><i class="fas fa-times"></i></button>
@@ -343,8 +357,8 @@ function renderHeaderFooter() {
             <a href="#" class="drawer-link logout-link" onclick="toggleNavDrawer(); logout();"><i class="fas fa-sign-out-alt"></i> Logout</a>
           ` : ''}
         </div>
-      </div>
     `;
+    document.body.appendChild(drawer);
   }
 
   if (footerTag) {
