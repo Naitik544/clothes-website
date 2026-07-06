@@ -89,6 +89,10 @@ function saveCart(cart) {
 }
 
 function addToCart(product, size = 'M', qty = 1) {
+  if (product.stock !== undefined && parseInt(product.stock) <= 0) {
+    showToast(`Sorry, ${product.name} is currently Out of Stock!`, 'error');
+    return;
+  }
   const cart = getCart();
   const index = cart.findIndex(item => item.product_id === product.id && item.size === size);
 

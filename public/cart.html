@@ -181,9 +181,15 @@
       cart.forEach(item => {
         container.innerHTML += `
           <div class="cart-item">
-            <img src="${item.image}" alt="${item.name}" class="cart-item-img" onerror="this.src='/images/products/placeholder.jpg'">
+            <a href="product-detail.html?id=${item.product_id}" style="display:contents">
+              <img src="${item.image}" alt="${item.name}" class="cart-item-img" onerror="this.src='/images/products/placeholder.jpg'" style="cursor:pointer">
+            </a>
             <div class="cart-item-details">
-              <h4 class="cart-item-title">${item.name}</h4>
+              <h4 class="cart-item-title">
+                <a href="product-detail.html?id=${item.product_id}" style="color:var(--primary); text-decoration:none; transition:color 0.2s">
+                  ${item.name}
+                </a>
+              </h4>
               <p class="cart-item-meta">Size: <strong>${item.size}</strong> | Price: ₹${item.price}</p>
               
               <div class="cart-item-actions">

@@ -81,6 +81,9 @@
         <button class="btn btn-accent" id="detailWishlistBtn" onclick="handleWishlistClick()" style="max-width: 180px">
           <i class="far fa-heart"></i> Wishlist
         </button>
+        <button class="btn btn-share" onclick="shareProduct()" style="max-width: 120px; background:#f4f4f5; border:1px solid #e4e4e7; color:#27272a; display:flex; align-items:center; justify-content:center; gap:8px; border-radius:50px" title="Share Product">
+          <i class="fas fa-share-alt"></i> Share
+        </button>
       </div>
 
       <!-- Delivery Pin Checker -->
@@ -382,6 +385,27 @@
       });
       
       await wrapButtonLoader(button, addPromise);
+    }
+
+    function shareProduct() {
+      if (!activeProduct) return;
+      
+      const shareData = {
+        title: activeProduct.name,
+        text: `Check out the gorgeous ${activeProduct.name} on Little to Large e-store!`,
+        url: window.location.href
+      };
+
+      if (navigator.share) {
+        navigator.share(shareData)
+          .then(() => showToast('Product shared successfully!', 'success'))
+          .catch((err) => console.log('Error sharing:', err));
+      } else {
+        // Fallback: Copy link to clipboard
+        navigator.clipboard.writeText(window.location.href)
+          .then(() => showToast('Link copied to clipboard! Share it anywhere.', 'success'))
+          .catch(() => showToast('Failed to copy link.', 'error'));
+      }
     }
 
     /* ==========================================================================

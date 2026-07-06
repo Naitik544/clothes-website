@@ -746,3 +746,11 @@ html, body {
 .btn-cookie:hover {
   opacity: 0.9 !important;
 }
+
+@media (max-width: 768px) {
+  .btn-share {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
