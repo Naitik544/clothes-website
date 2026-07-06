@@ -955,3 +955,23 @@ body.drawer-open {
   box-shadow: 0 0 0 4px rgba(30, 27, 75, 0.08) !important;
   outline: none !important;
 }
+
+/* 22. MOBILE 2X2 CATEGORIES GRID MATRIX */
+@media (max-width: 768px) {
+  .categories-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+  }
+  .category-card {
+    height: 180px !important; /* Shorter height so it forms a beautiful 2x2 compact block */
+  }
+  .category-card-overlay {
+    padding: 1rem !important;
+  }
+  .category-card-overlay h3 {
+    font-size: 1.1rem !important;
+  }
+  .category-card-overlay span {
+    font-size: 0.7rem !important;
+  }
+}
