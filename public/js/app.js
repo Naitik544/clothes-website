@@ -237,7 +237,7 @@ function renderHeaderFooter() {
         <button class="hamburger-btn" onclick="toggleNavDrawer()"><i class="fas fa-bars"></i></button>
         
         <a href="index.html" class="logo">
-          🛍️ Little <span>to Large</span>
+          🛍️ Little <span class="logo-accent">to</span> Large
         </a>
         
         <nav class="nav-links">
@@ -365,7 +365,7 @@ function renderHeaderFooter() {
     footerTag.innerHTML = `
       <div class="container footer-grid">
         <div class="footer-col">
-          <div class="footer-logo">🛍️ Little <span>to Large</span></div>
+          <div class="footer-logo">🛍️ Little <span class="logo-accent">to</span> Large</div>
           <p>India's premium family clothing store. We bring comfortable, beautiful ethnic and western outfits from infants to adults. Designed to grow and scale with Indian family values.</p>
           <div class="social-links">
             <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>

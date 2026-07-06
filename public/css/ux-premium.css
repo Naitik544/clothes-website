@@ -975,3 +975,35 @@ body.drawer-open {
     font-size: 0.7rem !important;
   }
 }
+
+/* 23. ELEGANT LOGO TYPOGRAPHY & NO-WRAP MOBILE FIXES */
+.logo, .footer-logo {
+  white-space: nowrap !important;
+  display: flex !important;
+  align-items: center !important;
+  font-size: 1.45rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.5px !important;
+  font-family: 'Outfit', sans-serif !important;
+  text-transform: capitalize !important;
+}
+
+.logo-accent {
+  color: var(--marigold) !important;
+  font-style: italic !important;
+  font-weight: 400 !important;
+  font-family: Georgia, serif !important;
+  font-size: 1.25rem !important;
+  margin: 0 4px !important;
+  text-transform: lowercase !important;
+}
+
+@media (max-width: 576px) {
+  .logo {
+    font-size: 1.15rem !important; /* Shrunk size on mobile to prevent wrapping and overlaps */
+  }
+  .logo-accent {
+    font-size: 0.95rem !important;
+    margin: 0 2px !important;
+  }
+}
