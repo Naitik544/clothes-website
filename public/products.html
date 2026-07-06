@@ -239,10 +239,10 @@
 
       // Add listeners to elements
       document.querySelectorAll('.cat-filter, .subcat-filter, .fabric-filter, .color-filter, .style-filter, .gender-filter').forEach(el => {
-        el.addEventListener('change', fetchProducts);
+        el.addEventListener('change', syncFilterStates);
       });
       document.getElementById('sortSelector').addEventListener('change', fetchProducts);
-      document.getElementById('priceRange').addEventListener('change', fetchProducts);
+      document.getElementById('priceRange').addEventListener('input', handlePriceSliderChange);
 
       // Check URL parameters for text search on load
       if (searchParam) {
@@ -252,28 +252,65 @@
       fetchProducts();
     });
 
+    // Bi-directional state synchronization for checkboxes
+    function syncFilterStates(event) {
+      const target = event.target;
+      const val = target.value;
+      const isChecked = target.checked;
+      const className = target.className;
+
+      document.querySelectorAll(`.${className}`).forEach(el => {
+        if (el.value === val) {
+          el.checked = isChecked;
+        } else if (isChecked) {
+          // Mutual exclusivity inside the filter category
+          el.checked = false;
+        }
+      });
+      
+      fetchProducts();
+    }
+
+    // Bi-directional price slider sync
+    function handlePriceSliderChange(e) {
+      const val = e.target.value;
+      const formatted = `₹${parseInt(val).toLocaleString('en-IN')}`;
+      
+      document.querySelectorAll('#priceRange').forEach(el => el.value = val);
+      document.querySelectorAll('#priceValDisplay').forEach(el => el.textContent = formatted);
+      
+      fetchProducts();
+    }
+
     function toggleSizeFilter(el, size) {
       const chips = document.querySelectorAll('.size-filter-chip');
-      if (el.classList.contains('active')) {
-        el.classList.remove('active');
+      const wasActive = el.classList.contains('active');
+      
+      chips.forEach(c => c.classList.remove('active'));
+      
+      if (wasActive) {
         activeSizeFilter = null;
       } else {
-        chips.forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
+        // Sync active state across duplicate chips
+        chips.forEach(c => {
+          if (c.getAttribute('onclick') && c.getAttribute('onclick').includes(`'${size}'`)) {
+            c.classList.add('active');
+          }
+        });
         activeSizeFilter = size;
       }
       fetchProducts();
     }
 
     function updatePriceLabel(val) {
-      document.getElementById('priceValDisplay').textContent = `₹${parseInt(val).toLocaleString('en-IN')}`;
+      document.querySelectorAll('#priceValDisplay').forEach(el => el.textContent = `₹${parseInt(val).toLocaleString('en-IN')}`);
     }
 
     function clearFilters() {
       document.querySelectorAll('.cat-filter, .subcat-filter, .fabric-filter, .color-filter, .style-filter, .gender-filter').forEach(chk => chk.checked = false);
       document.querySelectorAll('.size-filter-chip').forEach(c => c.classList.remove('active'));
       activeSizeFilter = null;
-      document.getElementById('priceRange').value = 6000;
+      document.querySelectorAll('#priceRange').forEach(el => el.value = 6000);
       updatePriceLabel(6000);
       document.getElementById('sortSelector').value = '';
       document.getElementById('catalogSearchInput').value = '';
@@ -502,21 +539,11 @@
             
             // Bind mobile listener events
             container.querySelectorAll('.cat-filter, .subcat-filter, .fabric-filter, .color-filter, .style-filter, .gender-filter').forEach(el => {
-              el.addEventListener('change', fetchProducts);
+              el.addEventListener('change', syncFilterStates);
             });
             const mobilePrice = container.querySelector('#priceRange');
             if (mobilePrice) {
-              mobilePrice.addEventListener('change', fetchProducts);
-              mobilePrice.addEventListener('input', (e) => {
-                const label = container.querySelector('#priceValDisplay');
-                if (label) label.textContent = `₹${parseInt(e.target.value).toLocaleString('en-IN')}`;
-                
-                const deskPrice = originalAside.querySelector('#priceRange');
-                if (deskPrice) {
-                  deskPrice.value = e.target.value;
-                  originalAside.querySelector('#priceValDisplay').textContent = label.textContent;
-                }
-              });
+              mobilePrice.addEventListener('input', handlePriceSliderChange);
             }
           }
         }
