@@ -89,6 +89,13 @@ function saveCart(cart) {
 }
 
 function addToCart(product, size = 'M', qty = 1) {
+  if (!getToken()) {
+    showToast('Please login or register to add outfits to your family box!', 'error');
+    setTimeout(() => {
+      window.location.href = 'login.html';
+    }, 1200);
+    return;
+  }
   if (product.stock !== undefined && parseInt(product.stock) <= 0) {
     showToast(`Sorry, ${product.name} is currently Out of Stock!`, 'error');
     return;
