@@ -811,3 +811,20 @@ html, body {
     font-weight: 800 !important;
   }
 }
+
+/* 19. MOBILE MENU SCROLL LOCK & OVERLAP RESOLUTIONS */
+body.drawer-open {
+  overflow: hidden !important;
+  height: 100vh !important;
+  position: fixed !important;
+  width: 100% !important;
+  touch-action: none !important;
+}
+
+.nav-drawer {
+  background-color: #ffffff !important;
+  height: 100% !important;
+  height: 100vh !important;
+  height: -webkit-fill-available !important; /* Mobile browser dynamic viewport size support */
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.2) !important;
+}

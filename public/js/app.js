@@ -440,8 +440,14 @@ function toggleNavDrawer() {
   const drawer = document.getElementById('navDrawer');
   const overlay = document.getElementById('drawerOverlay');
   if (drawer && overlay) {
-    drawer.classList.toggle('active');
+    const isActive = drawer.classList.toggle('active');
     overlay.classList.toggle('active');
+    
+    if (isActive) {
+      document.body.classList.add('drawer-open');
+    } else {
+      document.body.classList.remove('drawer-open');
+    }
   }
 }
 
