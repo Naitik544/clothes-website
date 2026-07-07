@@ -152,7 +152,7 @@ async function getFirebasePublicKeys() {
     return firebasePublicKeys;
   }
   try {
-    const res = await fetch('https://www.googleapis.com/robot/v1/metadata/x509/securetoken-system@system.gserviceaccount.com');
+    const res = await fetch('https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com');
     const keys = await res.json();
     firebasePublicKeys = keys;
     keysExpiryTime = now + 3600000; // Cache for 1 hour
