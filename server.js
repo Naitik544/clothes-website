@@ -1406,6 +1406,90 @@ app.get('/api/admin/errors', adminIpFilter, authenticateAdmin, async (req, res) 
   }
 });
 
+// GET Public Lookbook Pages
+app.get('/api/lookbook', async (req, res) => {
+  try {
+    const pages = await db.query('SELECT * FROM lookbook_pages ORDER BY page_number ASC');
+    res.json({ success: true, pages });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST Admin Upload Lookbook Page (max 50 pages)
+app.post('/api/admin/lookbook/upload', adminIpFilter, authenticateAdmin, upload.single('image'), async (req, res) => {
+  try {
+    const pageNumber = parseInt(req.body.page_number);
+    if (!pageNumber || pageNumber < 1 || pageNumber > 50) {
+      return res.status(400).json({ success: false, message: 'Page number must be between 1 and 50' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Please upload an image file' });
+    }
+    
+    const imageUrl = 'images/uploads/' + req.file.filename;
+    
+    // Check if page already exists
+    const existing = await db.get('SELECT id FROM lookbook_pages WHERE page_number = ?', [pageNumber]);
+    if (existing) {
+      await db.run('UPDATE lookbook_pages SET image_url = ? WHERE page_number = ?', [imageUrl, pageNumber]);
+    } else {
+      await db.run('INSERT INTO lookbook_pages (page_number, image_url) VALUES (?, ?)', [pageNumber, imageUrl]);
+    }
+    
+    res.json({ success: true, message: `Lookbook page ${pageNumber} updated successfully`, imageUrl });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST Admin Delete Lookbook Page
+app.post('/api/admin/lookbook/delete', adminIpFilter, authenticateAdmin, async (req, res) => {
+  try {
+    const pageNumber = parseInt(req.body.page_number);
+    if (!pageNumber) {
+      return res.status(400).json({ success: false, message: 'Invalid page number' });
+    }
+    
+    await db.run('DELETE FROM lookbook_pages WHERE page_number = ?', [pageNumber]);
+    // Shift subsequent pages left to maintain contiguous numbering
+    await db.run('UPDATE lookbook_pages SET page_number = page_number - 1 WHERE page_number > ?', [pageNumber]);
+    
+    res.json({ success: true, message: `Lookbook page ${pageNumber} deleted successfully` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST Admin Reorder Lookbook Page
+app.post('/api/admin/lookbook/reorder', adminIpFilter, authenticateAdmin, async (req, res) => {
+  try {
+    const { page_number, direction } = req.body;
+    const pageNum = parseInt(page_number);
+    if (!pageNum) return res.status(400).json({ success: false, message: 'Invalid page number' });
+    
+    const targetPageNum = direction === 'up' ? pageNum - 1 : pageNum + 1;
+    if (targetPageNum < 1) return res.status(400).json({ success: false, message: 'Cannot move cover page further up' });
+    
+    const source = await db.get('SELECT image_url FROM lookbook_pages WHERE page_number = ?', [pageNum]);
+    const target = await db.get('SELECT image_url FROM lookbook_pages WHERE page_number = ?', [targetPageNum]);
+    
+    if (!source) return res.status(400).json({ success: false, message: 'Source page does not exist' });
+    
+    if (target) {
+      // Swap images to swap page orders
+      await db.run('UPDATE lookbook_pages SET image_url = ? WHERE page_number = ?', [target.image_url, pageNum]);
+      await db.run('UPDATE lookbook_pages SET image_url = ? WHERE page_number = ?', [source.image_url, targetPageNum]);
+    } else {
+      await db.run('UPDATE lookbook_pages SET page_number = ? WHERE page_number = ?', [targetPageNum, pageNum]);
+    }
+    
+    res.json({ success: true, message: 'Reordered pages successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Dynamic XML Sitemap Generator
 app.post('/api/admin/seo-generate', adminIpFilter, authenticateAdmin, async (req, res) => {
   try {

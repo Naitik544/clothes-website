@@ -325,6 +325,16 @@ async function createTables() {
     )
   `);
 
+  // Lookbook Pages table
+  await run(`
+    CREATE TABLE IF NOT EXISTS lookbook_pages (
+      id ${idType},
+      page_number INTEGER UNIQUE NOT NULL,
+      image_url VARCHAR(255) NOT NULL,
+      created_at ${datetimeType} DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Alter tables to add new columns for user settings and dynamic product details
   const alterQueries = [
     `ALTER TABLE customers ADD COLUMN phone_alt VARCHAR(15)`,
@@ -628,6 +638,27 @@ async function seedDatabase() {
     await run(`UPDATE products SET fabric = 'Cotton', color = 'Red', style = 'Ethnic', gender = 'Women', video_url = 'https://www.w3schools.com/html/mov_bbb.mp4' WHERE fabric IS NULL`);
   } catch (e) {
     console.error('Failed to backfill product values:', e.message);
+  }
+
+  // Seed default lookbook pages
+  try {
+    const lookbookCount = await get('SELECT COUNT(*) as count FROM lookbook_pages');
+    if (parseInt(lookbookCount.count) === 0) {
+      console.log('Seeding lookbook pages database...');
+      const defaultPages = [
+        { page_number: 1, image_url: 'images/lookbook_p1.png' },
+        { page_number: 2, image_url: 'images/lookbook_p2.png' },
+        { page_number: 3, image_url: 'images/lookbook_p3.png' },
+        { page_number: 4, image_url: 'images/lookbook_p4.png' },
+        { page_number: 5, image_url: 'images/lookbook_p5.png' },
+        { page_number: 6, image_url: 'images/lookbook_p6.png' }
+      ];
+      for (const page of defaultPages) {
+        await run('INSERT INTO lookbook_pages (page_number, image_url) VALUES (?, ?)', [page.page_number, page.image_url]);
+      }
+    }
+  } catch (err) {
+    console.error('Failed to seed lookbook pages:', err.message);
   }
 }
 

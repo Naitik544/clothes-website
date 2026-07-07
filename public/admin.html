@@ -28,6 +28,7 @@
         <li><a href="#" data-section="promotionsSection"><i class="fas fa-ad"></i> Promotions & Hero</a></li>
         <li><a href="#" data-section="errorSection"><i class="fas fa-bug"></i> Error Tracking</a></li>
         <li><a href="#" data-section="inquiriesSection"><i class="far fa-envelope-open"></i> Customer Inquiries</a></li>
+        <li><a href="#" data-section="lookbookSection"><i class="fas fa-book-open"></i> Lookbook Manager</a></li>
         <li><a href="index.html" style="color:var(--marigold); margin-top:3rem"><i class="fas fa-home"></i> View Website</a></li>
       </ul>
     </aside>
@@ -349,6 +350,38 @@
                 <!-- Load dynamic error logs -->
               </tbody>
             </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. LOOKBOOK MANAGER SECTION -->
+      <section id="lookbookSection" style="display: none;">
+        <div style="background-color:#fff; padding:2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); margin-bottom:2rem">
+          <h2 style="font-size:1.3rem; color:var(--primary); font-weight:800; border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:1.5rem">
+            📖 Interactive 3D Lookbook Catalog Manager
+          </h2>
+          <p style="font-size:0.85rem; color:var(--text-light); margin-bottom:2rem">
+            Upload new pages, reorder catalog sequences, or delete pages. The catalog automatically pairs pages into a 3D flipbook. Max 50 pages supported.
+          </p>
+
+          <!-- Upload Form Block -->
+          <form id="lookbookUploadForm" style="display:flex; gap:1.5rem; flex-wrap:wrap; background:#fafafa; padding:1.5rem; border-radius:8px; border:1px solid var(--border-color); margin-bottom:2.5rem; align-items:flex-end">
+            <div style="flex:1; min-width:150px">
+              <label style="font-size:0.8rem; font-weight:700">Page Number (1 to 50)</label>
+              <input type="number" id="lookbookPageNum" min="1" max="50" class="form-input" style="width:100%; box-sizing:border-box" required placeholder="e.g. 5">
+            </div>
+            <div style="flex:2; min-width:200px">
+              <label style="font-size:0.8rem; font-weight:700">Select Page Image (JPG/PNG)</label>
+              <input type="file" id="lookbookFile" accept="image/*" class="form-input" style="width:100%; box-sizing:border-box" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="padding:0.75rem 2rem !important; font-size:0.85rem !important; cursor:pointer">Upload / Update Page</button>
+          </form>
+
+          <!-- Catalog Grid -->
+          <h3 style="font-size:1rem; font-weight:800; color:var(--primary); margin-bottom:1.2rem; border-bottom:1px dashed #eee; padding-bottom:6px">Active Catalog Pages</h3>
+          <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:1.5rem" id="lookbookPagesGrid">
+            <!-- Dynamically populated lookbook pages list -->
+            <p style="color:var(--text-light)">Loading lookbook pages list...</p>
           </div>
         </div>
       </section>

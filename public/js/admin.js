@@ -33,7 +33,7 @@ function setupSidebarNavigation() {
 }
 
 function showSection(sectionId) {
-  const sections = ['analyticsSection', 'ordersSection', 'productsSection', 'inquiriesSection', 'promotionsSection', 'errorSection'];
+  const sections = ['analyticsSection', 'ordersSection', 'productsSection', 'inquiriesSection', 'promotionsSection', 'errorSection', 'lookbookSection'];
   sections.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = id === sectionId ? 'block' : 'none';
@@ -48,6 +48,7 @@ function showSection(sectionId) {
     loadAdminPromotions();
   }
   else if (sectionId === 'errorSection') loadAdminErrors();
+  else if (sectionId === 'lookbookSection') loadAdminLookbook();
 }
 
 /* ==========================================================================
@@ -715,5 +716,147 @@ async function loadAdminErrors() {
     }
   } catch (err) {
     showToast('Failed to load system diagnostics logs', 'error');
+  }
+}
+
+/* ==========================================================================
+   8. INTERACTIVE LOOKBOOK CATALOG MANAGER
+   ========================================================================== */
+
+async function loadAdminLookbook() {
+  try {
+    const res = await fetch('/api/lookbook');
+    const data = await res.json();
+    const grid = document.getElementById('lookbookPagesGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    if (data.success && data.pages) {
+      if (data.pages.length === 0) {
+        grid.innerHTML = '<p style="color:var(--text-light); grid-column:1/-1; text-align:center">No pages added to lookbook catalog yet. Add your first page using the form above.</p>';
+        return;
+      }
+
+      data.pages.forEach((page, index) => {
+        const isFirst = index === 0;
+        const isLast = index === data.pages.length - 1;
+        
+        const card = document.createElement('div');
+        card.style.cssText = 'background:#fff; border:1px solid var(--border-color); border-radius:8px; overflow:hidden; display:flex; flex-direction:column; box-shadow:var(--shadow-sm);';
+        card.innerHTML = `
+          <div style="height:180px; background-image:url(\'${page.image_url}\'); background-size:cover; background-position:center; background-color:#faf7f2; border-bottom:1px solid #eee"></div>
+          <div style="padding:1rem; display:flex; flex-direction:column; gap:0.8rem; flex-grow:1; justify-content:space-between">
+            <div>
+              <strong style="color:var(--primary); font-size:0.95rem">Page ${page.page_number}</strong>
+              <div style="font-size:0.75rem; color:var(--text-light); text-overflow:ellipsis; overflow:hidden; white-space:nowrap" title="${page.image_url}">${page.image_url}</div>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; gap:0.4rem">
+              <div style="display:flex; gap:0.4rem">
+                <button class="btn btn-accent" style="flex:1; padding:0.4rem !important; font-size:0.75rem !important; cursor:pointer" onclick="reorderLookbook(${page.page_number}, \'up\')" ${isFirst ? 'disabled style="opacity:0.5"' : ''} title="Move page up"><i class="fas fa-arrow-up"></i> Up</button>
+                <button class="btn btn-accent" style="flex:1; padding:0.4rem !important; font-size:0.75rem !important; cursor:pointer" onclick="reorderLookbook(${page.page_number}, \'down\')" ${isLast ? 'disabled style="opacity:0.5"' : ''} title="Move page down"><i class="fas fa-arrow-down"></i> Down</button>
+              </div>
+              <button class="btn btn-danger" style="width:100%; padding:0.4rem !important; font-size:0.75rem !important; cursor:pointer" onclick="deleteLookbookPage(${page.page_number})"><i class="fas fa-trash-alt"></i> Delete Page</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+  } catch (err) {
+    showToast('Failed to load lookbook catalogue pages', 'error');
+  }
+}
+
+// Upload/Update a page handler
+document.addEventListener('DOMContentLoaded', () => {
+  const uploadForm = document.getElementById('lookbookUploadForm');
+  if (uploadForm) {
+    uploadForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const pageNumInput = document.getElementById('lookbookPageNum');
+      const fileInput = document.getElementById('lookbookFile');
+      
+      const pageNumber = pageNumInput.value;
+      const file = fileInput.files[0];
+      
+      if (!pageNumber || !file) {
+        showToast('Please fill all required upload fields', 'warning');
+        return;
+      }
+      
+      const formData = new FormData();
+      formData.append('page_number', pageNumber);
+      formData.append('image', file);
+      
+      try {
+        showToast('Uploading lookbook catalog page...', 'info');
+        const res = await fetch('/api/admin/lookbook/upload', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.message, 'success');
+          uploadForm.reset();
+          loadAdminLookbook();
+        } else {
+          showToast(data.message || 'Failed to upload lookbook page', 'error');
+        }
+      } catch (err) {
+        showToast('Error uploading lookbook page', 'error');
+      }
+    });
+  }
+});
+
+async function reorderLookbook(pageNumber, direction) {
+  try {
+    const res = await fetch('/api/admin/lookbook/reorder', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ page_number: pageNumber, direction })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message, 'success');
+      loadAdminLookbook();
+    } else {
+      showToast(data.message || 'Failed to reorder page', 'error');
+    }
+  } catch (err) {
+    showToast('Error reordering lookbook page', 'error');
+  }
+}
+
+async function deleteLookbookPage(pageNumber) {
+  if (!confirm(`Are you sure you want to delete Lookbook Page ${pageNumber}? Subsequent pages will automatically shift left.`)) {
+    return;
+  }
+  
+  try {
+    const res = await fetch('/api/admin/lookbook/delete', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ page_number: pageNumber })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message || 'Page deleted', 'success');
+      loadAdminLookbook();
+    } else {
+      showToast(data.message || 'Failed to delete page', 'error');
+    }
+  } catch (err) {
+    showToast('Error deleting lookbook page', 'error');
   }
 }
