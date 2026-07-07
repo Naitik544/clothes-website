@@ -167,21 +167,30 @@ async function verifyFirebaseIdToken(token) {
   try {
     const decodedHeader = jwt.decode(token, { complete: true });
     if (!decodedHeader || !decodedHeader.header || !decodedHeader.header.kid) {
+      console.error('Firebase verification failed: Invalid JWT format or missing kid');
       return null;
     }
+    
+    // Log decoded payload for debugging on server logs
+    console.log('Decoded Firebase Token Payload:', JSON.stringify(decodedHeader.payload));
+    
     const kid = decodedHeader.header.kid;
     const publicKeys = await getFirebasePublicKeys();
     const cert = publicKeys[kid];
-    if (!cert) return null;
+    if (!cert) {
+      console.error('Firebase verification failed: Cert matching kid not found');
+      return null;
+    }
 
     const payload = jwt.verify(token, cert, {
       algorithms: ['RS256'],
       audience: 'littletolatge',
-      issuer: 'https://securetoken.google.com/littletolatge'
+      issuer: 'https://securetoken.google.com/littletolatge',
+      clockTolerance: 120 // Allow up to 2 minutes of clock skew to prevent invalid token failures
     });
     return payload;
   } catch (err) {
-    console.error('Firebase token verification failed:', err.message);
+    console.error('Firebase token verification failed with error:', err.message);
     return null;
   }
 }
