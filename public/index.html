@@ -194,13 +194,16 @@
             `;
           } else {
             mainSlideHtml = `
-              <div class="slide active" style="background-image: url('${s.media_url}'); background-color: #3b3658;">
+              <div class="slide active" style="background-color: #3b3658;">
                 <div class="slide-overlay"></div>
-                <div class="container">
+                <div class="container hero-slide-grid">
                   <div class="slide-content">
                     <h1>${s.hero_title}</h1>
                     <p>${s.hero_subtitle}</p>
                     <a href="products.html" class="btn">Explore Collections</a>
+                  </div>
+                  <div class="slide-image-frame">
+                    <img src="${s.media_url}" alt="${s.hero_title}" class="hero-slide-img">
                   </div>
                 </div>
               </div>
