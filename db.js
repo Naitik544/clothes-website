@@ -584,7 +584,7 @@ async function seedDatabase() {
     `, [
       'Ethnic Elegance for Every Generation',
       'Handcrafted ethnic wear and modern western styles matching your family lifestyle.',
-      'images/hero_ethnic.svg',
+      'images/hero_ethnic.png',
       'image',
       'none'
     ]);
@@ -605,7 +605,7 @@ async function seedDatabase() {
       'Grand Festival Diwali Sale!',
       'Flat 15% discount on all silk ethnic wear outfits. Use code L2LHOLI.',
       'hsl(38, 92%, 50%)',
-      'images/hero_ethnic.svg',
+      'images/hero_ethnic.png',
       'products.html?category=ethnic',
       now.toISOString(),
       nextMonth.toISOString(),
@@ -620,7 +620,7 @@ async function seedDatabase() {
       'Cyber Monday Smart Combos',
       'Buy 2 kidswear outfits and get a leather mojari set free! Use TWINNING500.',
       'hsl(243, 75%, 19%)',
-      'images/hero_kids.svg',
+      'images/hero_kids.png',
       'products.html?category=kids',
       now.toISOString(),
       nextMonth.toISOString(),
@@ -659,6 +659,15 @@ async function seedDatabase() {
     }
   } catch (err) {
     console.error('Failed to seed lookbook pages:', err.message);
+  }
+
+  // Migrate any existing SVG hero paths to PNG
+  try {
+    await run("UPDATE promotions SET media_url = 'images/hero_ethnic.png' WHERE media_url = 'images/hero_ethnic.svg'");
+    await run("UPDATE promotions SET media_url = 'images/hero_kids.png' WHERE media_url = 'images/hero_kids.svg'");
+    await run("UPDATE homepage_settings SET media_url = 'images/hero_ethnic.png' WHERE media_url = 'images/hero_ethnic.svg'");
+  } catch (e) {
+    console.error('Failed to migrate SVG hero backgrounds to PNG:', e.message);
   }
 }
 
