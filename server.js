@@ -141,6 +141,160 @@ const tempOtps = {};
    AUTHENTICATION ENDPOINTS
    ========================================================================== */
 
+/* ==========================================================================
+   FIREBASE AUTH INTEGRATION & VERIFICATION SYSTEM
+   ========================================================================== */
+let firebasePublicKeys = {};
+let keysExpiryTime = 0;
+
+async function getFirebasePublicKeys() {
+  const now = Date.now();
+  if (Object.keys(firebasePublicKeys).length > 0 && now < keysExpiryTime) {
+    return firebasePublicKeys;
+  }
+  try {
+    const res = await fetch('https://www.googleapis.com/robot/v1/metadata/x509/securetoken-system@system.gserviceaccount.com');
+    const keys = await res.json();
+    firebasePublicKeys = keys;
+    keysExpiryTime = now + 3600000; // Cache for 1 hour
+    return firebasePublicKeys;
+  } catch (err) {
+    console.error('Failed to fetch Firebase public keys:', err);
+    return {};
+  }
+}
+
+async function verifyFirebaseIdToken(token) {
+  try {
+    const decodedHeader = jwt.decode(token, { complete: true });
+    if (!decodedHeader || !decodedHeader.header || !decodedHeader.header.kid) {
+      return null;
+    }
+    const kid = decodedHeader.header.kid;
+    const publicKeys = await getFirebasePublicKeys();
+    const cert = publicKeys[kid];
+    if (!cert) return null;
+
+    const payload = jwt.verify(token, cert, {
+      algorithms: ['RS256'],
+      audience: 'littletolatge',
+      issuer: 'https://securetoken.google.com/littletolatge'
+    });
+    return payload;
+  } catch (err) {
+    console.error('Firebase token verification failed:', err.message);
+    return null;
+  }
+}
+
+// POST Firebase Login Sync
+app.post('/api/auth/firebase-login', async (req, res) => {
+  const { idToken } = req.body;
+  if (!idToken) {
+    return res.status(400).json({ success: false, message: 'Firebase ID Token is required' });
+  }
+
+  try {
+    const decoded = await verifyFirebaseIdToken(idToken);
+    if (!decoded) {
+      return res.status(401).json({ success: false, message: 'Invalid or expired Firebase ID Token' });
+    }
+
+    const email = decoded.email;
+    const name = decoded.name || email.split('@')[0];
+    
+    // Check if customer exists in database
+    let customer = await db.get('SELECT * FROM customers WHERE email = ?', [email]);
+    if (!customer) {
+      // Create new customer
+      const result = await db.run(`
+        INSERT INTO customers (name, email, phone, password_hash, address_line, city, state, pincode)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `, [name, email, 'fb-' + Date.now(), 'firebase-auth-oauth', '', '', '', '']);
+      customer = await db.get('SELECT * FROM customers WHERE id = ?', [result.insertId]);
+    }
+
+    // Generate local JWT
+    const token = jwt.sign(
+      { id: customer.id, name: customer.name, email: customer.email },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: customer.id,
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        address: customer.address_line,
+        city: customer.city,
+        state: customer.state,
+        pincode: customer.pincode
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Firebase login sync failed: ' + err.message });
+  }
+});
+
+// POST Firebase Register Sync
+app.post('/api/auth/firebase-register', async (req, res) => {
+  const { idToken, name, phone, address, city, state, pincode } = req.body;
+  if (!idToken || !name || !phone) {
+    return res.status(400).json({ success: false, message: 'Missing registration details or token' });
+  }
+
+  try {
+    const decoded = await verifyFirebaseIdToken(idToken);
+    if (!decoded) {
+      return res.status(401).json({ success: false, message: 'Invalid or expired Firebase ID Token' });
+    }
+
+    const email = decoded.email;
+    
+    // Check if email or phone already exists
+    const existing = await db.get('SELECT id FROM customers WHERE email = ? OR phone = ?', [email, phone]);
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'An account with this email or mobile number already exists.' });
+    }
+
+    // Create new customer
+    const result = await db.run(`
+      INSERT INTO customers (name, email, phone, password_hash, address_line, city, state, pincode)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `, [name, email, phone, 'firebase-auth-oauth', address || '', city || '', state || '', pincode || '']);
+    
+    const customer = await db.get('SELECT * FROM customers WHERE id = ?', [result.insertId]);
+
+    // Generate local JWT
+    const token = jwt.sign(
+      { id: customer.id, name: customer.name, email: customer.email },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: customer.id,
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        address: customer.address_line,
+        city: customer.city,
+        state: customer.state,
+        pincode: customer.pincode
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Firebase registration sync failed: ' + err.message });
+  }
+});
+
 // Register Customer
 app.post('/api/auth/register', async (req, res) => {
   const { name, email, phone, password, address, city, state, pincode } = req.body;

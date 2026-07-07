@@ -223,6 +223,23 @@
   <footer></footer>
 
   <!-- Scripts -->
+  <!-- Firebase Compat App and Auth -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script>
+    // Initialize Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyB0fitzioEcgfud3ARqRFp7H6Zaq5TaPoo",
+      authDomain: "littletolatge.firebaseapp.com",
+      projectId: "littletolatge",
+      storageBucket: "littletolatge.firebasestorage.app",
+      messagingSenderId: "115535605542",
+      appId: "1:115535605542:web:5380c95a4230076c2fdbe7",
+      measurementId: "G-B3MXGHD03X"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+  </script>
   <script src="js/ux-premium.js"></script>
   <script src="js/app.js"></script>
   <script src="js/chatbot.js"></script>
@@ -258,10 +275,35 @@
       const password = document.getElementById('loginPassword').value.trim();
 
       try {
-        const res = await fetch('/api/auth/login', {
+        let idToken;
+        try {
+          // 1. Try Firebase Authentication first
+          const userCredential = await auth.signInWithEmailAndPassword(email, password);
+          idToken = await userCredential.user.getIdToken();
+        } catch (fbErr) {
+          // If Firebase fails and it's the admin email, fallback to local DB check
+          if (email === 'admin@littlelarge.in') {
+            const res = await fetch('/api/auth/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            if (data.success) {
+              saveToken(data.token, data.user);
+              showToast(`Welcome back Admin!`, 'success');
+              setTimeout(() => { window.location.href = 'admin.html'; }, 1000);
+              return;
+            }
+          }
+          throw fbErr; // Otherwise propagate Firebase error
+        }
+
+        // 2. Sync token with backend to establish session and get local token
+        const res = await fetch('/api/auth/firebase-login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({ idToken })
         });
         const data = await res.json();
         
@@ -269,7 +311,6 @@
           saveToken(data.token, data.user);
           showToast(`Welcome back, ${data.user.name}!`, 'success');
           
-          // Redirect check: if from cart checkout, send back to cart
           setTimeout(() => {
             if (data.user.email === 'admin@littlelarge.in') {
               window.location.href = 'admin.html';
@@ -278,10 +319,10 @@
             }
           }, 1200);
         } else {
-          showToast(data.message || 'Login failed', 'error');
+          showToast(data.message || 'Firebase login sync failed', 'error');
         }
       } catch (err) {
-        showToast('Server connection failed', 'error');
+        showToast(err.message || 'Login failed: Check email or password', 'error');
       }
     });
 
@@ -370,10 +411,20 @@
       }
 
       try {
-        const res = await fetch('/api/auth/register', {
+        // 1. Create account on Firebase
+        showToast('Creating account on Firebase...', 'info');
+        const userCredential = await auth.createUserWithEmailAndPassword(payload.email, payload.password);
+        const firebaseUser = userCredential.user;
+        const idToken = await firebaseUser.getIdToken();
+
+        // 2. Post registration payload + idToken to backend
+        const syncPayload = { ...payload, idToken };
+        delete syncPayload.password; // Do not send plain password to server
+
+        const res = await fetch('/api/auth/firebase-register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(syncPayload)
         });
         const data = await res.json();
         
@@ -384,10 +435,12 @@
             window.location.href = 'index.html';
           }, 1200);
         } else {
-          showToast(data.message || 'Registration failed', 'error');
+          // If backend sync fails, delete the user from Firebase so they can try again
+          await firebaseUser.delete();
+          showToast(data.message || 'Registration sync failed', 'error');
         }
       } catch (err) {
-        showToast('Server registration failed', 'error');
+        showToast(err.message || 'Server registration failed', 'error');
       }
     });
 
