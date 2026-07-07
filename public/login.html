@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login / Register | Little to Large</title>
   <link rel="stylesheet" href="css/style.css">
-  <script src="https://accounts.google.com/gsi/client?onload=initGoogleSignIn" async defer></script>
+
   <style>
     .auth-container {
       max-width: 480px;
@@ -213,7 +213,10 @@
       <!-- Google Auth Single Sign-In Button Container -->
       <div style="border-top:1px solid #eee; padding:1.5rem; text-align:center; display:flex; flex-direction:column; align-items:center; gap:10px; background:#fafafa">
         <span style="font-size:0.8rem; font-weight:700; color:var(--text-light)">OR QUICK ACCESS</span>
-        <div id="googleSignInButton" style="width:100%; display:flex; justify-content:center"></div>
+        <button onclick="signInWithGoogleFirebase()" class="btn btn-accent" style="width: 100%; max-width: 320px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0.75rem !important; border: 1px solid #ddd; background: #fff; color: #444; border-radius: 8px; font-weight: 700; cursor: pointer; box-shadow: var(--shadow-sm); font-size: 0.9rem !important;">
+          <img src="https://cdn-icons-png.flaticon.com/512/300/300221.png" alt="Google Logo" style="width:18px; height:18px">
+          Continue with Google
+        </button>
       </div>
 
     </div>
@@ -444,55 +447,37 @@
       }
     });
 
-    // Google Sign-In Callback
-    async function handleGoogleSignInResponse(response) {
-      startGlobalProgressBar();
-      
+    // Google Sign-In with Firebase Auth
+    async function signInWithGoogleFirebase() {
+      const provider = new firebase.auth.GoogleAuthProvider();
       try {
-        const res = await fetch('/api/auth/google-login', {
+        startGlobalProgressBar();
+        const result = await auth.signInWithPopup(provider);
+        const firebaseUser = result.user;
+        const idToken = await firebaseUser.getIdToken();
+        
+        // Sync with backend firebase-login endpoint
+        const res = await fetch('/api/auth/firebase-login', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ credential: response.credential })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken })
         });
         const data = await res.json();
-        
         completeGlobalProgressBar();
         
         if (data.success) {
-          showToast('Google Authentication Successful!');
           saveToken(data.token, data.user);
-          
+          showToast('Google Sign-In Successful!', 'success');
           setTimeout(() => {
             window.location.href = 'account.html';
           }, 1000);
         } else {
-          showToast(data.message || 'Google Login failed', 'error');
+          showToast(data.message || 'Google Login Sync failed', 'error');
         }
       } catch (err) {
         completeGlobalProgressBar();
-        showToast('Failed to connect to Google Auth API', 'error');
+        showToast(err.message || 'Google authentication failed', 'error');
       }
-    }
-
-    // Google Sign-In SDK Initialization
-    window.initGoogleSignIn = function () {
-      if (typeof google !== 'undefined') {
-        google.accounts.id.initialize({
-          client_id: "649045427673-u49enoga00outgpr082fvt2im3l1ogse.apps.googleusercontent.com",
-          callback: handleGoogleSignInResponse
-        });
-        google.accounts.id.renderButton(
-          document.getElementById("googleSignInButton"),
-          { theme: "outline", size: "large", width: "320px" }
-        );
-      }
-    };
-
-    // Trigger fallback if google is already loaded before handler registers
-    if (typeof google !== 'undefined') {
-      window.initGoogleSignIn();
     }
   </script>
 </body>
