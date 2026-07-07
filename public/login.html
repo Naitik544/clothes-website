@@ -447,52 +447,38 @@
       }
     });
 
-    // Google Sign-In with Firebase Auth (Mobile-friendly Redirect Flow)
+    // Google Sign-In with Firebase Auth (Popup Flow)
     async function signInWithGoogleFirebase() {
       const provider = new firebase.auth.GoogleAuthProvider();
       try {
         startGlobalProgressBar();
-        await auth.signInWithRedirect(provider);
+        const result = await auth.signInWithPopup(provider);
+        const firebaseUser = result.user;
+        const idToken = await firebaseUser.getIdToken();
+        
+        // Sync with backend firebase-login endpoint
+        const res = await fetch('/api/auth/firebase-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken })
+        });
+        const data = await res.json();
+        completeGlobalProgressBar();
+        
+        if (data.success) {
+          saveToken(data.token, data.user);
+          showToast('Google Sign-In Successful!', 'success');
+          setTimeout(() => {
+            window.location.href = 'account.html';
+          }, 1000);
+        } else {
+          showToast(data.message || 'Google Login Sync failed', 'error');
+        }
       } catch (err) {
         completeGlobalProgressBar();
         showToast(err.message || 'Google authentication failed', 'error');
       }
     }
-
-    // Handle Firebase redirect result on page load
-    window.addEventListener('DOMContentLoaded', () => {
-      auth.getRedirectResult().then(async (result) => {
-        if (result && result.user) {
-          startGlobalProgressBar();
-          const firebaseUser = result.user;
-          const idToken = await firebaseUser.getIdToken();
-          
-          // Sync with backend firebase-login endpoint
-          const res = await fetch('/api/auth/firebase-login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken })
-          });
-          const data = await res.json();
-          completeGlobalProgressBar();
-          
-          if (data.success) {
-            saveToken(data.token, data.user);
-            showToast('Google Sign-In Successful!', 'success');
-            setTimeout(() => {
-              window.location.href = 'account.html';
-            }, 1000);
-          } else {
-            showToast(data.message || 'Google Login Sync failed', 'error');
-          }
-        }
-      }).catch((err) => {
-        completeGlobalProgressBar();
-        if (err.code) {
-          showToast(err.message || 'Google authentication failed', 'error');
-        }
-      });
-    });
   </script>
 </body>
 </html>
