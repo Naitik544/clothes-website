@@ -582,9 +582,9 @@ async function seedDatabase() {
       INSERT INTO homepage_settings (hero_title, hero_subtitle, media_url, media_type, festival_mode)
       VALUES (?, ?, ?, ?, ?)
     `, [
-      'Ethnic Elegance for Every Generation',
-      'Handcrafted ethnic wear and modern western styles matching your family lifestyle.',
-      'images/hero_ethnic.png',
+      'Coordinated Styles for Every Generation',
+      'Discover premium matching vacation outfits, lounge wear, and festival wear tailored for the entire family.',
+      'images/hero_vacation.png',
       'image',
       'none'
     ]);
@@ -661,13 +661,13 @@ async function seedDatabase() {
     console.error('Failed to seed lookbook pages:', err.message);
   }
 
-  // Migrate any existing SVG hero paths to PNG
+  // Migrate any existing SVG hero paths to PNG and update Slide 1 to vacation image
   try {
     await run("UPDATE promotions SET media_url = 'images/hero_ethnic.png' WHERE media_url = 'images/hero_ethnic.svg'");
     await run("UPDATE promotions SET media_url = 'images/hero_kids.png' WHERE media_url = 'images/hero_kids.svg'");
-    await run("UPDATE homepage_settings SET media_url = 'images/hero_ethnic.png' WHERE media_url = 'images/hero_ethnic.svg'");
+    await run("UPDATE homepage_settings SET media_url = 'images/hero_vacation.png', hero_title = 'Coordinated Styles for Every Generation', hero_subtitle = 'Discover premium matching vacation outfits, lounge wear, and festival wear tailored for the entire family.' WHERE id = 1");
   } catch (e) {
-    console.error('Failed to migrate SVG hero backgrounds to PNG:', e.message);
+    console.error('Failed to migrate/update hero slide backgrounds to PNG:', e.message);
   }
 }
 
