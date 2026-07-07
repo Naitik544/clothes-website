@@ -1007,3 +1007,55 @@ body.drawer-open {
     margin: 0 2px !important;
   }
 }
+
+/* ==========================================================================
+   11. HERO SLIDER SPLIT LAYOUT (NO-CROP PHOTO DISPLAY)
+   ========================================================================== */
+
+.hero-slide-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  align-items: center;
+  gap: 3rem;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  z-index: 3;
+}
+
+.slide-image-frame {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 85%;
+  overflow: hidden;
+}
+
+.hero-slide-img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 16px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.slide:hover .hero-slide-img {
+  transform: scale(1.04) rotate(0.5deg);
+}
+
+/* Mobile Responsive overrides for split hero layout */
+@media (max-width: 768px) {
+  .hero-slide-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+    padding: 0 1rem !important;
+  }
+  .slide-image-frame {
+    display: none !important; /* Hide image container on small screen sizes to prevent vertical overflow */
+  }
+  .slide-content h1 {
+    font-size: 2.2rem !important;
+  }
+}

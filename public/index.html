@@ -15,13 +15,16 @@
 
   <!-- Hero Section Carousel (Dynamic) -->
   <section class="hero-slider" id="heroSlider">
-    <div class="slide active" style="background-image: url('images/hero_ethnic.png'); background-color: #3b3658;">
+    <div class="slide active" style="background-color: #3b3658;">
       <div class="slide-overlay"></div>
-      <div class="container">
+      <div class="container hero-slide-grid">
         <div class="slide-content">
           <h1>Ethnic Elegance for Every Generation</h1>
           <p>Handcrafted ethnic wear and modern western styles matching your family lifestyle.</p>
           <a href="products.html" class="btn">Explore Store</a>
+        </div>
+        <div class="slide-image-frame">
+          <img src="images/hero_ethnic.png" alt="Ethnic Family Fashion" class="hero-slide-img">
         </div>
       </div>
     </div>
@@ -205,13 +208,16 @@
           }
         } else {
           mainSlideHtml = `
-            <div class="slide active" style="background-image: url('images/hero_ethnic.png'); background-color: #3b3658;">
+            <div class="slide active" style="background-color: #3b3658;">
               <div class="slide-overlay"></div>
-              <div class="container">
+              <div class="container hero-slide-grid">
                 <div class="slide-content">
                   <h1>Ethnic Elegance for Every Generation</h1>
                   <p>Handcrafted ethnic wear and modern western styles matching your family lifestyle.</p>
                   <a href="products.html" class="btn">Explore Store</a>
+                </div>
+                <div class="slide-image-frame">
+                  <img src="images/hero_ethnic.png" alt="Ethnic Family Fashion" class="hero-slide-img">
                 </div>
               </div>
             </div>
@@ -227,13 +233,16 @@
         if (promoData.success && promoData.promotions && promoData.promotions.length > 0) {
           promoData.promotions.forEach((p, idx) => {
             slidesHtml += `
-              <div class="slide" style="background-image: url('${p.media_url || 'images/hero_ethnic.png'}'); background-color: ${p.bg_color || 'var(--primary)'};">
+              <div class="slide" style="background-color: ${p.bg_color || 'var(--primary)'};">
                 <div class="slide-overlay"></div>
-                <div class="container">
+                <div class="container hero-slide-grid">
                   <div class="slide-content">
                     <h1>${p.title}</h1>
                     <p>${p.subtitle}</p>
                     <a href="${p.link_url || 'products.html'}" class="btn">View Deal</a>
+                  </div>
+                  <div class="slide-image-frame">
+                    <img src="${p.media_url || 'images/hero_ethnic.png'}" alt="${p.title}" class="hero-slide-img">
                   </div>
                 </div>
               </div>
