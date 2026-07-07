@@ -167,31 +167,29 @@ async function verifyFirebaseIdToken(token) {
   try {
     const decodedHeader = jwt.decode(token, { complete: true });
     if (!decodedHeader || !decodedHeader.header || !decodedHeader.header.kid) {
-      console.error('Firebase verification failed: Invalid JWT format or missing kid');
-      return null;
+      return { error: 'Invalid JWT structure or missing kid' };
     }
     
-    // Log decoded payload for debugging on server logs
+    // Log decoded payload for debugging
     console.log('Decoded Firebase Token Payload:', JSON.stringify(decodedHeader.payload));
     
     const kid = decodedHeader.header.kid;
     const publicKeys = await getFirebasePublicKeys();
     const cert = publicKeys[kid];
     if (!cert) {
-      console.error('Firebase verification failed: Cert matching kid not found');
-      return null;
+      return { error: `Cert not found for kid: ${kid}. Available kids: ${Object.keys(publicKeys).join(', ')}` };
     }
 
     const payload = jwt.verify(token, cert, {
       algorithms: ['RS256'],
       audience: 'littletolatge',
       issuer: 'https://securetoken.google.com/littletolatge',
-      clockTolerance: 120 // Allow up to 2 minutes of clock skew to prevent invalid token failures
+      clockTolerance: 120
     });
-    return payload;
+    return { payload };
   } catch (err) {
-    console.error('Firebase token verification failed with error:', err.message);
-    return null;
+    console.error('Firebase token verification error:', err.message);
+    return { error: err.message };
   }
 }
 
@@ -203,13 +201,13 @@ app.post('/api/auth/firebase-login', async (req, res) => {
   }
 
   try {
-    const decoded = await verifyFirebaseIdToken(idToken);
-    if (!decoded) {
-      return res.status(401).json({ success: false, message: 'Invalid or expired Firebase ID Token' });
+    const { payload, error } = await verifyFirebaseIdToken(idToken);
+    if (error) {
+      return res.status(401).json({ success: false, message: `Firebase Token Verification Error: ${error}` });
     }
 
-    const email = decoded.email;
-    const name = decoded.name || email.split('@')[0];
+    const email = payload.email;
+    const name = payload.name || email.split('@')[0];
     
     // Check if customer exists in database
     let customer = await db.get('SELECT * FROM customers WHERE email = ?', [email]);
@@ -256,12 +254,12 @@ app.post('/api/auth/firebase-register', async (req, res) => {
   }
 
   try {
-    const decoded = await verifyFirebaseIdToken(idToken);
-    if (!decoded) {
-      return res.status(401).json({ success: false, message: 'Invalid or expired Firebase ID Token' });
+    const { payload, error } = await verifyFirebaseIdToken(idToken);
+    if (error) {
+      return res.status(401).json({ success: false, message: `Firebase Token Verification Error: ${error}` });
     }
 
-    const email = decoded.email;
+    const email = payload.email;
     
     // Check if email or phone already exists
     const existing = await db.get('SELECT id FROM customers WHERE email = ? OR phone = ?', [email, phone]);
