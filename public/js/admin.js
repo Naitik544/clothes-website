@@ -248,11 +248,10 @@ async function exportOrdersToExcel() {
       };
     });
 
-    // Create Excel worksheet using SheetJS
     const worksheet = XLSX.utils.json_to_sheet(formattedRows);
     const workbook = XLSX.utils.book_new();
-    Xtarget_sheet_name = "Orders Report";
-    XLSX.utils.book_append_sheet(workbook, worksheet, Xtarget_sheet_name);
+    const targetSheetName = "Orders Report";
+    XLSX.utils.book_append_sheet(workbook, worksheet, targetSheetName);
 
     // Adjust column widths automatically
     worksheet["!cols"] = [
@@ -343,12 +342,14 @@ async function updateOrderStatus(orderId, newStatus) {
    3. PRODUCT CRUD OPERATIONS
    ========================================================================== */
 let editingProductId = null;
+let allProducts = [];
 
 async function loadAdminProducts() {
   try {
     const res = await fetch('/api/products');
     const data = await res.json();
     if (data.success) {
+      allProducts = data.products;
       const tbody = document.querySelector('#adminProductsTable tbody');
       tbody.innerHTML = '';
 
@@ -362,7 +363,7 @@ async function loadAdminProducts() {
             <td>${p.stock} units</td>
             <td>${p.size_variants}</td>
             <td>
-              <button onclick="openEditProductModal(${JSON.stringify(p).replace(/"/g, '&quot;')})" class="btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:var(--primary); color:#fff"><i class="fas fa-edit"></i></button>
+              <button onclick="openEditProductModal(${p.id})" class="btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:var(--primary); color:#fff"><i class="fas fa-edit"></i></button>
               <button onclick="deleteProduct(${p.id})" class="btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:var(--danger); color:#fff"><i class="fas fa-trash"></i></button>
             </td>
           </tr>
@@ -381,7 +382,10 @@ function openAddProductModal() {
   document.getElementById('productModal').style.display = 'flex';
 }
 
-function openEditProductModal(product) {
+function openEditProductModal(id) {
+  const product = allProducts.find(p => p.id === id);
+  if (!product) return;
+  
   editingProductId = product.id;
   document.getElementById('productModalTitle').textContent = 'Edit Clothing Product';
   
