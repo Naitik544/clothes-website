@@ -46,6 +46,7 @@ function showSection(sectionId) {
   else if (sectionId === 'promotionsSection') {
     loadHomepageSettings();
     loadAdminPromotions();
+    prefillPromoDates();
   }
   else if (sectionId === 'errorSection') loadAdminErrors();
   else if (sectionId === 'lookbookSection') loadAdminLookbook();
@@ -643,9 +644,13 @@ async function handlePromoSubmit(e) {
   const end_date = document.getElementById('promoEndDate').value;
   const link_url = document.getElementById('promoLinkUrl').value.trim();
   const fileInput = document.getElementById('promoFile');
+  const mediaUrlInput = document.getElementById('promoMediaUrl');
 
-  if (!fileInput.files[0]) {
-    showToast('Please select a banner image file', 'warning');
+  const file = fileInput.files[0];
+  const media_url = mediaUrlInput.value.trim();
+
+  if (!file && !media_url) {
+    showToast('Please upload an image file OR paste an image URL/path', 'warning');
     return;
   }
 
@@ -657,7 +662,12 @@ async function handlePromoSubmit(e) {
   formData.append('start_date', start_date);
   formData.append('end_date', end_date);
   formData.append('link_url', link_url);
-  formData.append('image', fileInput.files[0]);
+
+  if (file) {
+    formData.append('image', file);
+  } else {
+    formData.append('media_url', media_url);
+  }
 
   try {
     showToast('Creating campaign banner...', 'info');
@@ -876,5 +886,21 @@ async function deleteLookbookPage(pageNumber) {
     }
   } catch (err) {
     showToast('Error deleting lookbook page', 'error');
+  }
+}
+
+function prefillPromoDates() {
+  const startDateInput = document.getElementById('promoStartDate');
+  const endDateInput = document.getElementById('promoEndDate');
+  if (startDateInput && endDateInput && !startDateInput.value) {
+    const now = new Date();
+    const tzoffset = now.getTimezoneOffset() * 60000;
+    const localISOTime = (new Date(now - tzoffset)).toISOString().slice(0, 16);
+    startDateInput.value = localISOTime;
+
+    // Set end date to 30 days in future
+    const future = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const localFutureTime = (new Date(future - tzoffset)).toISOString().slice(0, 16);
+    endDateInput.value = localFutureTime;
   }
 }
