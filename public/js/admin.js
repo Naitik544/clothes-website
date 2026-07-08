@@ -634,25 +634,39 @@ async function loadAdminPromotions() {
 
 async function handlePromoSubmit(e) {
   e.preventDefault();
-  const payload = {
-    title: document.getElementById('promoTitle').value.trim(),
-    subtitle: document.getElementById('promoSubtitle').value.trim(),
-    bg_color: document.getElementById('promoBgColor').value.trim(),
-    priority: parseInt(document.getElementById('promoPriority').value) || 0,
-    start_date: document.getElementById('promoStartDate').value,
-    end_date: document.getElementById('promoEndDate').value,
-    media_url: document.getElementById('promoMediaUrl').value.trim(),
-    link_url: document.getElementById('promoLinkUrl').value.trim()
-  };
+  
+  const title = document.getElementById('promoTitle').value.trim();
+  const subtitle = document.getElementById('promoSubtitle').value.trim();
+  const bg_color = document.getElementById('promoBgColor').value.trim();
+  const priority = parseInt(document.getElementById('promoPriority').value) || 0;
+  const start_date = document.getElementById('promoStartDate').value;
+  const end_date = document.getElementById('promoEndDate').value;
+  const link_url = document.getElementById('promoLinkUrl').value.trim();
+  const fileInput = document.getElementById('promoFile');
+
+  if (!fileInput.files[0]) {
+    showToast('Please select a banner image file', 'warning');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('title', title);
+  formData.append('subtitle', subtitle);
+  formData.append('bg_color', bg_color);
+  formData.append('priority', priority);
+  formData.append('start_date', start_date);
+  formData.append('end_date', end_date);
+  formData.append('link_url', link_url);
+  formData.append('image', fileInput.files[0]);
 
   try {
+    showToast('Creating campaign banner...', 'info');
     const res = await fetch('/api/promotions', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(payload)
+      body: formData
     });
     const data = await res.json();
     if (data.success) {

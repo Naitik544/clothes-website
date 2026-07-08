@@ -1462,16 +1462,22 @@ app.get('/api/promotions', async (req, res) => {
 });
 
 // Create Promotion (Admin only)
-app.post('/api/promotions', adminIpFilter, authenticateAdmin, async (req, res) => {
-  const { title, subtitle, bg_color, media_url, link_url, start_date, end_date, priority } = req.body;
+app.post('/api/promotions', adminIpFilter, authenticateAdmin, upload.single('image'), async (req, res) => {
+  const { title, subtitle, bg_color, link_url, start_date, end_date, priority } = req.body;
   if (!title || !start_date || !end_date) {
     return res.status(400).json({ success: false, message: 'Title and dates are required' });
   }
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: 'Please upload a banner image file' });
+  }
+
+  const media_url = 'images/uploads/' + req.file.filename;
+
   try {
     await db.run(
       `INSERT INTO promotions (title, subtitle, bg_color, media_url, link_url, start_date, end_date, priority, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
-      [title, subtitle, bg_color || 'var(--primary)', media_url, link_url, start_date, end_date, priority || 0]
+      [title, subtitle, bg_color || 'var(--primary)', media_url, link_url, start_date, end_date, parseInt(priority) || 0]
     );
     res.json({ success: true, message: 'Promotion added successfully' });
   } catch (err) {
