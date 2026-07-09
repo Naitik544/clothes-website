@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    if (!localStorage.getItem('l2l_token')) {
+      window.location.replace('login.html');
+    }
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Account | Little to Large</title>
@@ -315,13 +320,6 @@
   <script src="js/chatbot.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const token = getToken();
-      if (!token) {
-        showToast('Please login to view account page!', 'error');
-        setTimeout(() => window.location.href = 'login.html', 1000);
-        return;
-      }
-
       // Check success order ID in URL
       const urlParams = new URLSearchParams(window.location.search);
       const successId = urlParams.get('success_id');
