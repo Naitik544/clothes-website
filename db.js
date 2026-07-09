@@ -391,7 +391,7 @@ async function seedDatabase() {
     await run(`
       INSERT INTO customers (name, email, phone, password_hash, address_line, city, state, pincode)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `, ['Admin Manager', 'admin@littlelarge.in', '9999999999', adminHash, 'HQ Little to Large, Sector 62', 'Noida', 'Uttar Pradesh', '201301']);
+    `, ['Admin Manager', 'admin@littlelarge.in', '9999999999', adminHash, 'HQ Little to Large', 'Gandhidham', 'Gujarat', '370201']);
   }
 
   // Check if products seeded
