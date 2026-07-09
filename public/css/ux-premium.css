@@ -1048,14 +1048,42 @@ body.drawer-open {
 /* Mobile Responsive overrides for split hero layout */
 @media (max-width: 768px) {
   .hero-slide-grid {
-    grid-template-columns: 1fr !important;
-    gap: 1rem !important;
-    padding: 0 1rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 0.8rem !important;
+    padding: 1.5rem 1rem !important;
+  }
+  .slide-content {
+    order: 1 !important;
   }
   .slide-image-frame {
-    display: none !important; /* Hide image container on small screen sizes to prevent vertical overflow */
+    display: flex !important; /* Show image container on mobile! */
+    order: 2 !important;
+    justify-content: center !important;
+    align-items: center !important;
+    max-height: 140px !important;
+    width: 100% !important;
+  }
+  .hero-slide-img {
+    max-height: 130px !important;
+    max-width: 100% !important;
+    width: auto !important;
+    object-fit: contain !important;
   }
   .slide-content h1 {
-    font-size: 2.2rem !important;
+    font-size: 1.6rem !important;
+    margin-bottom: 0.4rem !important;
+    line-height: 1.2 !important;
+  }
+  .slide-content p {
+    font-size: 0.85rem !important;
+    margin-bottom: 0.8rem !important;
+  }
+  .slide-content .btn {
+    padding: 0.45rem 1.2rem !important;
+    font-size: 0.82rem !important;
   }
 }
