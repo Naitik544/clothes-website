@@ -68,6 +68,34 @@
     .order-summary-card:hover {
       border-color: var(--primary);
     }
+    
+    /* Clean responsive form grid layouts */
+    .profile-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.2rem;
+    }
+    .profile-form-grid.three-cols {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .full-width {
+      grid-column: span 2;
+    }
+    .three-cols .full-width {
+      grid-column: span 3;
+    }
+    @media (max-width: 768px) {
+      .profile-form-grid, .profile-form-grid.three-cols {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+      }
+      .full-width, .three-cols .full-width {
+        grid-column: span 1 !important;
+      }
+      .account-card {
+        padding: 1.5rem !important; /* Decrease card padding on mobile to prevent overflow */
+      }
+    }
   </style>
   <link rel="stylesheet" href="css/ux-premium.css">
 </head>
@@ -132,21 +160,22 @@
               <input type="hidden" id="profAvatarUrl" value="">
             </div>
 
-            <div style="display:flex; gap:1rem; flex-wrap:wrap">
-              <div style="flex:1; min-width:240px" class="validation-input-group">
+            <div class="profile-form-grid">
+              <div class="validation-input-group">
                 <label style="font-size:0.8rem; font-weight:700">Full Name</label>
                 <input type="text" id="profName" class="form-input" required placeholder="Enter full name" oninput="validateField(this, /^[a-zA-Z\s\.\']{3,50}$/, 'Name must be 3-50 alphabet characters')">
                 <span class="error-msg"></span>
               </div>
-              <div style="flex:1; min-width:240px" class="validation-input-group">
+              <div class="validation-input-group">
                 <label style="font-size:0.8rem; font-weight:700">Mobile Number</label>
                 <input type="tel" id="profPhone" class="form-input" required placeholder="Enter 10-digit mobile number" maxlength="10" oninput="validateField(this, /^[6-9]\d{9}$/, 'Please enter a valid 10-digit mobile number starting with 6-9')">
                 <span class="error-msg"></span>
               </div>
-            </div>
-            <div>
-              <label style="font-size:0.8rem; font-weight:700">Email Address (Read-only)</label>
-              <input type="email" id="profEmail" class="form-input" style="background:#f4f4f4; color:#888" readonly>
+              <div class="validation-input-group full-width">
+                <label style="font-size:0.8rem; font-weight:700">Email Address (Read-only)</label>
+                <input type="email" id="profEmail" class="form-input" style="background:#f4f4f4; color:#888" readonly>
+                <span class="error-msg"></span>
+              </div>
             </div>
             <button type="submit" class="btn btn-primary" style="align-self: flex-start; padding: 0.8rem 2rem; cursor:pointer">Save Personal Details</button>
           </form>
@@ -167,16 +196,16 @@
                 <input type="text" id="profAddress" class="form-input" placeholder="Flat No, Building name, Street address" required>
               </div>
               
-              <div style="display:flex; gap:1rem; flex-wrap:wrap">
-                <div style="flex:1; min-width:180px" class="validation-input-group">
+              <div class="profile-form-grid three-cols">
+                <div class="validation-input-group">
                   <label style="font-size:0.8rem; font-weight:700">City</label>
                   <input type="text" id="profCity" class="form-input" placeholder="City name" required>
                 </div>
-                <div style="flex:1; min-width:180px" class="validation-input-group">
+                <div class="validation-input-group">
                   <label style="font-size:0.8rem; font-weight:700">State</label>
                   <input type="text" id="profState" class="form-input" placeholder="State" required>
                 </div>
-                <div style="flex:1; min-width:180px" class="validation-input-group">
+                <div class="validation-input-group">
                   <label style="font-size:0.8rem; font-weight:700">Pincode</label>
                   <input type="text" id="profPincode" class="form-input" placeholder="6-digit pincode" maxlength="6" required oninput="validateField(this, /^\d{6}$/, 'Enter valid 6-digit Pincode')">
                   <span class="error-msg"></span>
@@ -190,28 +219,28 @@
                 <i class="fas fa-truck-moving" style="color:var(--accent)"></i> Alternative Contact & Shipping Address
               </h3>
               
-              <div style="display:flex; gap:1rem; flex-wrap:wrap">
-                <div style="flex:1; min-width:240px" class="validation-input-group">
+              <div class="profile-form-grid">
+                <div class="validation-input-group">
                   <label style="font-size:0.8rem; font-weight:700">Alternative Phone Number</label>
                   <input type="tel" id="profPhoneAlt" class="form-input" placeholder="10-digit mobile number" maxlength="10" oninput="validateField(this, /^([6-9]\d{9})?$/, 'Please enter a valid 10-digit alternate number')">
                   <span class="error-msg"></span>
                 </div>
-                <div style="flex:1; min-width:240px" class="validation-input-group">
+                <div class="validation-input-group">
                   <label style="font-size:0.8rem; font-weight:700">Address Line 2 (Alt Shipping)</label>
                   <input type="text" id="profAddressAlt" class="form-input" placeholder="Flat No, Building, Street 2">
                 </div>
               </div>
               
-              <div style="display:flex; gap:1rem; flex-wrap:wrap">
-                <div style="flex:1; min-width:180px" class="validation-input-group">
+              <div class="profile-form-grid three-cols">
+                <div class="validation-input-group">
                   <label style="font-size:0.8rem; font-weight:700">City 2</label>
                   <input type="text" id="profCityAlt" class="form-input" placeholder="City 2">
                 </div>
-                <div style="flex:1; min-width:180px" class="validation-input-group">
+                <div class="validation-input-group">
                   <label style="font-size:0.8rem; font-weight:700">State 2</label>
                   <input type="text" id="profStateAlt" class="form-input" placeholder="State 2">
                 </div>
-                <div style="flex:1; min-width:180px" class="validation-input-group">
+                <div class="validation-input-group">
                   <label style="font-size:0.8rem; font-weight:700">Pincode 2</label>
                   <input type="text" id="profPincodeAlt" class="form-input" placeholder="Pincode 2" maxlength="6" oninput="validateField(this, /^(\d{6})?$/, 'Enter valid 6-digit Pincode')">
                   <span class="error-msg"></span>
