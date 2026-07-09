@@ -46,6 +46,7 @@ function showSection(sectionId) {
   else if (sectionId === 'promotionsSection') {
     loadHomepageSettings();
     loadAdminPromotions();
+    loadAdminCoupons();
     prefillPromoDates();
   }
   else if (sectionId === 'errorSection') loadAdminErrors();
@@ -567,26 +568,32 @@ async function loadHomepageSettings() {
 
 async function handleHeroSubmit(e) {
   e.preventDefault();
-  const payload = {
-    hero_title: document.getElementById('heroTitleInput').value.trim(),
-    hero_subtitle: document.getElementById('heroSubtitleInput').value.trim(),
-    media_url: document.getElementById('heroMediaUrlInput').value.trim(),
-    media_type: document.getElementById('heroMediaTypeInput').value,
-    festival_mode: document.getElementById('heroFestivalInput').value
-  };
+  
+  const formData = new FormData();
+  formData.append('hero_title', document.getElementById('heroTitleInput').value.trim());
+  formData.append('hero_subtitle', document.getElementById('heroSubtitleInput').value.trim());
+  formData.append('media_url', document.getElementById('heroMediaUrlInput').value.trim());
+  formData.append('media_type', document.getElementById('heroMediaTypeInput').value);
+  formData.append('festival_mode', document.getElementById('heroFestivalInput').value);
+  
+  const heroFileInput = document.getElementById('heroFile');
+  if (heroFileInput && heroFileInput.files[0]) {
+    formData.append('image', heroFileInput.files[0]);
+  }
 
   try {
     const res = await fetch('/api/homepage-settings', {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(payload)
+      body: formData
     });
     const data = await res.json();
     if (data.success) {
       showToast('Homepage hero configuration updated!', 'success');
+      // Reset file input
+      if (heroFileInput) heroFileInput.value = '';
       loadHomepageSettings();
     } else {
       showToast(data.message, 'error');
@@ -598,7 +605,9 @@ async function handleHeroSubmit(e) {
 
 async function loadAdminPromotions() {
   try {
-    const res = await fetch('/api/promotions');
+    const res = await fetch('/api/admin/promotions', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
     const data = await res.json();
     const tbody = document.querySelector('#adminPromotionsTable tbody');
     tbody.innerHTML = '';
@@ -902,5 +911,100 @@ function prefillPromoDates() {
     const future = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     const localFutureTime = (new Date(future - tzoffset)).toISOString().slice(0, 16);
     endDateInput.value = localFutureTime;
+  }
+}
+
+async function loadAdminCoupons() {
+  try {
+    const res = await fetch('/api/coupons');
+    const data = await res.json();
+    const tbody = document.querySelector('#adminCouponsTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (data.success && data.coupons) {
+      if (data.coupons.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-light)">No coupon codes created yet.</td></tr>';
+        return;
+      }
+
+      data.coupons.forEach(c => {
+        let discountText = '';
+        if (c.discount_type === 'percentage') {
+          discountText = `${Math.round(c.discount_value)}%`;
+        } else {
+          discountText = `₹${Math.round(c.discount_value)}`;
+        }
+
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${c.code}</strong></td>
+            <td>${discountText}</td>
+            <td style="font-size:0.8rem">${c.description || ''}</td>
+            <td><span style="padding:0.2rem 0.5rem; background:#e1e1e1; font-weight:700; border-radius:4px; font-size:0.75rem">${c.tag}</span></td>
+            <td>
+              <button onclick="deleteCoupon(${c.id})" class="btn btn-accent" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:var(--danger); color:#fff"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+  } catch (err) {
+    showToast('Error loading coupons list', 'error');
+  }
+}
+
+async function handleCouponSubmit(e) {
+  e.preventDefault();
+
+  const code = document.getElementById('couponCode').value.trim();
+  const discount_type = document.getElementById('couponDiscountType').value;
+  const discount_value = parseFloat(document.getElementById('couponDiscountValue').value);
+  const description = document.getElementById('couponDescription').value.trim();
+  const tag = document.getElementById('couponTag').value.trim();
+
+  if (!code || isNaN(discount_value) || discount_value <= 0) {
+    showToast('Please enter valid coupon details', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/coupons', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ code, discount_type, discount_value, description, tag })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Coupon code created successfully!', 'success');
+      document.getElementById('couponCreateForm').reset();
+      loadAdminCoupons();
+    } else {
+      showToast(data.message || 'Failed to create coupon', 'error');
+    }
+  } catch (err) {
+    showToast('Error saving coupon code', 'error');
+  }
+}
+
+async function deleteCoupon(id) {
+  if (!confirm('Are you sure you want to delete this coupon code? Customers will no longer be able to apply it.')) return;
+  try {
+    const res = await fetch(`/api/coupons/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Coupon code deleted');
+      loadAdminCoupons();
+    } else {
+      showToast(data.message || 'Failed to delete coupon', 'error');
+    }
+  } catch (err) {
+    showToast('Error deleting coupon code', 'error');
   }
 }

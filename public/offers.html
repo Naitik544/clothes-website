@@ -63,29 +63,11 @@
       <p>Click any coupon box to copy the promo code instantly</p>
     </div>
     
-    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:2rem">
-      <!-- Coupon 1 -->
-      <div class="coupon-card" onclick="copyCoupon('WELCOME10')">
-        <span class="coupon-tag">NEW USER</span>
-        <h3>10% Discount</h3>
-        <p>Applicable on all products. No minimum purchase required.</p>
-        <div class="code-box">WELCOME10 <i class="far fa-copy"></i></div>
-      </div>
-
-      <!-- Coupon 2 -->
-      <div class="coupon-card" onclick="copyCoupon('FAMILY40')">
-        <span class="coupon-tag">ACCESSORIES</span>
-        <h3>Flat 40% OFF</h3>
-        <p>Save massive amounts on clutches, belts, and mojari footwear combos.</p>
-        <div class="code-box" style="border-color:var(--accent); color:var(--accent)">FAMILY40 <i class="far fa-copy"></i></div>
-      </div>
-
-      <!-- Coupon 3 -->
-      <div class="coupon-card" onclick="copyCoupon('TWINNING500')">
-        <span class="coupon-tag">MEGA SAVER</span>
-        <h3>Save ₹500</h3>
-        <p>Valid on purchase of minimum 2 kids outfits. Perfect for twins.</p>
-        <div class="code-box" style="border-color:var(--success); color:var(--success)">TWINNING500 <i class="far fa-copy"></i></div>
+    <div id="couponsListGrid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:2rem">
+      <!-- Injected dynamically by JavaScript -->
+      <div style="grid-column:1/-1; text-align:center; padding:2rem">
+        <i class="fas fa-spinner fa-spin" style="font-size:1.5rem; color:var(--primary)"></i>
+        <p style="margin-top:10px">Loading active coupons...</p>
       </div>
     </div>
 
@@ -283,8 +265,40 @@
       addToCart(product, defaultSize, 1);
     }
 
+    async function loadCoupons() {
+      const grid = document.getElementById('couponsListGrid');
+      try {
+        const res = await fetch('/api/coupons');
+        const data = await res.json();
+        if (data.success && data.coupons && data.coupons.length > 0) {
+          grid.innerHTML = '';
+          data.coupons.forEach(c => {
+            let discountText = '';
+            if (c.discount_type === 'percentage') {
+              discountText = `${Math.round(c.discount_value)}% Discount`;
+            } else {
+              discountText = `Flat ₹${Math.round(c.discount_value)} OFF`;
+            }
+            grid.innerHTML += `
+              <div class="coupon-card" onclick="copyCoupon('${c.code}')">
+                <span class="coupon-tag">${c.tag || 'OFFER'}</span>
+                <h3>${discountText}</h3>
+                <p>${c.description || 'Valid on all premium outfits.'}</p>
+                <div class="code-box">${c.code} <i class="far fa-copy"></i></div>
+              </div>
+            `;
+          });
+        } else {
+          grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--text-light)">No active coupons right now. Check back during our next festival event!</div>';
+        }
+      } catch (err) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--danger)">Error loading coupon codes.</div>';
+      }
+    }
+
     startCountdown();
     loadClearanceItems();
+    loadCoupons();
   </script>
 </body>
 </html>

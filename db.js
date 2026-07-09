@@ -335,6 +335,19 @@ async function createTables() {
     )
   `);
 
+  // Coupons table
+  await run(`
+    CREATE TABLE IF NOT EXISTS coupons (
+      id ${idType},
+      code VARCHAR(50) UNIQUE NOT NULL,
+      discount_type VARCHAR(50) DEFAULT 'percentage', -- 'percentage' or 'amount'
+      discount_value DECIMAL(10, 2) NOT NULL,
+      description VARCHAR(255),
+      tag VARCHAR(50) DEFAULT 'OFFER',
+      created_at ${datetimeType} DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Alter tables to add new columns for user settings and dynamic product details
   const alterQueries = [
     `ALTER TABLE customers ADD COLUMN phone_alt VARCHAR(15)`,
@@ -657,8 +670,22 @@ async function seedDatabase() {
         await run('INSERT INTO lookbook_pages (page_number, image_url) VALUES (?, ?)', [page.page_number, page.image_url]);
       }
     }
+
+    // Seed default coupons
+    const couponCount = await get('SELECT COUNT(*) as count FROM coupons');
+    if (parseInt(couponCount.count) === 0) {
+      console.log('Seeding default active promo coupons...');
+      const defaultCoupons = [
+        { code: 'WELCOME10', discount_type: 'percentage', discount_value: 10.00, description: 'Applicable on all products. No minimum purchase required.', tag: 'NEW USER' },
+        { code: 'FAMILY40', discount_type: 'percentage', discount_value: 40.00, description: 'Save massive amounts on clutches, belts, and mojari footwear combos.', tag: 'ACCESSORIES' },
+        { code: 'TWINNING500', discount_type: 'amount', discount_value: 500.00, description: 'Valid on purchase of minimum 2 kids outfits. Perfect for twins.', tag: 'MEGA SAVER' }
+      ];
+      for (const c of defaultCoupons) {
+        await run('INSERT INTO coupons (code, discount_type, discount_value, description, tag) VALUES (?, ?, ?, ?, ?)', [c.code, c.discount_type, c.discount_value, c.description, c.tag]);
+      }
+    }
   } catch (err) {
-    console.error('Failed to seed lookbook pages:', err.message);
+    console.error('Failed to seed lookbook pages or coupons:', err.message);
   }
 
   // Migrate any existing SVG hero paths to PNG and update Slide 1 to vacation image

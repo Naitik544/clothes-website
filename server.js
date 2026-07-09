@@ -1510,17 +1510,79 @@ app.get('/api/homepage-settings', async (req, res) => {
 });
 
 // Update Homepage settings (Admin only)
-app.put('/api/homepage-settings', adminIpFilter, authenticateAdmin, async (req, res) => {
+app.put('/api/homepage-settings', adminIpFilter, authenticateAdmin, upload.single('image'), async (req, res) => {
   const { hero_title, hero_subtitle, media_url, media_type, festival_mode } = req.body;
   if (!hero_title) return res.status(400).json({ success: false, message: 'Hero title is required' });
+  
+  let final_media_url = '';
+  if (req.file) {
+    final_media_url = 'images/uploads/' + req.file.filename;
+  } else if (media_url) {
+    final_media_url = media_url;
+  } else {
+    try {
+      const existing = await db.get('SELECT media_url FROM homepage_settings WHERE id = 1');
+      final_media_url = existing ? existing.media_url : '';
+    } catch (e) {
+      final_media_url = '';
+    }
+  }
+
   try {
     await db.run(
       `UPDATE homepage_settings 
        SET hero_title = ?, hero_subtitle = ?, media_url = ?, media_type = ?, festival_mode = ?, updated_at = CURRENT_TIMESTAMP
        WHERE id = 1`,
-      [hero_title, hero_subtitle, media_url, media_type || 'image', festival_mode || 'none']
+      [hero_title, hero_subtitle, final_media_url, media_type || 'image', festival_mode || 'none']
     );
     res.json({ success: true, message: 'Homepage hero updated successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Get All Promotions (Admin only)
+app.get('/api/admin/promotions', adminIpFilter, authenticateAdmin, async (req, res) => {
+  try {
+    const list = await db.query('SELECT * FROM promotions ORDER BY priority DESC, created_at DESC');
+    res.json({ success: true, promotions: list });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Get All Coupons (Public / Offers page)
+app.get('/api/coupons', async (req, res) => {
+  try {
+    const list = await db.query('SELECT * FROM coupons ORDER BY created_at DESC');
+    res.json({ success: true, coupons: list });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Create Coupon (Admin only)
+app.post('/api/coupons', adminIpFilter, authenticateAdmin, async (req, res) => {
+  const { code, discount_type, discount_value, description, tag } = req.body;
+  if (!code || !discount_value) {
+    return res.status(400).json({ success: false, message: 'Coupon code and discount value are required' });
+  }
+  try {
+    await db.run(
+      `INSERT INTO coupons (code, discount_type, discount_value, description, tag) VALUES (?, ?, ?, ?, ?)`,
+      [code.toUpperCase(), discount_type || 'percentage', parseFloat(discount_value), description || '', tag || 'OFFER']
+    );
+    res.json({ success: true, message: 'Coupon added successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Delete Coupon (Admin only)
+app.delete('/api/coupons/:id', adminIpFilter, authenticateAdmin, async (req, res) => {
+  try {
+    await db.run('DELETE FROM coupons WHERE id = ?', [req.params.id]);
+    res.json({ success: true, message: 'Coupon deleted successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
