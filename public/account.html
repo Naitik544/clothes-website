@@ -363,6 +363,11 @@
         
         if (data.success) {
           const u = data.user;
+          if (!u) {
+            logout();
+            window.location.replace('login.html');
+            return;
+          }
           // Sidebar displayName
           document.getElementById('userDisplayName').textContent = u.name;
           document.getElementById('userDisplayEmail').textContent = u.email;
@@ -370,7 +375,7 @@
 
           // Inputs
           document.getElementById('profName').value = u.name;
-          document.getElementById('profPhone').value = u.phone;
+          document.getElementById('profPhone').value = (u.phone && u.phone.startsWith('fb-')) ? '' : (u.phone || '');
           document.getElementById('profEmail').value = u.email;
           document.getElementById('profAddress').value = u.address_line || '';
           document.getElementById('profCity').value = u.city || '';
