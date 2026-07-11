@@ -1731,18 +1731,18 @@ app.post('/api/admin/seo-generate', adminIpFilter, authenticateAdmin, async (req
     // Add static html routes
     const pages = ['index.html', 'products.html', 'cart.html', 'login.html', 'account.html', 'offers.html', 'about.html'];
     pages.forEach(p => {
-      sitemap += `  <url>\n    <loc>https://little-to-large.onrender.com/${p}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+      sitemap += `  <url>\n    <loc>https://littletolargee.com/${p}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
     });
 
     // Add dynamic products
     products.forEach(p => {
-      sitemap += `  <url>\n    <loc>https://little-to-large.onrender.com/product-detail.html?id=${p.id}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+      sitemap += `  <url>\n    <loc>https://littletolargee.com/product-detail.html?id=${p.id}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
     });
 
     sitemap += `</urlset>\n`;
 
     fs.writeFileSync(path.join(__dirname, 'public', 'sitemap.xml'), sitemap, 'utf8');
-    fs.writeFileSync(path.join(__dirname, 'public', 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: https://little-to-large.onrender.com/sitemap.xml\n`, 'utf8');
+    fs.writeFileSync(path.join(__dirname, 'public', 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: https://littletolargee.com/sitemap.xml\n`, 'utf8');
 
     res.json({ success: true, message: 'sitemap.xml and robots.txt compiled successfully' });
   } catch (err) {
