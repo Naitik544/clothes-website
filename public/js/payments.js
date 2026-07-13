@@ -280,21 +280,15 @@ async function processOrderSubmit(e) {
     return;
   }
 
-  // Validate payment inputs
-  let txnId = '';
-  if (activePaymentMethod === 'Card') {
-    const cardName = document.getElementById('cardName').value.trim();
-    const cardNum = document.getElementById('cardNumber').value.trim();
-    const cardExp = document.getElementById('cardExpiry').value.trim();
-    const cardCvv = document.getElementById('cardCvv').value.trim();
+  // Calculate order amount
+  const cart = getCart();
+  let subtotal = cart.reduce((tot, it) => tot + it.price * it.quantity, 0);
+  const discount = parseFloat(sessionStorage.getItem('l2l_discount') || 0);
+  const shipping = subtotal > 999 ? 0 : 60;
+  const totalAmount = subtotal - discount + shipping;
 
-    if (!cardName || cardNum.length < 19 || cardExp.length < 5 || cardCvv.length < 3) {
-      showToast('Please check card payment details!', 'error');
-      return;
-    }
-    txnId = 'TXN-CARD-' + Date.now();
-  } 
-  else if (activePaymentMethod === 'COD') {
+  // If COD, run captcha validation
+  if (activePaymentMethod === 'COD') {
     const captcha = document.getElementById('captchaCode').textContent;
     const input = document.getElementById('captchaInput').value.trim();
 
@@ -302,57 +296,159 @@ async function processOrderSubmit(e) {
       showToast('Verification code is incorrect!', 'error');
       return;
     }
+
+    const orderPayload = {
+      items: cart.map(item => ({
+        product_id: item.product_id,
+        size: item.size,
+        quantity: item.quantity,
+        price: item.price
+      })),
+      total_amount: totalAmount,
+      shipping_address: `${name}, ${address}, ${state} - ${pincode} (Tel: ${phone})`,
+      payment_method: 'COD',
+      transaction_id: 'COD-' + Date.now() + '-' + Math.floor(Math.random() * 1000)
+    };
+
+    try {
+      const res = await fetch(`${API_URL}/api/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(orderPayload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        clearCart();
+        sessionStorage.removeItem('l2l_discount');
+        showToast('🎉 Order placed successfully!', 'success');
+        setTimeout(() => {
+          window.location.href = `account.html?tab=orders&success_id=${data.orderId}`;
+        }, 1500);
+      } else {
+        showToast(data.message || 'Order failed', 'error');
+      }
+    } catch (err) {
+      showToast('Failed to connect to order API', 'error');
+    }
   } 
   else {
-    // UPI QR simulated payment ID
-    txnId = 'TXN-UPI-' + Math.floor(Math.random() * 9E9) + 'L2L';
-  }
+    // Card or UPI -> Process through Razorpay!
+    try {
+      // 1. Get Razorpay key config
+      const configRes = await fetch(`${API_URL}/api/payment/config`);
+      const configData = await configRes.json();
+      if (!configData.success) {
+        showToast('Failed to load payment gateway config', 'error');
+        return;
+      }
 
-  // Construct payload
-  const cart = getCart();
-  let subtotal = cart.reduce((tot, it) => tot + it.price * it.quantity, 0);
-  const discount = parseFloat(sessionStorage.getItem('l2l_discount') || 0);
-  const shipping = subtotal > 999 ? 0 : 60;
-  const totalAmount = subtotal - discount + shipping;
+      // 2. Create the pending order in database
+      const orderPayload = {
+        items: cart.map(item => ({
+          product_id: item.product_id,
+          size: item.size,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        total_amount: totalAmount,
+        shipping_address: `${name}, ${address}, ${state} - ${pincode} (Tel: ${phone})`,
+        payment_method: activePaymentMethod,
+        transaction_id: 'PENDING'
+      };
 
-  const orderPayload = {
-    items: cart.map(item => ({
-      product_id: item.product_id,
-      size: item.size,
-      quantity: item.quantity,
-      price: item.price
-    })),
-    total_amount: totalAmount,
-    shipping_address: `${name}, ${address}, ${state} - ${pincode} (Tel: ${phone})`,
-    payment_method: activePaymentMethod,
-    transaction_id: txnId
-  };
-
-  try {
-    // Trigger placing order API
-    const res = await fetch(`${API_URL}/api/orders`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(orderPayload)
-    });
-
-    const data = await res.json();
-    if (data.success) {
-      // Clear Cart state
-      clearCart();
-      sessionStorage.removeItem('l2l_discount');
+      const dbOrderRes = await fetch(`${API_URL}/api/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(orderPayload)
+      });
+      const dbOrderData = await dbOrderRes.json();
+      if (!dbOrderData.success) {
+        showToast(dbOrderData.message || 'Failed to initialize order', 'error');
+        return;
+      }
       
-      showToast('🎉 Order placed successfully!', 'success');
-      setTimeout(() => {
-        window.location.href = `account.html?tab=orders&success_id=${data.orderId}`;
-      }, 1500);
-    } else {
-      showToast(data.message || 'Order failed', 'error');
+      const dbOrderId = dbOrderData.orderId;
+
+      // 3. Create the Razorpay Order on server
+      const rzpOrderRes = await fetch(`${API_URL}/api/payment/create-order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ amount: totalAmount })
+      });
+      const rzpOrderData = await rzpOrderRes.json();
+      if (!rzpOrderData.success) {
+        showToast('Failed to create payment order', 'error');
+        return;
+      }
+
+      const rzpOrder = rzpOrderData.order;
+
+      // 4. Configure and open Razorpay Checkout
+      const options = {
+        key: configData.key_id,
+        amount: rzpOrder.amount,
+        currency: rzpOrder.currency,
+        name: "Little to Large",
+        description: `Order Payment for ID #${dbOrderId}`,
+        order_id: rzpOrder.id,
+        handler: async function (response) {
+          showToast('Payment successful, verifying...', 'info');
+          try {
+            // 5. Verify signature on server
+            const verifyRes = await fetch(`${API_URL}/api/payment/verify`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                order_id: dbOrderId
+              })
+            });
+            const verifyData = await verifyRes.json();
+            if (verifyData.success) {
+              clearCart();
+              sessionStorage.removeItem('l2l_discount');
+              showToast('🎉 Payment verified! Order placed.', 'success');
+              setTimeout(() => {
+                window.location.href = `account.html?tab=orders&success_id=${dbOrderId}`;
+              }, 1500);
+            } else {
+              showToast(verifyData.message || 'Signature verification failed', 'error');
+            }
+          } catch (err) {
+            showToast('Verification request failed', 'error');
+          }
+        },
+        prefill: {
+          name: name,
+          contact: phone
+        },
+        theme: {
+          color: "#1e1b4b"
+        }
+      };
+
+      const rzp1 = new Razorpay(options);
+      rzp1.on('payment.failed', function (response) {
+        showToast('Payment failed: ' + response.error.description, 'error');
+      });
+      rzp1.open();
+
+    } catch (err) {
+      showToast('Payment gateway initialization failed', 'error');
     }
-  } catch (err) {
-    showToast('Failed to connect to order API', 'error');
   }
 }

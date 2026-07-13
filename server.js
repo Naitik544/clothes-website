@@ -9,7 +9,14 @@ const xlsx = require('xlsx');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const db = require('./db');
 const adminIpFilter = require('./middleware/ipFilter');
+const crypto = require('crypto');
+const Razorpay = require('razorpay');
 require('dotenv').config();
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_yourKeyHere',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || 'yourSecretHere'
+});
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -1044,6 +1051,69 @@ app.get('/api/orders/:id/invoice', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('Invoice Generation Error:', err.stack || err.message);
     res.status(500).send(`<h1>Failed to generate invoice</h1><p>${err.message}</p>`);
+  }
+});
+
+// Get Razorpay Key Config
+app.get('/api/payment/config', (req, res) => {
+  res.json({ success: true, key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_yourKeyHere' });
+});
+
+// Create Razorpay Order
+app.post('/api/payment/create-order', authenticateToken, async (req, res) => {
+  const { amount } = req.body;
+  if (!amount || isNaN(amount)) {
+    return res.status(400).json({ success: false, message: 'Invalid order amount' });
+  }
+
+  try {
+    const options = {
+      amount: Math.round(amount * 100), // amount in paisa
+      currency: "INR",
+      receipt: "receipt_order_" + Math.random().toString(36).substring(2, 10)
+    };
+
+    const order = await razorpay.orders.create(options);
+    res.json({ success: true, order });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Verify Razorpay Payment Signature
+app.post('/api/payment/verify', authenticateToken, async (req, res) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, order_id } = req.body;
+  
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !order_id) {
+    return res.status(400).json({ success: false, message: 'Missing verification parameters' });
+  }
+
+  try {
+    const sign = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSign = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || 'yourSecretHere')
+      .update(sign.toString())
+      .digest("hex");
+
+    if (razorpay_signature === expectedSign) {
+      await db.run(
+        `UPDATE payments 
+         SET status = 'Success', transaction_id = ?, method = 'Razorpay'
+         WHERE order_id = ?`,
+        [razorpay_payment_id, order_id]
+      );
+      await db.run(
+        `UPDATE orders 
+         SET status = 'Processing' 
+         WHERE id = ?`,
+        [order_id]
+      );
+      res.json({ success: true, message: "Payment verified successfully" });
+    } else {
+      res.status(400).json({ success: false, message: "Payment signature mismatch" });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
