@@ -880,12 +880,17 @@ app.get('/api/orders/:id/invoice', authenticateToken, async (req, res) => {
       padding: 20px;
       border-radius: 8px;
       box-sizing: border-box;
+      width: 100%;
+      word-wrap: break-word;
     }
     .items-table {
       width: 100%;
       border-collapse: collapse;
       margin-bottom: 25px;
       font-size: 0.9rem;
+    }
+    .items-table th, .items-table td {
+      word-break: break-word;
     }
     .items-table th {
       background-color: #f8f9fa !important;
@@ -925,6 +930,7 @@ app.get('/api/orders/:id/invoice', authenticateToken, async (req, res) => {
       }
       .billing-card {
         height: auto !important;
+        min-height: unset !important;
       }
       .summary-table td:first-child {
         width: 10% !important;
@@ -969,17 +975,17 @@ app.get('/api/orders/:id/invoice', authenticateToken, async (req, res) => {
     <table class="billing-table" style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-family: sans-serif;">
       <tr>
         <td style="width: 50%; padding-right: 10px; vertical-align: top;">
-          <div class="billing-card" style="border: 1px solid #eee; border-radius: 6px; padding: 15px; background: #fafafa; height: 120px; box-sizing: border-box;">
+          <div class="billing-card" style="border: 1px solid #eee; border-radius: 6px; padding: 15px; background: #fafafa; min-height: 120px; height: auto; box-sizing: border-box;">
             <h3 style="margin: 0 0 10px 0; font-size: 0.95rem; color: #1e1b4b; border-bottom: 1px solid #eee; padding-bottom: 5px; text-transform: uppercase; font-weight: 700;">Customer Details</h3>
-            <p style="margin: 5px 0; font-size: 0.85rem; line-height: 1.4;"><strong>Name:</strong> ${custName}</p>
-            <p style="margin: 5px 0; font-size: 0.85rem; line-height: 1.4;"><strong>Email:</strong> ${custEmail}</p>
-            <p style="margin: 5px 0; font-size: 0.85rem; line-height: 1.4;"><strong>Phone:</strong> ${custPhone ? '+91 ' + custPhone : 'N/A'}</p>
+            <p style="margin: 5px 0; font-size: 0.85rem; line-height: 1.4; word-break: break-word;"><strong>Name:</strong> ${custName}</p>
+            <p style="margin: 5px 0; font-size: 0.85rem; line-height: 1.4; word-break: break-word;"><strong>Email:</strong> ${custEmail}</p>
+            <p style="margin: 5px 0; font-size: 0.85rem; line-height: 1.4; word-break: break-word;"><strong>Phone:</strong> ${custPhone ? '+91 ' + custPhone : 'N/A'}</p>
           </div>
         </td>
         <td style="width: 50%; padding-left: 10px; vertical-align: top;">
-          <div class="billing-card" style="border: 1px solid #eee; border-radius: 6px; padding: 15px; background: #fafafa; height: 120px; box-sizing: border-box;">
+          <div class="billing-card" style="border: 1px solid #eee; border-radius: 6px; padding: 15px; background: #fafafa; min-height: 120px; height: auto; box-sizing: border-box;">
             <h3 style="margin: 0 0 10px 0; font-size: 0.95rem; color: #1e1b4b; border-bottom: 1px solid #eee; padding-bottom: 5px; text-transform: uppercase; font-weight: 700;">Delivery Address</h3>
-            <p style="margin: 5px 0; font-size: 0.85rem; line-height: 1.4;">${order.shipping_address}</p>
+            <p style="margin: 5px 0; font-size: 0.85rem; line-height: 1.4; word-break: break-word;">${order.shipping_address}</p>
           </div>
         </td>
       </tr>
