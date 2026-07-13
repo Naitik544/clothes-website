@@ -428,7 +428,8 @@ async function processOrderSubmit(e) {
       rzp1.open();
 
     } catch (err) {
-      showToast('Payment gateway initialization failed', 'error');
+      console.error('Razorpay Init Error:', err);
+      showToast('Payment gateway initialization failed: ' + err.message, 'error');
     }
   }
 }
