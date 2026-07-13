@@ -874,13 +874,13 @@ app.get('/api/orders/:id/invoice', authenticateToken, async (req, res) => {
       -webkit-print-color-adjust: exact;
     }
     .invoice-box {
-      max-width: 800px;
+      width: 740px;
+      max-width: 100%;
       margin: auto;
       border: 1px solid #eee;
       padding: 20px;
       border-radius: 8px;
       box-sizing: border-box;
-      width: 100%;
       word-wrap: break-word;
     }
     .items-table {
