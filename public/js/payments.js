@@ -336,7 +336,7 @@ async function processOrderSubmit(e) {
         total_amount: totalAmount,
         shipping_address: `${name}, ${address}, ${state} - ${pincode} (Tel: ${phone})`,
         payment_method: activePaymentMethod,
-        transaction_id: 'PENDING'
+        transaction_id: 'PENDING-' + Date.now() + '-' + Math.floor(Math.random() * 1000000)
       };
 
       const dbOrderRes = await fetch(`${API_URL}/api/orders`, {
