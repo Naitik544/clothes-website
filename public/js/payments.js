@@ -237,6 +237,21 @@ function setupCardInputFormatting() {
   }
 }
 
+// Helper to dynamically load a script
+function loadRazorpayScript(src) {
+  return new Promise((resolve, reject) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = () => resolve(true);
+    script.onerror = () => reject(new Error('Failed to load Razorpay payment gateway script. Please check your internet connection or disable ad-blocker / Brave Shields.'));
+    document.head.appendChild(script);
+  });
+}
+
 // Process checkout form submission
 async function processOrderSubmit(e) {
   e.preventDefault();
@@ -371,6 +386,9 @@ async function processOrderSubmit(e) {
       }
 
       const rzpOrder = rzpOrderData.order;
+
+      // Ensure Razorpay script is loaded dynamically
+      await loadRazorpayScript('https://checkout.razorpay.com/v1/checkout.js');
 
       // 4. Configure and open Razorpay Checkout
       const options = {
