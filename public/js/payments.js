@@ -83,43 +83,23 @@ function renderPaymentDetails(method) {
 
   if (method === 'UPI') {
     container.innerHTML = `
-      <div class="qr-code-display">
-        <canvas id="qrCanvas" width="180" height="180"></canvas>
-        <p style="font-weight:700; font-size:0.9rem; color:var(--primary); margin:0">Scan dynamic UPI QR code</p>
-        <span style="font-size:0.75rem; color:var(--text-light)">GPay, PhonePe, Paytm or any UPI App</span>
-        <div id="qrTimer" style="font-weight:800; font-size:0.85rem; color:var(--danger)">Expires in 05:00</div>
+      <div style="text-align:center; padding:1.5rem; border:1px solid var(--border-color); border-radius:12px; background:hsl(243, 75%, 98%)">
+        <div style="font-size:2.5rem; color:var(--primary); margin-bottom:0.8rem"><i class="fas fa-qrcode"></i></div>
+        <p style="font-weight:700; font-size:1rem; color:var(--primary); margin:0 0 0.4rem 0">UPI Payment via Razorpay</p>
+        <p style="font-size:0.85rem; color:var(--text-light); margin:0">Pay using GPay, PhonePe, Paytm, or scan a dynamic QR inside the Razorpay secure popup after clicking 'Place Order'.</p>
       </div>
     `;
-    drawSimulatedQR();
-    startQRCountdown();
   } 
   else if (method === 'Card') {
     container.innerHTML = `
-      <div style="display:flex; flex-direction:column; gap:1rem">
-        <div>
-          <label style="font-size:0.8rem; font-weight:700">Cardholder Name</label>
-          <input type="text" id="cardName" placeholder="Enter name on card" class="form-input" style="width:100%; padding:0.6rem; border:1px solid var(--border-color); border-radius:6px; margin-top:0.3rem" required>
-        </div>
-        <div>
-          <label style="font-size:0.8rem; font-weight:700">Card Number</label>
-          <input type="text" id="cardNumber" placeholder="1234 5678 9101 1121" maxlength="19" class="form-input" style="width:100%; padding:0.6rem; border:1px solid var(--border-color); border-radius:6px; margin-top:0.3rem" required>
-        </div>
-        <div style="display:flex; gap:1rem">
-          <div style="flex:1">
-            <label style="font-size:0.8rem; font-weight:700">Expiry (MM/YY)</label>
-            <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5" class="form-input" style="width:100%; padding:0.6rem; border:1px solid var(--border-color); border-radius:6px; margin-top:0.3rem" required>
-          </div>
-          <div style="flex:1">
-            <label style="font-size:0.8rem; font-weight:700">CVV</label>
-            <input type="password" id="cardCvv" placeholder="***" maxlength="3" class="form-input" style="width:100%; padding:0.6rem; border:1px solid var(--border-color); border-radius:6px; margin-top:0.3rem" required>
-          </div>
-        </div>
+      <div style="text-align:center; padding:1.5rem; border:1px solid var(--border-color); border-radius:12px; background:hsl(243, 75%, 98%)">
+        <div style="font-size:2.5rem; color:var(--primary); margin-bottom:0.8rem"><i class="fas fa-credit-card"></i></div>
+        <p style="font-weight:700; font-size:1rem; color:var(--primary); margin:0 0 0.4rem 0">Credit / Debit Card via Razorpay</p>
+        <p style="font-size:0.85rem; color:var(--text-light); margin:0">Pay securely using any Visa, Mastercard, RuPay, or Maestro card inside the Razorpay popup after clicking 'Place Order'.</p>
       </div>
     `;
-    setupCardInputFormatting();
   } 
   else if (method === 'COD') {
-    // Generate simple captcha code
     const captcha = Math.floor(1000 + Math.random() * 9000).toString();
     container.innerHTML = `
       <div style="text-align:center; padding:1rem; border:1px dashed var(--border-color); border-radius:var(--radius); background:#fafafa">
