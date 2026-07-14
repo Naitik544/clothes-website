@@ -61,11 +61,13 @@ function getToken() {
 function saveToken(token, user) {
   localStorage.setItem('l2l_token', token);
   localStorage.setItem('l2l_user', JSON.stringify(user));
+  document.cookie = `l2l_token=${token}; path=/; max-age=86400; SameSite=Lax`;
 }
 
 function logout() {
   localStorage.removeItem('l2l_token');
   localStorage.removeItem('l2l_user');
+  document.cookie = "l2l_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax";
   showToast('Logged out successfully', 'info');
   setTimeout(() => {
     window.location.href = 'index.html';

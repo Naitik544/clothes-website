@@ -21,8 +21,31 @@ if (process.env.ADMIN_IP_WHITELIST) {
 
 function adminIpFilter(req, res, next) {
   // 1. Bypass IP check if request has a valid admin JWT token
+  let token = null;
+
+  // Try parsing from Authorization header
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  if (authHeader && authHeader.split(' ')[1]) {
+    token = authHeader.split(' ')[1];
+  }
+
+  // Try parsing from Cookie header
+  if (!token && req.headers.cookie) {
+    const cookieMap = req.headers.cookie.split(';').reduce((acc, c) => {
+      const parts = c.trim().split('=');
+      if (parts.length === 2) {
+        acc[parts[0]] = parts[1];
+      }
+      return acc;
+    }, {});
+    token = cookieMap['l2l_token'];
+  }
+
+  // Try parsing from Query string parameter
+  if (!token && req.query.token) {
+    token = req.query.token;
+  }
+
   if (token) {
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
