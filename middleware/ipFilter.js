@@ -67,8 +67,8 @@ function adminIpFilter(req, res, next) {
 
   if (!isAllowed) {
     console.warn(`[SECURITY WARNING] Unauthorized admin panel access attempt from IP: ${clientIp}`);
-    // Return standard 404 response to obfuscate the existence of the admin route
-    return res.status(404).send('<!DOCTYPE html><html><head><title>404 Not Found</title></head><body><h1>Not Found</h1><p>The requested URL was not found on this server.</p></body></html>');
+    // Redirect unauthorized requests to login page so admin can authenticate
+    return res.redirect('/login.html');
   }
 
   next();
