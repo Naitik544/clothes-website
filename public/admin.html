@@ -13,6 +13,25 @@
     }
   </style>
   <link rel="stylesheet" href="css/ux-premium.css">
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      const errBanner = document.createElement('div');
+      errBanner.style.position = 'fixed';
+      errBanner.style.top = '0';
+      errBanner.style.left = '0';
+      errBanner.style.width = '100%';
+      errBanner.style.backgroundColor = '#fee2e2';
+      errBanner.style.color = '#b91c1c';
+      errBanner.style.padding = '1rem';
+      errBanner.style.zIndex = '99999';
+      errBanner.style.borderBottom = '3px solid #ef4444';
+      errBanner.style.fontSize = '0.9rem';
+      errBanner.style.fontFamily = 'monospace';
+      errBanner.innerHTML = `<strong>⚠️ JS Crash:</strong> ${message} <br> <span style="font-size:0.75rem">File: ${source} (Line: ${lineno}, Col: ${colno})</span>`;
+      document.body.appendChild(errBanner);
+      return false;
+    };
+  </script>
 </head>
 <body>
 
