@@ -1089,6 +1089,7 @@ async function saveShippingSettings(e) {
     const data = await res.json();
     if (data.success) {
       showToast('🎉 Shipping settings saved successfully!', 'success');
+      localStorage.setItem('l2l_settings', JSON.stringify({ shipping_fee, free_shipping_threshold }));
       if (window.systemSettings) {
         window.systemSettings.shipping_fee = shipping_fee;
         window.systemSettings.free_shipping_threshold = free_shipping_threshold;

@@ -10,13 +10,41 @@ window.systemSettings = {
   free_shipping_threshold: 999
 };
 
+// Initialize synchronously from localStorage cache to prevent race conditions during first render
+try {
+  const cachedSettings = localStorage.getItem('l2l_settings');
+  if (cachedSettings) {
+    const parsed = JSON.parse(cachedSettings);
+    window.systemSettings.shipping_fee = parseFloat(parsed.shipping_fee || '60');
+    window.systemSettings.free_shipping_threshold = parseFloat(parsed.free_shipping_threshold || '999');
+  }
+} catch (e) {
+  console.error('Failed to load settings from localStorage cache:', e);
+}
+
 async function loadSystemSettings() {
   try {
     const res = await fetch(`${API_URL}/api/settings`);
     const data = await res.json();
     if (data.success && data.settings) {
-      window.systemSettings.shipping_fee = parseFloat(data.settings.shipping_fee || '60');
-      window.systemSettings.free_shipping_threshold = parseFloat(data.settings.free_shipping_threshold || '999');
+      const fee = parseFloat(data.settings.shipping_fee || '60');
+      const threshold = parseFloat(data.settings.free_shipping_threshold || '999');
+      
+      const changed = (window.systemSettings.shipping_fee !== fee || window.systemSettings.free_shipping_threshold !== threshold);
+      
+      window.systemSettings.shipping_fee = fee;
+      window.systemSettings.free_shipping_threshold = threshold;
+      localStorage.setItem('l2l_settings', JSON.stringify({ shipping_fee: fee, free_shipping_threshold: threshold }));
+
+      // Hot reload prices on pages if values changed
+      if (changed) {
+        if (typeof renderCheckoutSummary === 'function') {
+          renderCheckoutSummary();
+        }
+        if (typeof renderPriceSummary === 'function') {
+          renderPriceSummary();
+        }
+      }
     }
   } catch (err) {
     console.error('Failed to load system settings:', err);
