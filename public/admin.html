@@ -31,6 +31,7 @@
         <li><a href="#" data-section="errorSection"><i class="fas fa-bug"></i> Error Tracking</a></li>
         <li><a href="#" data-section="inquiriesSection"><i class="far fa-envelope-open"></i> Customer Inquiries</a></li>
         <li><a href="#" data-section="lookbookSection"><i class="fas fa-book-open"></i> Lookbook Manager</a></li>
+        <li><a href="#" data-section="settingsSection"><i class="fas fa-sliders-h"></i> Shipping Settings</a></li>
         <li><a href="index.html" style="color:var(--marigold); margin-top:3rem"><i class="fas fa-home"></i> View Website</a></li>
       </ul>
     </aside>
@@ -459,6 +460,33 @@
             <!-- Dynamically populated lookbook pages list -->
             <p style="color:var(--text-light)">Loading lookbook pages list...</p>
           </div>
+      <!-- 8. SHIPPING & DELIVERY SETTINGS SECTION -->
+      <section id="settingsSection" style="display: none;">
+        <div style="background-color:#fff; padding:2.5rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); max-width:650px; margin: 0 auto;">
+          <h2 style="font-size:1.5rem; color:var(--primary); font-weight:800; border-bottom:1px solid var(--border-color); padding-bottom:12px; margin-bottom:1.5rem; display:flex; align-items:center; gap:10px">
+            ⚙️ Shipping & Delivery Fee Configurator
+          </h2>
+          <p style="font-size:0.85rem; color:var(--text-light); margin-bottom:2rem; line-height:1.6">
+            Configure delivery fees charged to customers during checkout. You can set a standard shipping charge, and optionally define a threshold above which delivery becomes completely free. Set the shipping charge to 0 to provide free shipping across all orders.
+          </p>
+
+          <form id="shippingSettingsForm" onsubmit="saveShippingSettings(event)" style="display:flex; flex-direction:column; gap:1.5rem">
+            <div class="form-group">
+              <label style="font-size:0.85rem; font-weight:800; color:var(--primary); display:block; margin-bottom:0.4rem">Standard Shipping Charge (₹)</label>
+              <input type="number" id="settingShippingFee" class="form-input" min="0" required placeholder="e.g. 60" style="width:100%; box-sizing:border-box">
+              <small style="color:var(--text-light); font-size:0.75rem; display:block; margin-top:4px">Enter 0 if you want standard shipping to be completely free by default.</small>
+            </div>
+
+            <div class="form-group">
+              <label style="font-size:0.85rem; font-weight:800; color:var(--primary); display:block; margin-bottom:0.4rem">Free Shipping Threshold Limit (₹)</label>
+              <input type="number" id="settingFreeThreshold" class="form-input" min="0" required placeholder="e.g. 999" style="width:100%; box-sizing:border-box">
+              <small style="color:var(--text-light); font-size:0.75rem; display:block; margin-top:4px">Customers get free shipping if their order amount is equal to or greater than this limit. Set to 0 to keep shipping free on all items without a minimum order limit.</small>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="padding:0.8rem 2rem; font-size:0.9rem; font-weight:700; width:100%; margin-top:1rem; cursor:pointer">
+              💾 Save Shipping Settings
+            </button>
+          </form>
         </div>
       </section>
 

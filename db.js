@@ -348,6 +348,14 @@ async function createTables() {
     )
   `);
 
+  // Settings
+  await run(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key VARCHAR(100) PRIMARY KEY,
+      value TEXT NOT NULL
+    )
+  `);
+
   // Alter tables to add new columns for user settings and dynamic product details
   const alterQueries = [
     `ALTER TABLE customers ADD COLUMN phone_alt VARCHAR(15)`,
@@ -643,6 +651,18 @@ async function seedDatabase() {
     await run("UPDATE homepage_settings SET media_url = 'images/hero_vacation.png', hero_title = 'Coordinated Styles for Every Generation', hero_subtitle = 'Discover premium matching vacation outfits, lounge wear, and festival wear tailored for the entire family.' WHERE id = 1");
   } catch (e) {
     console.error('Failed to migrate/update hero slide backgrounds to PNG:', e.message);
+  }
+
+  // Seed default system settings
+  try {
+    const settingsCount = await get('SELECT COUNT(*) as count FROM settings');
+    if (parseInt(settingsCount.count) === 0) {
+      console.log('Seeding default system settings...');
+      await run("INSERT INTO settings (key, value) VALUES ('shipping_fee', '60')");
+      await run("INSERT INTO settings (key, value) VALUES ('free_shipping_threshold', '999')");
+    }
+  } catch (e) {
+    console.error('Failed to seed default settings:', e.message);
   }
 }
 

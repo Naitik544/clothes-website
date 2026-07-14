@@ -222,7 +222,9 @@
       cart.forEach(it => subtotal += it.price * it.quantity);
 
       const discount = parseFloat(sessionStorage.getItem('l2l_discount') || 0);
-      const shipping = subtotal > 999 || subtotal === 0 ? 0 : 60;
+      const fee = window.systemSettings ? window.systemSettings.shipping_fee : 60;
+      const threshold = window.systemSettings ? window.systemSettings.free_shipping_threshold : 999;
+      const shipping = (subtotal >= threshold || subtotal === 0) ? 0 : fee;
       const total = subtotal - discount + shipping;
 
       document.getElementById('checkoutSubtotal').textContent = `₹${subtotal.toFixed(2)}`;

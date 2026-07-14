@@ -4,6 +4,28 @@
 
 const API_URL = ''; // Relative path for unified host
 
+// Global System Settings for shipping fee and threshold
+window.systemSettings = {
+  shipping_fee: 60,
+  free_shipping_threshold: 999
+};
+
+async function loadSystemSettings() {
+  try {
+    const res = await fetch(`${API_URL}/api/settings`);
+    const data = await res.json();
+    if (data.success && data.settings) {
+      window.systemSettings.shipping_fee = parseFloat(data.settings.shipping_fee || '60');
+      window.systemSettings.free_shipping_threshold = parseFloat(data.settings.free_shipping_threshold || '999');
+    }
+  } catch (err) {
+    console.error('Failed to load system settings:', err);
+  }
+}
+
+// Fetch settings immediately on import
+loadSystemSettings();
+
 // Toast Notification Helper
 function showToast(message, type = 'success') {
   let container = document.getElementById('toast-container');

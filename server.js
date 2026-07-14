@@ -970,7 +970,14 @@ app.get('/api/orders/:id/invoice', authenticateToken, async (req, res) => {
       `;
     });
 
-    const shippingFee = subtotal > 999 ? 0 : 60;
+    // Fetch custom shipping settings from DB
+    const shipFeeRow = await db.get("SELECT value FROM settings WHERE key = 'shipping_fee'");
+    const thresholdRow = await db.get("SELECT value FROM settings WHERE key = 'free_shipping_threshold'");
+    
+    const dbShippingFee = parseFloat(shipFeeRow ? shipFeeRow.value : '60');
+    const dbThreshold = parseFloat(thresholdRow ? thresholdRow.value : '999');
+
+    const shippingFee = subtotal >= dbThreshold ? 0 : dbShippingFee;
     const discount = subtotal + shippingFee - parseFloat(order.total_amount);
 
     const invoiceHtml = `
@@ -1389,6 +1396,36 @@ app.get('/api/admin/analytics', adminIpFilter, authenticateAdmin, async (req, re
       monthlySales,
       categoryBreakdown
     });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Get System Settings (Public)
+app.get('/api/settings', async (req, res) => {
+  try {
+    const rows = await db.query('SELECT * FROM settings');
+    const settings = {};
+    rows.forEach(r => {
+      settings[r.key] = r.value;
+    });
+    res.json({ success: true, settings });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Update System Settings (Admin Only)
+app.post('/api/admin/settings', adminIpFilter, authenticateAdmin, async (req, res) => {
+  const { shipping_fee, free_shipping_threshold } = req.body;
+  try {
+    if (shipping_fee !== undefined) {
+      await db.run("INSERT OR REPLACE INTO settings (key, value) VALUES ('shipping_fee', ?)", [shipping_fee.toString()]);
+    }
+    if (free_shipping_threshold !== undefined) {
+      await db.run("INSERT OR REPLACE INTO settings (key, value) VALUES ('free_shipping_threshold', ?)", [free_shipping_threshold.toString()]);
+    }
+    res.json({ success: true, message: 'Settings updated successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

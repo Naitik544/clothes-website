@@ -49,7 +49,9 @@ function renderCheckoutSummary() {
   });
 
   const discount = parseFloat(sessionStorage.getItem('l2l_discount') || 0);
-  const shipping = subtotal > 999 ? 0 : 60;
+  const fee = window.systemSettings ? window.systemSettings.shipping_fee : 60;
+  const threshold = window.systemSettings ? window.systemSettings.free_shipping_threshold : 999;
+  const shipping = subtotal >= threshold ? 0 : fee;
   const total = subtotal - discount + shipping;
 
   document.getElementById('checkoutSubtotal').textContent = `₹${subtotal.toFixed(2)}`;
@@ -279,7 +281,9 @@ async function processOrderSubmit(e) {
   const cart = getCart();
   let subtotal = cart.reduce((tot, it) => tot + it.price * it.quantity, 0);
   const discount = parseFloat(sessionStorage.getItem('l2l_discount') || 0);
-  const shipping = subtotal > 999 ? 0 : 60;
+  const fee = window.systemSettings ? window.systemSettings.shipping_fee : 60;
+  const threshold = window.systemSettings ? window.systemSettings.free_shipping_threshold : 999;
+  const shipping = subtotal >= threshold ? 0 : fee;
   const totalAmount = subtotal - discount + shipping;
 
   // If COD, run captcha validation

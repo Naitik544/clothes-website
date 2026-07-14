@@ -33,7 +33,7 @@ function setupSidebarNavigation() {
 }
 
 function showSection(sectionId) {
-  const sections = ['analyticsSection', 'ordersSection', 'productsSection', 'inquiriesSection', 'promotionsSection', 'errorSection', 'lookbookSection'];
+  const sections = ['analyticsSection', 'ordersSection', 'productsSection', 'inquiriesSection', 'promotionsSection', 'errorSection', 'lookbookSection', 'settingsSection'];
   sections.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = id === sectionId ? 'block' : 'none';
@@ -51,6 +51,7 @@ function showSection(sectionId) {
   }
   else if (sectionId === 'errorSection') loadAdminErrors();
   else if (sectionId === 'lookbookSection') loadAdminLookbook();
+  else if (sectionId === 'settingsSection') loadAdminShippingSettings();
 }
 
 /* ==========================================================================
@@ -1050,5 +1051,52 @@ async function deleteCoupon(id) {
     }
   } catch (err) {
     showToast('Error deleting coupon code', 'error');
+  }
+}
+
+/* ==========================================================================
+   9. SHIPPING & DELIVERY SETTINGS
+   ========================================================================== */
+async function loadAdminShippingSettings() {
+  try {
+    const res = await fetch('/api/settings');
+    const data = await res.json();
+    if (data.success && data.settings) {
+      document.getElementById('settingShippingFee').value = data.settings.shipping_fee || '60';
+      document.getElementById('settingFreeThreshold').value = data.settings.free_shipping_threshold || '999';
+    } else {
+      showToast(data.message || 'Failed to load shipping settings', 'error');
+    }
+  } catch (err) {
+    showToast('Error connecting to settings API', 'error');
+  }
+}
+
+async function saveShippingSettings(e) {
+  e.preventDefault();
+  const shipping_fee = parseFloat(document.getElementById('settingShippingFee').value);
+  const free_shipping_threshold = parseFloat(document.getElementById('settingFreeThreshold').value);
+
+  try {
+    const res = await fetch('/api/admin/settings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ shipping_fee, free_shipping_threshold })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('🎉 Shipping settings saved successfully!', 'success');
+      if (window.systemSettings) {
+        window.systemSettings.shipping_fee = shipping_fee;
+        window.systemSettings.free_shipping_threshold = free_shipping_threshold;
+      }
+    } else {
+      showToast(data.message || 'Failed to save shipping settings', 'error');
+    }
+  } catch (err) {
+    showToast('Error saving shipping settings', 'error');
   }
 }
