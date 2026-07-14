@@ -658,7 +658,7 @@ async function seedDatabase() {
     const settingsCount = await get('SELECT COUNT(*) as count FROM settings');
     if (parseInt(settingsCount.count) === 0) {
       console.log('Seeding default system settings...');
-      await run("INSERT INTO settings (key, value) VALUES ('shipping_fee', '60')");
+      await run("INSERT INTO settings (key, value) VALUES ('shipping_fee', '1')");
       await run("INSERT INTO settings (key, value) VALUES ('free_shipping_threshold', '999')");
     }
   } catch (e) {
