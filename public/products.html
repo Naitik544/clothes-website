@@ -7,7 +7,8 @@
   <meta name="description" content="Browse our wide selection of Indian family clothing. Filters by Men, Women, Kids, Accessories, sizes, and prices. Direct global shipping.">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/ux-premium.css">
-  <link rel="icon" type="image/png" href="images/favicon.png">
+  <link rel="icon" type="image/png" href="/images/logo-new.png?v=3">
+  <link rel="shortcut icon" href="/images/logo-new.png?v=3">
 </head>
 <body>
 
@@ -441,6 +442,20 @@
                     ${stars}
                     <span class="rating-num">(${p.rating || '5.0'})</span>
                   </div>
+                  
+                  ${(() => {
+                    if (p.color && p.color.trim()) {
+                      const colors = p.color.split(',').map(c => c.trim()).filter(Boolean);
+                      if (colors.length > 0) {
+                        return `<div style="display:flex; gap:6px; margin: 6px 0; align-items:center;">
+                          <span style="font-size:0.75rem; color:var(--text-light)">Colors:</span>
+                          ${colors.map((col, idx) => `<span class="color-dot ${idx === 0 ? 'active' : ''}" style="width:12px; height:12px; border-radius:50%; background-color:${col}; border:${idx === 0 ? '2px solid var(--primary)' : '1px solid #ddd'}; display:inline-block; cursor:pointer;" title="${col}" onclick="selectCardColor(event, this, '${col}')"></span>`).join('')}
+                        </div>`;
+                      }
+                    }
+                    return '';
+                  })()}
+
                   ${p.stock > 0 && p.stock < 10 ? `<span style="color:var(--danger); font-size:0.8rem; font-weight:700; display:block; margin:4px 0">🔴 Only ${p.stock} left!</span>` : ''}
                   <div class="product-pricing">
                     <span class="price">₹${priceVal}</span>
@@ -468,22 +483,40 @@
       else btn.classList.remove('active');
     }
 
-    function handleAddToCart(product) {
+    function selectCardColor(event, el, color) {
+      event.stopPropagation();
+      const container = el.closest('.product-details');
+      const card = el.closest('.product-card');
+      if (container && card) {
+        container.querySelectorAll('.color-dot').forEach(dot => {
+          dot.style.border = '1px solid #ddd';
+          dot.classList.remove('active');
+        });
+        el.style.border = '2px solid var(--primary)';
+        el.classList.add('active');
+        card.setAttribute('data-selected-color', color);
+      }
+    }
+
+    function handleAddToCart(product, button) {
+      const card = button.closest('.product-card');
+      const selectedColor = card ? (card.getAttribute('data-selected-color') || (product.color ? product.color.split(',')[0].trim() : 'Default')) : 'Default';
       const sizes = product.size_variants.split(',');
       const defaultSize = sizes[0] || 'M';
-      addToCart(product, defaultSize, 1);
+      addToCart(product, defaultSize, 1, selectedColor);
     }
 
     async function handleAddCartClick(event, button, product) {
       event.stopPropagation();
       const card = button.closest('.product-card');
       const img = card ? card.querySelector('.product-img-wrapper img') : null;
+      const selectedColor = card ? (card.getAttribute('data-selected-color') || (product.color ? product.color.split(',')[0].trim() : 'Default')) : 'Default';
       
       const addToCartPromise = new Promise((resolve) => {
         setTimeout(() => {
           const sizes = product.size_variants.split(',');
           const defaultSize = sizes[0] || 'M';
-          addToCart(product, defaultSize, 1);
+          addToCart(product, defaultSize, 1, selectedColor);
           if (img) {
             animateFlyToCart(img);
           }

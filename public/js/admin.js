@@ -104,7 +104,7 @@ function renderSalesChart(data) {
   if (!chartWrapper) return;
   chartWrapper.innerHTML = '';
 
-  const maxVal = Math.max(...data.map(d => d.sales));
+  const maxVal = Math.max(...data.map(d => d.sales)) || 1; // Prevent division by zero (NaN)
   
   data.forEach(d => {
     const pctHeight = (d.sales / maxVal) * 85; // cap height at 85%
@@ -291,6 +291,23 @@ async function loadAdminOrders() {
 
       data.orders.forEach(o => {
         const date = new Date(o.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        
+        let shiprocketColHtml = '';
+        if (o.status === 'Shipped' || o.status === 'Delivered') {
+          shiprocketColHtml = `
+            <span style="font-size:0.8rem; color:var(--success); font-weight:bold"><i class="fas fa-truck"></i> Shipped</span><br>
+            <span style="font-size:0.75rem">AWB: <a href="${o.tracking_link || '#'}" target="_blank" style="color:var(--secondary); text-decoration:underline; font-weight:bold">${o.tracking_number || 'Track'}</a></span>
+          `;
+        } else if (o.status === 'Cancelled') {
+          shiprocketColHtml = `<span style="font-size:0.8rem; color:var(--danger)">N/A (Cancelled)</span>`;
+        } else {
+          shiprocketColHtml = `
+            <button onclick="shipOrderViaShiprocket(${o.id})" class="btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:var(--secondary); color:#fff; border:none; border-radius:4px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:4px">
+              <i class="fas fa-rocket"></i> Ship order
+            </button>
+          `;
+        }
+
         tbody.innerHTML += `
           <tr>
             <td><strong>#${o.id}</strong></td>
@@ -310,12 +327,39 @@ async function loadAdminOrders() {
                 <option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
               </select>
             </td>
+            <td>${shiprocketColHtml}</td>
           </tr>
         `;
       });
     }
   } catch (err) {
     showToast('Failed to load orders', 'error');
+  }
+}
+
+async function shipOrderViaShiprocket(orderId) {
+  if (!confirm(`Are you sure you want to create a Shiprocket shipment for Order #${orderId}?`)) {
+    return;
+  }
+
+  showToast('Connecting to Shiprocket...', 'info');
+  try {
+    const res = await fetch(`/api/admin/orders/${orderId}/ship`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('🎉 Shiprocket Order Created successfully!', 'success');
+      loadAdminOrders();
+    } else {
+      showToast(data.message || 'Shiprocket creation failed', 'error');
+    }
+  } catch (err) {
+    showToast('Failed to connect to Shiprocket API', 'error');
   }
 }
 

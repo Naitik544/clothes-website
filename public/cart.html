@@ -6,7 +6,8 @@
   <title>Shopping Cart | Little to Large</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/ux-premium.css">
-  <link rel="icon" type="image/png" href="images/favicon.png">
+  <link rel="icon" type="image/png" href="/images/logo-new.png?v=3">
+  <link rel="shortcut icon" href="/images/logo-new.png?v=3">
   <!-- Razorpay Checkout Integration -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
@@ -182,6 +183,7 @@
       container.innerHTML = `<h3 style="font-size:1.2rem; color:var(--primary); font-weight:800; border-bottom:1px solid var(--border-color); padding-bottom:0.8rem; margin-bottom:1rem">Items in Box</h3>`;
       
       cart.forEach(item => {
+        const itemColor = item.color || 'Default';
         container.innerHTML += `
           <div class="cart-item">
             <a href="product-detail.html?id=${item.product_id}" style="display:contents">
@@ -193,15 +195,15 @@
                   ${item.name}
                 </a>
               </h4>
-              <p class="cart-item-meta">Size: <strong>${item.size}</strong> | Price: ₹${item.price}</p>
+              <p class="cart-item-meta">Size: <strong>${item.size}</strong> | Color: <strong style="text-transform: capitalize;">${itemColor}</strong> | Price: ₹${item.price}</p>
               
               <div class="cart-item-actions">
                 <div class="qty-control" style="transform: scale(0.85); transform-origin: left center">
-                  <button onclick="changeCartItemQty('${item.product_id}', '${item.size}', -1)"><i class="fas fa-minus"></i></button>
+                  <button onclick="changeCartItemQty('${item.product_id}', '${item.size}', '${itemColor}', -1)"><i class="fas fa-minus"></i></button>
                   <span>${item.quantity}</span>
-                  <button onclick="changeCartItemQty('${item.product_id}', '${item.size}', 1)"><i class="fas fa-plus"></i></button>
+                  <button onclick="changeCartItemQty('${item.product_id}', '${item.size}', '${itemColor}', 1)"><i class="fas fa-plus"></i></button>
                 </div>
-                <button class="btn-remove-item" onclick="removeCartItem('${item.product_id}', '${item.size}')">
+                <button class="btn-remove-item" onclick="removeCartItem('${item.product_id}', '${item.size}', '${itemColor}')">
                   <i class="far fa-trash-alt"></i> Remove
                 </button>
               </div>
@@ -229,24 +231,24 @@
       document.getElementById('checkoutTotal').textContent = `₹${total.toFixed(2)}`;
     }
 
-    function changeCartItemQty(prodId, size, diff) {
+    function changeCartItemQty(prodId, size, color, diff) {
       const cart = getCart();
-      const item = cart.find(it => it.product_id === parseInt(prodId) && it.size === size);
+      const item = cart.find(it => it.product_id === parseInt(prodId) && it.size === size && (it.color || 'Default') === color);
       if (item) {
         let newQty = item.quantity + diff;
         if (newQty > item.stock) {
           showToast(`Only ${item.stock} items in stock!`, 'error');
           return;
         }
-        updateCartQty(parseInt(prodId), size, newQty);
+        updateCartQty(parseInt(prodId), size, color, newQty);
         renderCartItems();
         renderPriceSummary();
-        renderCheckoutSummary(); // Update checkout lines too if visible
+        renderCheckoutSummary();
       }
     }
 
-    function removeCartItem(prodId, size) {
-      removeFromCart(parseInt(prodId), size);
+    function removeCartItem(prodId, size, color) {
+      removeFromCart(parseInt(prodId), size, color);
       renderCartItems();
       renderPriceSummary();
       renderCheckoutSummary();

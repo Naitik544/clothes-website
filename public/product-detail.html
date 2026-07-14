@@ -6,6 +6,8 @@
   <title>Product Details | Little to Large</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/ux-premium.css">
+  <link rel="icon" type="image/png" href="/images/logo-new.png?v=3">
+  <link rel="shortcut icon" href="/images/logo-new.png?v=3">
 </head>
 <body>
 
@@ -59,6 +61,14 @@
         <h4>Select Size:</h4>
         <div class="size-selector" id="sizeOptionsContainer">
           <!-- Injected size chips -->
+        </div>
+      </div>
+
+      <!-- Color Options -->
+      <div class="detail-variants" id="colorVariantsSection" style="margin-top: 1rem; display: none;">
+        <h4>Select Color:</h4>
+        <div class="color-selector" id="colorOptionsContainer" style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <!-- Injected color chips -->
         </div>
       </div>
 
@@ -257,11 +267,35 @@
       sizesContainer.innerHTML = '';
       const sizes = p.size_variants.split(',');
       sizes.forEach((sz, idx) => {
-        if (idx === 0) selectedSize = sz; // Auto select first
+        if (idx === 0) selectedSize = sz;
         sizesContainer.innerHTML += `
           <span class="size-option ${idx === 0 ? 'active' : ''}" onclick="selectSize(this, '${sz}')">${sz}</span>
         `;
       });
+
+      // Color Variants
+      const colorsContainer = document.getElementById('colorOptionsContainer');
+      const colorsSection = document.getElementById('colorVariantsSection');
+      colorsContainer.innerHTML = '';
+      
+      if (p.color && p.color.trim()) {
+        const colors = p.color.split(',').map(c => c.trim()).filter(Boolean);
+        if (colors.length > 0) {
+          colorsSection.style.display = 'block';
+          colors.forEach((col, idx) => {
+            if (idx === 0) selectedColor = col;
+            colorsContainer.innerHTML += `
+              <span class="color-option ${idx === 0 ? 'active' : ''}" onclick="selectColor(this, '${col}')" style="display:inline-block; padding: 0.4rem 1.2rem; border: 1px solid var(--border-color); border-radius: 50px; font-size: 0.85rem; font-weight: 700; cursor: pointer; text-transform: capitalize;">${col}</span>
+            `;
+          });
+        } else {
+          colorsSection.style.display = 'none';
+          selectedColor = 'Default';
+        }
+      } else {
+        colorsSection.style.display = 'none';
+        selectedColor = 'Default';
+      }
 
       // Rating Stars
       const starWrapper = document.getElementById('detailRatingStars');
@@ -297,6 +331,14 @@
       document.querySelectorAll('.size-option').forEach(s => s.classList.remove('active'));
       el.classList.add('active');
       selectedSize = size;
+    }
+
+    let selectedColor = 'Default';
+
+    function selectColor(el, color) {
+      document.querySelectorAll('.color-option').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      selectedColor = color;
     }
 
     function changeQty(diff) {
@@ -376,7 +418,7 @@
       
       const addPromise = new Promise((resolve) => {
         setTimeout(() => {
-          addToCart(activeProduct, selectedSize, selectedQty);
+          addToCart(activeProduct, selectedSize, selectedQty, selectedColor);
           if (img) {
             animateFlyToCart(img);
           }

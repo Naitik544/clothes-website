@@ -10,6 +10,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Account | Little to Large</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/png" href="/images/logo-new.png?v=3">
+  <link rel="shortcut icon" href="/images/logo-new.png?v=3">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     .account-layout {
@@ -725,8 +727,15 @@
                   </div>
                 </div>
 
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1.2rem; border-top:1px dashed var(--border-color); padding-top:0.8rem">
-                  <span style="font-size:0.88rem">Status: <strong style="color:${statusColor}">${o.status}</strong></span>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1.2rem; border-top:1px dashed var(--border-color); padding-top:0.8rem; flex-wrap:wrap; gap:10px">
+                  <div style="display:flex; flex-direction:column; gap:4px">
+                    <span style="font-size:0.88rem">Status: <strong style="color:${statusColor}">${o.status}</strong></span>
+                    ${o.tracking_number ? `
+                      <span style="font-size:0.78rem; color:var(--text-light)">
+                        Tracking: <a href="${o.tracking_link}" target="_blank" style="color:var(--secondary); font-weight:bold; text-decoration:underline">${o.tracking_number}</a> (Shiprocket)
+                      </span>
+                    ` : ''}
+                  </div>
                   <div style="display:flex; gap:10px">
                     <button class="btn" onclick="downloadInvoice(${o.id})" style="padding:0.4rem 1.2rem; font-size:0.8rem; background:#10b981; color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:700; display:flex; align-items:center; gap:5px"><i class="fas fa-file-download"></i> Bill</button>
                     <button class="btn btn-primary" onclick="showOrderItemsModal(${o.id})" style="padding:0.4rem 1rem; font-size:0.8rem">View Items</button>

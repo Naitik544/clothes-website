@@ -361,7 +361,12 @@ async function createTables() {
     `ALTER TABLE products ADD COLUMN fabric VARCHAR(100)`,
     `ALTER TABLE products ADD COLUMN color VARCHAR(100)`,
     `ALTER TABLE products ADD COLUMN style VARCHAR(100)`,
-    `ALTER TABLE products ADD COLUMN gender VARCHAR(50)`
+    `ALTER TABLE products ADD COLUMN gender VARCHAR(50)`,
+    `ALTER TABLE order_items ADD COLUMN color VARCHAR(50)`,
+    `ALTER TABLE orders ADD COLUMN shiprocket_order_id VARCHAR(50)`,
+    `ALTER TABLE orders ADD COLUMN shiprocket_shipment_id VARCHAR(50)`,
+    `ALTER TABLE orders ADD COLUMN tracking_number VARCHAR(100)`,
+    `ALTER TABLE orders ADD COLUMN tracking_link TEXT`
   ];
 
   for (const q of alterQueries) {
@@ -528,63 +533,6 @@ async function seedDatabase() {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [p.name, p.category, p.subcategory, p.price, p.discount_price, p.stock, p.description, p.size_variants, p.image_urls, p.rating]);
     }
-  }
-
-  // Seed sample orders
-  const orderCount = await get('SELECT COUNT(*) as count FROM orders');
-  if (parseInt(orderCount.count) === 0) {
-    console.log('Seeding sample orders for admin dashboard analytics...');
-    
-    const o1 = await run(`
-      INSERT INTO orders (customer_id, total_amount, status, shipping_address, payment_method)
-      VALUES (?, ?, ?, ?, ?)
-    `, [1, 2398.00, 'Delivered', 'Flat 402, Sunshine Heights, MG Road, Bengaluru, Karnataka, 560001', 'UPI']);
-    
-    await run(`
-      INSERT INTO order_items (order_id, product_id, size, quantity, price)
-      VALUES (?, ?, ?, ?, ?)
-    `, [o1.insertId, 1, 'M', 2, 1199.00]);
-
-    await run(`
-      INSERT INTO payments (order_id, transaction_id, amount, method, status)
-      VALUES (?, ?, ?, ?, ?)
-    `, [o1.insertId, 'TXN891230491823', 2398.00, 'UPI', 'Completed']);
-
-    const o2 = await run(`
-      INSERT INTO orders (customer_id, total_amount, status, shipping_address, payment_method)
-      VALUES (?, ?, ?, ?, ?)
-    `, [1, 3999.00, 'Shipped', 'Flat 402, Sunshine Heights, MG Road, Bengaluru, Karnataka, 560001', 'Card']);
-
-    await run(`
-      INSERT INTO order_items (order_id, product_id, size, quantity, price)
-      VALUES (?, ?, ?, ?, ?)
-    `, [o2.insertId, 3, 'Free Size', 1, 3999.00]);
-
-    await run(`
-      INSERT INTO payments (order_id, transaction_id, amount, method, status)
-      VALUES (?, ?, ?, ?, ?)
-    `, [o2.insertId, 'TXN1029384756', 3999.00, 'Card', 'Completed']);
-
-    const o3 = await run(`
-      INSERT INTO orders (customer_id, total_amount, status, shipping_address, payment_method)
-      VALUES (?, ?, ?, ?, ?)
-    `, [1, 1398.00, 'Processing', 'Flat 402, Sunshine Heights, MG Road, Bengaluru, Karnataka, 560001', 'COD']);
-
-    await run(`
-      INSERT INTO order_items (order_id, product_id, size, quantity, price)
-      VALUES (?, ?, ?, ?, ?)
-    `, [o3.insertId, 9, 'One Size', 2, 699.00]);
-
-    // Seed reviews
-    await run(`
-      INSERT INTO reviews (customer_id, product_id, rating, comment)
-      VALUES (?, ?, ?, ?)
-    `, [1, 1, 5, 'Beautiful Kurta! The silk quality is outstanding and fits perfectly. Wore it for Diwali.']);
-    
-    await run(`
-      INSERT INTO reviews (customer_id, product_id, rating, comment)
-      VALUES (?, ?, ?, ?)
-    `, [1, 3, 5, 'Absolutely gorgeous saree. The Banarasi borders have a rich feel. High value for money.']);
   }
 
   // Seed homepage settings

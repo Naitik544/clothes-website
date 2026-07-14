@@ -18,7 +18,7 @@ function initCheckout() {
   const user = getCurrentUser();
   if (user) {
     document.getElementById('shippingName').value = user.name || '';
-    document.getElementById('shippingPhone').value = user.phone || '';
+    document.getElementById('shippingPhone').value = ''; // Left empty for fresh input as requested
     
     // Autofill address fields if stored
     if (user.address_line) {
@@ -296,6 +296,7 @@ async function processOrderSubmit(e) {
       items: cart.map(item => ({
         product_id: item.product_id,
         size: item.size,
+        color: item.color || 'Default',
         quantity: item.quantity,
         price: item.price
       })),
@@ -345,6 +346,7 @@ async function processOrderSubmit(e) {
         items: cart.map(item => ({
           product_id: item.product_id,
           size: item.size,
+          color: item.color || 'Default',
           quantity: item.quantity,
           price: item.price
         })),

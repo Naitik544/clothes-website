@@ -88,7 +88,7 @@ function saveCart(cart) {
   updateCartBadge();
 }
 
-function addToCart(product, size = 'M', qty = 1) {
+function addToCart(product, size = 'M', qty = 1, color = 'Default') {
   if (!getToken()) {
     showToast('Please login or register to add outfits to your family box!', 'error');
     setTimeout(() => {
@@ -101,7 +101,7 @@ function addToCart(product, size = 'M', qty = 1) {
     return;
   }
   const cart = getCart();
-  const index = cart.findIndex(item => item.product_id === product.id && item.size === size);
+  const index = cart.findIndex(item => item.product_id === product.id && item.size === size && (item.color || 'Default') === color);
 
   if (index > -1) {
     cart[index].quantity += qty;
@@ -112,25 +112,26 @@ function addToCart(product, size = 'M', qty = 1) {
       price: product.discount_price || product.price,
       image: JSON.parse(product.image_urls || '[]')[0] || '/images/products/placeholder.jpg',
       size: size,
+      color: color,
       quantity: qty,
       stock: product.stock
     });
   }
 
   saveCart(cart);
-  showToast(`${product.name} (${size}) added to cart!`);
+  showToast(`${product.name} (${size} | ${color}) added to cart!`);
 }
 
-function removeFromCart(productId, size) {
+function removeFromCart(productId, size, color = 'Default') {
   let cart = getCart();
-  cart = cart.filter(item => !(item.product_id === productId && item.size === size));
+  cart = cart.filter(item => !(item.product_id === productId && item.size === size && (item.color || 'Default') === color));
   saveCart(cart);
   showToast('Item removed from cart', 'info');
 }
 
-function updateCartQty(productId, size, qty) {
+function updateCartQty(productId, size, color, qty) {
   const cart = getCart();
-  const index = cart.findIndex(item => item.product_id === productId && item.size === size);
+  const index = cart.findIndex(item => item.product_id === productId && item.size === size && (item.color || 'Default') === color);
   if (index > -1) {
     cart[index].quantity = parseInt(qty);
     if (cart[index].quantity <= 0) {
@@ -236,13 +237,15 @@ function renderHeaderFooter() {
       <div class="container navbar">
         <button class="hamburger-btn" onclick="toggleNavDrawer()"><i class="fas fa-bars"></i></button>
         
-        <a href="index.html" class="logo">
-          🛍️ Little <span class="logo-accent">to</span> Large
+        <a href="index.html" class="logo" style="display: inline-flex; align-items: center; gap: 8px;">
+          <img src="images/favicon.png" alt="Little to Large Logo" style="height: 32px; width: 32px; border-radius: 4px; object-fit: cover;">
+          <span>Little <span class="logo-accent">to</span> Large</span>
         </a>
         
         <nav class="nav-links">
           <a href="index.html">Home</a>
           <a href="products.html">Shop All</a>
+          ${user ? `<a href="orders.html">My Orders</a>` : ''}
           <a href="lookbook.html">Lookbook</a>
           <a href="products.html?category=Men">Men</a>
           <a href="products.html?category=Women">Women</a>
@@ -331,7 +334,8 @@ function renderHeaderFooter() {
             <a href="index.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-home"></i> Home</a>
             <a href="products.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-shopping-bag"></i> Shop All Collections</a>
             <a href="lookbook.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-book-open"></i> Interactive Lookbook</a>
-            <a href="account.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-box"></i> My Orders & Profile</a>
+            <a href="account.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-user-circle"></i> My Profile Settings</a>
+            ${user ? `<a href="orders.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-box"></i> My Orders History</a>` : ''}
             <a href="account.html?tab=wishlist" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-heart"></i> My Wishlist</a>
             <a href="cart.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-shopping-cart"></i> My Shopping Bag</a>
           </div>
@@ -367,7 +371,10 @@ function renderHeaderFooter() {
     footerTag.innerHTML = `
       <div class="container footer-grid">
         <div class="footer-col">
-          <div class="footer-logo">🛍️ Little <span class="logo-accent">to</span> Large</div>
+          <div class="footer-logo" style="display: inline-flex; align-items: center; gap: 8px;">
+            <img src="images/favicon.png" alt="Little to Large Logo" style="height: 32px; width: 32px; border-radius: 4px; object-fit: cover;">
+            <span>Little <span class="logo-accent">to</span> Large</span>
+          </div>
           <p>India's premium family clothing store. We bring comfortable, beautiful ethnic and western outfits from infants to adults. Designed to grow and scale with Indian family values.</p>
           <div class="social-links">
             <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>

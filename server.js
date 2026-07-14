@@ -18,6 +18,116 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET || 'yourSecretHere'
 });
 
+// Shiprocket Integration Service
+class ShiprocketService {
+  constructor() {
+    this.email = process.env.SHIPROCKET_EMAIL;
+    this.password = process.env.SHIPROCKET_PASSWORD;
+    this.token = null;
+    this.tokenExpiry = null;
+    this.isSandbox = !this.email || !this.password;
+    if (this.isSandbox) {
+      console.log('⚡ Shiprocket running in Sandbox/Simulation mode. (No credentials in environment variables)');
+    }
+  }
+
+  async getAuthToken() {
+    if (this.isSandbox) return 'sandbox_token_12345';
+    
+    if (this.token && this.tokenExpiry && Date.now() < this.tokenExpiry) {
+      return this.token;
+    }
+
+    try {
+      const response = await fetch('https://apiv2.shiprocket.in/v1/external/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: this.email, password: this.password })
+      });
+      const data = await response.json();
+      if (data.token) {
+        this.token = data.token;
+        this.tokenExpiry = Date.now() + 9 * 24 * 60 * 60 * 1000;
+        return this.token;
+      }
+      throw new Error(data.message || 'Shiprocket authentication failed');
+    } catch (err) {
+      console.error('Shiprocket Login Error:', err.message);
+      throw err;
+    }
+  }
+
+  async createAdhocOrder(orderDetails) {
+    if (this.isSandbox) {
+      const orderId = Math.floor(Math.random() * 10000000);
+      const shipmentId = Math.floor(Math.random() * 10000000);
+      const trackingNumber = 'SR' + Math.floor(1000000000 + Math.random() * 9000000000);
+      return {
+        success: true,
+        order_id: orderId,
+        shipment_id: shipmentId,
+        tracking_number: trackingNumber,
+        tracking_link: `https://shiprocket.co/tracking/${trackingNumber}`
+      };
+    }
+
+    try {
+      const token = await this.getAuthToken();
+      const response = await fetch('https://apiv2.shiprocket.in/v1/external/orders/create/adhoc', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(orderDetails)
+      });
+      const data = await response.json();
+      if (data.order_id && data.shipment_id) {
+        const trackingNumber = data.awb_code || 'AWB' + Math.floor(100000 + Math.random() * 900000);
+        return {
+          success: true,
+          order_id: data.order_id,
+          shipment_id: data.shipment_id,
+          tracking_number: trackingNumber,
+          tracking_link: `https://shiprocket.co/tracking/${trackingNumber}`
+        };
+      }
+      throw new Error(data.message || JSON.stringify(data.errors) || 'Failed to create Shiprocket order');
+    } catch (err) {
+      console.error('Shiprocket Create Order Error:', err.message);
+      throw err;
+    }
+  }
+
+  async getTrackingDetails(shipmentId) {
+    if (this.isSandbox) {
+      return {
+        success: true,
+        status: 'In Transit',
+        activity: [
+          { date: new Date().toISOString(), location: 'Gandhidham Hub', activity: 'Package Picked Up' },
+          { date: new Date().toISOString(), location: 'Ahmedabad Sorting Center', activity: 'Arrived at sorting hub' }
+        ]
+      };
+    }
+
+    try {
+      const token = await this.getAuthToken();
+      const response = await fetch(`https://apiv2.shiprocket.in/v1/external/courier/track/shipment/${shipmentId}`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      return { success: true, tracking: data };
+    } catch (err) {
+      console.error('Shiprocket Tracking Error:', err.message);
+      throw err;
+    }
+  }
+}
+
+const shiprocketService = new ShiprocketService();
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'little_to_large_super_secret_key_123';
@@ -64,6 +174,12 @@ app.use('/api/', rateLimiter);
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Protect admin.html from unauthorized client access before serving static files
+app.get('/admin.html', adminIpFilter, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Configure Multer for Image Uploads
@@ -730,9 +846,9 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
     // 2. Insert Order Items and decrement stock
     for (const item of items) {
       await db.run(`
-        INSERT INTO order_items (order_id, product_id, size, quantity, price)
-        VALUES (?, ?, ?, ?, ?)
-      `, [orderId, item.product_id, item.size || 'M', item.quantity, item.price]);
+        INSERT INTO order_items (order_id, product_id, size, color, quantity, price)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `, [orderId, item.product_id, item.size || 'M', item.color || 'Default', item.quantity, item.price]);
 
       await db.run('UPDATE products SET stock = stock - ? WHERE id = ?', [item.quantity, item.product_id]);
     }
@@ -1225,6 +1341,7 @@ app.get('/api/inquiries', adminIpFilter, authenticateAdmin, async (req, res) => 
 
 // Dashboard Analytics Metrics
 app.get('/api/admin/analytics', adminIpFilter, authenticateAdmin, async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
   try {
     const totalSales = await db.get("SELECT SUM(amount) as sales FROM payments WHERE status = 'Completed'");
     const totalOrders = await db.get("SELECT COUNT(*) as count FROM orders");
@@ -1232,15 +1349,27 @@ app.get('/api/admin/analytics', adminIpFilter, authenticateAdmin, async (req, re
     const customersCount = await db.get("SELECT COUNT(*) as count FROM customers");
     const lowStock = await db.query("SELECT id, name, stock FROM products WHERE stock < 10");
 
-    // Monthly data mock for styling charts
-    const monthlySales = [
-      { month: 'Jan', sales: 45000 },
-      { month: 'Feb', sales: 52000 },
-      { month: 'Mar', sales: 49000 },
-      { month: 'Apr', sales: 63000 },
-      { month: 'May', sales: 78000 },
-      { month: 'Jun', sales: (totalSales.sales || 7795.00) }
-    ];
+    // Dynamic portable monthly sales calculator (last 6 months)
+    const payments = await db.query("SELECT amount, created_at FROM payments WHERE status = 'Completed'");
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthlySales = [];
+    const now = new Date();
+    
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const mName = months[d.getMonth()];
+      
+      const monthPayments = payments.filter(p => {
+        const pDate = new Date(p.created_at);
+        return pDate.getMonth() === d.getMonth() && pDate.getFullYear() === d.getFullYear();
+      });
+      const monthSum = monthPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+      
+      monthlySales.push({
+        month: mName,
+        sales: monthSum
+      });
+    }
 
     const categoryBreakdown = await db.query(`
       SELECT category, COUNT(*) as count, SUM(stock) as total_stock, SUM(price * stock) as total_value
@@ -1251,7 +1380,7 @@ app.get('/api/admin/analytics', adminIpFilter, authenticateAdmin, async (req, re
     res.json({
       success: true,
       metrics: {
-        totalSales: totalSales.sales || 7795.00, // Seed total as baseline fallback
+        totalSales: totalSales.sales || 0.00,
         totalOrders: totalOrders.count,
         pendingOrders: pendingOrders.count,
         totalCustomers: customersCount.count - 1, // minus admin account
@@ -1289,6 +1418,101 @@ app.put('/api/orders/:id/status', adminIpFilter, authenticateAdmin, async (req, 
   try {
     await db.run('UPDATE orders SET status = ? WHERE id = ?', [status, req.params.id]);
     res.json({ success: true, message: `Order status updated to ${status}` });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST Admin ship order via Shiprocket
+app.post('/api/admin/orders/:id/ship', adminIpFilter, authenticateAdmin, async (req, res) => {
+  const orderId = req.params.id;
+
+  try {
+    const order = await db.get(`
+      SELECT o.*, c.name as cust_name, c.email as cust_email, c.phone as cust_phone, p.status as payment_status
+      FROM orders o
+      JOIN customers c ON o.customer_id = c.id
+      LEFT JOIN payments p ON o.id = p.order_id
+      WHERE o.id = ?
+    `, [orderId]);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    const items = await db.query(`
+      SELECT oi.*, p.name as prod_name
+      FROM order_items oi
+      JOIN products p ON oi.product_id = p.id
+      WHERE oi.order_id = ?
+    `, [orderId]);
+
+    const addr = order.shipping_address || '';
+    const pinMatch = addr.match(/\b\d{6}\b/);
+    const pincode = pinMatch ? pinMatch[0] : '370201';
+
+    const addressParts = addr.split(',');
+    const city = addressParts[addressParts.length - 2]?.trim() || 'Gandhidham';
+    const state = addressParts[addressParts.length - 1]?.replace(/\b\d{6}\b/g, '')?.trim() || 'Gujarat';
+
+    const shiprocketPayload = {
+      order_id: `L2L-ORD-${orderId}`,
+      order_date: new Date(order.created_at).toISOString().slice(0, 19).replace('T', ' '),
+      pickup_location: "Primary",
+      billing_customer_name: order.cust_name.split(' ')[0] || 'Customer',
+      billing_last_name: order.cust_name.split(' ').slice(1).join(' ') || 'L2L',
+      billing_address: order.shipping_address,
+      billing_city: city,
+      billing_pincode: pincode,
+      billing_state: state,
+      billing_country: "India",
+      billing_email: order.cust_email,
+      billing_phone: order.cust_phone || '9988776655',
+      shipping_is_billing: true,
+      order_items: items.map(item => ({
+        name: item.prod_name,
+        sku: `SKU-${item.product_id}-${item.size || 'M'}`,
+        units: item.quantity,
+        selling_price: item.price,
+        discount: 0,
+        tax: 0
+      })),
+      payment_method: order.payment_method === 'COD' ? 'COD' : 'Prepaid',
+      sub_total: order.total_amount,
+      length: 20,
+      width: 15,
+      height: 5,
+      weight: 0.4
+    };
+
+    const shiprocketResult = await shiprocketService.createAdhocOrder(shiprocketPayload);
+
+    if (shiprocketResult.success) {
+      await db.run(`
+        UPDATE orders 
+        SET status = 'Shipped',
+            shiprocket_order_id = ?,
+            shiprocket_shipment_id = ?,
+            tracking_number = ?,
+            tracking_link = ?
+        WHERE id = ?
+      `, [
+        shiprocketResult.order_id,
+        shiprocketResult.shipment_id,
+        shiprocketResult.tracking_number,
+        shiprocketResult.tracking_link,
+        orderId
+      ]);
+
+      res.json({
+        success: true,
+        message: 'Order shipped via Shiprocket successfully!',
+        tracking_number: shiprocketResult.tracking_number,
+        tracking_link: shiprocketResult.tracking_link
+      });
+    } else {
+      res.status(500).json({ success: false, message: 'Shiprocket failed to create order' });
+    }
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -1799,18 +2023,17 @@ app.post('/api/admin/lookbook/reorder', adminIpFilter, authenticateAdmin, async 
 });
 
 // Dynamic XML Sitemap Generator
-app.post('/api/admin/seo-generate', adminIpFilter, authenticateAdmin, async (req, res) => {
+// Auto compile sitemap.xml and robots.txt for Google Search Console indexing
+async function autoGenerateSitemap() {
   try {
     const products = await db.query('SELECT id FROM products');
     let sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
     
-    // Add static html routes
-    const pages = ['index.html', 'products.html', 'cart.html', 'login.html', 'account.html', 'offers.html', 'about.html'];
+    const pages = ['index.html', 'products.html', 'cart.html', 'login.html', 'account.html', 'offers.html', 'about.html', 'orders.html'];
     pages.forEach(p => {
       sitemap += `  <url>\n    <loc>https://littletolargee.com/${p}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
     });
 
-    // Add dynamic products
     products.forEach(p => {
       sitemap += `  <url>\n    <loc>https://littletolargee.com/product-detail.html?id=${p.id}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
     });
@@ -1819,7 +2042,15 @@ app.post('/api/admin/seo-generate', adminIpFilter, authenticateAdmin, async (req
 
     fs.writeFileSync(path.join(__dirname, 'public', 'sitemap.xml'), sitemap, 'utf8');
     fs.writeFileSync(path.join(__dirname, 'public', 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: https://littletolargee.com/sitemap.xml\n`, 'utf8');
+    console.log('✔ Automatically compiled fresh sitemap.xml and robots.txt for Search Console');
+  } catch (err) {
+    console.error('Failed to auto-generate sitemap:', err.message);
+  }
+}
 
+app.post('/api/admin/seo-generate', adminIpFilter, authenticateAdmin, async (req, res) => {
+  try {
+    await autoGenerateSitemap();
     res.json({ success: true, message: 'sitemap.xml and robots.txt compiled successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -1862,14 +2093,19 @@ app.use(async (err, req, res, next) => {
 });
 
 // Connect DB and Start Server
-db.initDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`==================================================`);
-    console.log(`Little to Large backend online at: http://localhost:${PORT}`);
-    console.log(`Serving frontend static files from /public`);
-    console.log(`==================================================`);
+if (require.main === module) {
+  db.initDB().then(async () => {
+    await autoGenerateSitemap();
+    app.listen(PORT, () => {
+      console.log(`==================================================`);
+      console.log(`Little to Large backend online at: http://localhost:${PORT}`);
+      console.log(`Serving frontend static files from /public`);
+      console.log(`==================================================`);
+    });
+  }).catch(err => {
+    console.error('Failed to initialize database, shutting down:', err.message);
+    process.exit(1);
   });
-}).catch(err => {
-  console.error('Failed to initialize database, shutting down:', err.message);
-  process.exit(1);
-});
+}
+
+module.exports = app;

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders | Little to Large</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/ux-premium.css">
+  <link rel="icon" type="image/png" href="/images/logo-new.png?v=3">
+  <link rel="shortcut icon" href="/images/logo-new.png?v=3">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    .orders-layout {
+      padding: 3rem 0;
+      min-height: 70vh;
+    }
+    .order-card {
+      background-color: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.8rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+    .order-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .status-badge {
+      padding: 0.35rem 0.8rem;
+      border-radius: 50px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: inline-block;
+    }
+    .status-pending { background: #fef3c7; color: #d97706; }
+    .status-processing { background: #dbeafe; color: #2563eb; }
+    .status-shipped { background: #eff6ff; color: #3b82f6; }
+    .status-delivered { background: hsl(162, 72%, 95%); color: hsl(162, 72%, 41%); }
+    .status-cancelled { background: #fee2e2; color: var(--danger); }
+
+    /* Modal Styling */
+    .items-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .items-modal-content {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      width: 90%;
+      max-width: 600px;
+      padding: 2rem;
+      position: relative;
+      animation: modalSlide 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes modalSlide {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .close-modal {
+      position: absolute;
+      top: 1.2rem;
+      right: 1.2rem;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-light);
+      transition: var(--transition);
+    }
+    .close-modal:hover {
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header></header>
+
+  <!-- Page Banner -->
+  <section style="background-color: var(--primary); color:#fff; padding: 2.5rem 0; margin-bottom: 2rem;">
+    <div class="container">
+      <h1 style="font-size: 2rem; font-weight: 800; font-family: 'Playfair Display', serif;">My Orders</h1>
+      <p style="font-size: 0.85rem; color: var(--marigold)">Home &gt; My Orders</p>
+    </div>
+  </section>
+
+  <!-- Main Content Layout -->
+  <main class="container orders-layout">
+    <div id="ordersListContainer">
+      <!-- Injected dynamically -->
+      <div style="text-align: center; padding: 3rem 0;">
+        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary);"></i>
+        <p style="margin-top: 10px; color: var(--text-light)">Loading your orders history...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Order Items Modal -->
+  <div id="orderItemsModal" class="items-modal">
+    <div class="items-modal-content">
+      <span class="close-modal" onclick="closeModal()">&times;</span>
+      <h3 style="font-size: 1.3rem; color: var(--primary); font-weight: 800; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.8rem;">
+        Order Outfits list
+      </h3>
+      <div id="modalItemsBody">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer></footer>
+
+  <!-- Scripts -->
+  <script src="js/ux-premium.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/chatbot.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Redirect if not logged in
+      if (!getToken()) {
+        showToast('Please login to view your orders', 'error');
+        setTimeout(() => window.location.href = 'login.html', 1500);
+        return;
+      }
+      loadOrdersHistory();
+    });
+
+    async function loadOrdersHistory() {
+      const container = document.getElementById('ordersListContainer');
+      try {
+        const res = await fetch('/api/orders', {
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          if (data.orders.length === 0) {
+            container.innerHTML = `
+              <div style="text-align:center; padding:4rem 0">
+                <i class="fas fa-shopping-basket" style="font-size:4rem; color:var(--text-light); margin-bottom:1.5rem"></i>
+                <h3 style="font-size:1.4rem; color:var(--primary); font-weight:800; margin-bottom:0.5rem">No Orders Placed Yet</h3>
+                <p style="color:var(--text-light); margin-bottom:2rem">You haven't added coordinate outfits to your family wardrobe box yet.</p>
+                <a href="products.html" class="btn btn-primary" style="display:inline-block; padding: 0.8rem 2rem;">Start Shopping</a>
+              </div>
+            `;
+            return;
+          }
+
+          container.innerHTML = '';
+          data.orders.forEach(o => {
+            const date = new Date(o.created_at).toLocaleDateString('en-IN', { 
+              day: 'numeric', 
+              month: 'long', 
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+            
+            let statusClass = 'status-pending';
+            if (o.status === 'Processing') statusClass = 'status-processing';
+            else if (o.status === 'Shipped') statusClass = 'status-shipped';
+            else if (o.status === 'Delivered') statusClass = 'status-delivered';
+            else if (o.status === 'Cancelled') statusClass = 'status-cancelled';
+
+            container.innerHTML += `
+              <div class="order-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; border-bottom:1px solid var(--border-color); padding-bottom:1rem; margin-bottom:1.2rem">
+                  <div>
+                    <span style="font-size:0.82rem; color:var(--text-light)">Order Reference:</span>
+                    <strong style="color:var(--primary)">#${o.id}</strong>
+                  </div>
+                  <div>
+                    <span style="font-size:0.82rem; color:var(--text-light)">Placed On:</span>
+                    <strong>${date}</strong>
+                  </div>
+                  <div>
+                    <span class="status-badge ${statusClass}">${o.status}</span>
+                  </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:15px">
+                  <div>
+                    <span style="font-size:0.82rem; color:var(--text-light); display:block; margin-bottom:0.2rem">Delivery Destination:</span>
+                    <span style="font-weight:600; font-size:0.92rem; color:var(--text-dark)">${o.shipping_address}</span>
+                    
+                    ${o.tracking_number ? `
+                      <div style="margin-top:0.8rem; background:hsl(243, 60%, 98%); border:1px dashed var(--primary-light); padding:0.6rem 1rem; border-radius:8px; display:inline-flex; align-items:center; gap:8px">
+                        <i class="fas fa-truck" style="color:var(--primary)"></i>
+                        <span style="font-size:0.8rem; color:var(--primary-light)">
+                          Courier AWB: <a href="${o.tracking_link}" target="_blank" style="font-weight:bold; text-decoration:underline">${o.tracking_number}</a> (Shiprocket)
+                        </span>
+                      </div>
+                    ` : ''}
+                  </div>
+                  <div style="text-align:right">
+                    <span style="font-size:0.82rem; color:var(--text-light); display:block">Total Invoice Value:</span>
+                    <strong style="font-size:1.3rem; color:var(--primary)">₹${parseFloat(o.total_amount).toFixed(2)}</strong>
+                    <span style="font-size:0.75rem; color:var(--text-light); display:block; margin-top:2px">Via ${o.payment_method}</span>
+                  </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1.5rem; border-top:1px dashed var(--border-color); padding-top:1rem">
+                  <button class="btn" onclick="downloadInvoice(${o.id})" style="padding:0.5rem 1.2rem; font-size:0.8rem; background:#10b981; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; display:flex; align-items:center; gap:5px">
+                    <i class="fas fa-file-download"></i> Download Invoice
+                  </button>
+                  <button class="btn btn-primary" onclick="viewOrderItems(${o.id})" style="padding:0.5rem 1.2rem; font-size:0.8rem; border-radius:6px; font-weight:700">
+                    View Outfits Details
+                  </button>
+                </div>
+              </div>
+            `;
+          });
+        } else {
+          container.innerHTML = `<div style="text-align:center; padding:3rem; color:var(--danger)">Error: ${data.message}</div>`;
+        }
+      } catch (err) {
+        container.innerHTML = '<div style="text-align:center; padding:3rem; color:var(--danger)">Failed to connect to backend orders database.</div>';
+      }
+    }
+
+    async function viewOrderItems(orderId) {
+      const modal = document.getElementById('orderItemsModal');
+      const body = document.getElementById('modalItemsBody');
+      body.innerHTML = '<div style="text-align:center; padding:2rem"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i></div>';
+      modal.style.display = 'flex';
+
+      try {
+        const res = await fetch(`/api/orders/${orderId}`, {
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          body.innerHTML = '';
+          data.items.forEach(item => {
+            const image = JSON.parse(item.image_urls || '[]')[0] || '/images/products/placeholder.jpg';
+            body.innerHTML += `
+              <div style="display:flex; gap:15px; align-items:center; padding:10px 0; border-bottom:1px solid #eee">
+                <img src="${image}" alt="${item.name}" style="width:50px; height:60px; object-fit:cover; border-radius:6px; border:1px solid #ddd">
+                <div style="flex:1">
+                  <h4 style="margin:0; font-size:0.95rem; color:var(--primary); font-weight:700">${item.name}</h4>
+                  <p style="margin:2px 0 0 0; font-size:0.8rem; color:var(--text-light)">
+                    Size: <strong>${item.size}</strong> | Color: <strong style="text-transform:capitalize">${item.color || 'Default'}</strong>
+                  </p>
+                </div>
+                <div style="text-align:right">
+                  <span style="font-size:0.85rem; color:var(--text-light); display:block">Qty: ${item.quantity}</span>
+                  <strong style="font-size:0.95rem; color:var(--primary)">₹${parseFloat(item.price).toFixed(2)}</strong>
+                </div>
+              </div>
+            `;
+          });
+        } else {
+          body.innerHTML = `<p style="color:var(--danger); text-align:center">${data.message}</p>`;
+        }
+      } catch (err) {
+        body.innerHTML = '<p style="color:var(--danger); text-align:center">Error fetching items list.</p>';
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('orderItemsModal').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+      const modal = document.getElementById('orderItemsModal');
+      if (event.target === modal) {
+        closeModal();
+      }
+    }
+
+    async function downloadInvoice(orderId) {
+      showToast('Compiling secure PDF invoice...', 'info');
+      try {
+        const res = await fetch(`/api/orders/${orderId}/invoice`, {
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        const htmlContent = await res.text();
+        
+        const opt = {
+          margin:       0.3,
+          filename:     `L2L_Invoice_Order_${orderId}.pdf`,
+          image:        { type: 'jpeg', quality: 0.98 },
+          html2canvas:  { scale: 2, useCORS: true },
+          jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+        document.body.appendChild(tempDiv);
+        
+        html2pdf().from(tempDiv).set(opt).save().then(() => {
+          document.body.removeChild(tempDiv);
+          showToast('🎉 Invoice downloaded successfully!', 'success');
+        });
+      } catch (err) {
+        showToast('Error downloading invoice', 'error');
+      }
+    }
+  </script>
+</body>
+</html>
