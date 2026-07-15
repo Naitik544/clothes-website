@@ -1806,3 +1806,138 @@ footer {
     width: 100%;
   }
 }
+
+/* ==========================================================================
+   ADMIN PANEL MOBILE RESPONSIVENESS
+   ========================================================================== */
+/* Hide mobile header on desktop by default */
+.admin-mobile-header {
+  display: none;
+}
+.admin-sidebar-overlay {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Admin Mobile Top Header Bar */
+  .admin-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1rem;
+    height: 60px;
+    background-color: var(--primary);
+    color: #fff;
+    padding: 0 1.2rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .admin-menu-toggle {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.4rem;
+    cursor: pointer;
+    padding: 0.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .admin-mobile-brand {
+    font-size: 1.15rem;
+    font-weight: 800;
+  }
+
+  /* Admin Layout Structure Grid override */
+  .admin-layout {
+    grid-template-columns: 1fr !important;
+    display: block !important;
+  }
+
+  /* Hidden Sidebar transform animation */
+  .admin-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: -260px !important;
+    bottom: 0 !important;
+    width: 260px !important;
+    z-index: 1001 !important;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.15) !important;
+    overflow-y: auto !important;
+  }
+  
+  .admin-sidebar.open {
+    left: 0 !important;
+  }
+
+  /* Overlay backdrop */
+  .admin-sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+    z-index: 1000;
+    display: none;
+  }
+  
+  .admin-sidebar-overlay.show {
+    display: block !important;
+  }
+
+  /* Main content padding-top shift for top bar */
+  .admin-main {
+    padding: 80px 1rem 2rem 1rem !important;
+  }
+
+  /* Table cards and grids adjustments */
+  .admin-table-card {
+    padding: 1.2rem 0.8rem !important;
+    border-radius: 12px !important;
+  }
+  
+  .table-header-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.8rem !important;
+    margin-bottom: 1.2rem !important;
+  }
+  
+  .table-header-row .btn {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+
+  /* Stats grid alignment */
+  div[style*="grid-template-columns: repeat(4, 1fr)"] {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 1rem !important;
+  }
+  
+  div[style*="grid-template-columns: 1fr 1.2fr"] {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+
+  div[style*="grid-template-columns:1fr 1.5fr"] {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+
+  /* Modals width */
+  .modal-content {
+    width: 94% !important;
+    margin: 20px auto !important;
+    padding: 1.5rem 1rem !important;
+  }
+}

@@ -35,10 +35,19 @@
 </head>
 <body>
 
+  <!-- Mobile Header Bar -->
+  <div class="admin-mobile-header">
+    <button class="admin-menu-toggle" onclick="toggleAdminSidebar(event)"><i class="fas fa-bars"></i></button>
+    <div class="admin-mobile-brand">🛍️ LTL Control Center</div>
+  </div>
+  
+  <!-- Sidebar Backdrop Overlay -->
+  <div class="admin-sidebar-overlay" id="adminSidebarOverlay" onclick="toggleAdminSidebar(event)"></div>
+
   <div class="admin-layout">
     
     <!-- Sidebar -->
-    <aside class="admin-sidebar">
+    <aside class="admin-sidebar" id="adminSidebar">
       <div class="admin-sidebar-logo">
         🛍️ Little <span>to Large</span>
       </div>

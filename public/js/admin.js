@@ -4,6 +4,16 @@
 
 const token = getToken();
 
+function toggleAdminSidebar(e) {
+  if (e) e.stopPropagation();
+  const sidebar = document.getElementById('adminSidebar');
+  const overlay = document.getElementById('adminSidebarOverlay');
+  if (sidebar && overlay) {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('show');
+  }
+}
+
 // Verify Admin on page entry
 document.addEventListener('DOMContentLoaded', () => {
   const user = getCurrentUser();
@@ -12,6 +22,19 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => window.location.href = 'login.html', 1000);
     return;
   }
+
+  // Auto-close sidebar on mobile menu clicks
+  const sidebarLinks = document.querySelectorAll('.admin-sidebar-menu a');
+  sidebarLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      const sidebar = document.getElementById('adminSidebar');
+      const overlay = document.getElementById('adminSidebarOverlay');
+      if (sidebar && sidebar.classList.contains('open')) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('show');
+      }
+    });
+  });
 
   // Load active tab
   loadDashboardAnalytics();
