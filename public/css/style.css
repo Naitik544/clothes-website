@@ -1940,4 +1940,116 @@ footer {
     margin: 20px auto !important;
     padding: 1.5rem 1rem !important;
   }
+
+  /* Table to Card Responsive Layouts */
+  .admin-table, 
+  .admin-table thead, 
+  .admin-table tbody, 
+  .admin-table th, 
+  .admin-table td, 
+  .admin-table tr { 
+    display: block !important; 
+  }
+  
+  /* Hide table headers visually but keep accessibility */
+  .admin-table thead tr { 
+    position: absolute !important;
+    top: -9999px !important;
+    left: -9999px !important;
+  }
+  
+  .admin-table tr { 
+    border: 1px solid var(--border-color) !important;
+    background: #fff !important;
+    border-radius: 12px !important;
+    margin-bottom: 1.5rem !important;
+    padding: 1.2rem 1rem !important;
+    position: relative !important;
+    box-shadow: var(--shadow-sm) !important;
+  }
+  
+  .admin-table td { 
+    border: none !important;
+    border-bottom: 1px dashed #f3f4f6 !important;
+    position: relative !important;
+    padding: 0.8rem 0 0.8rem 45% !important; /* Left padding creates space for absolute label */
+    text-align: right !important; /* Align value to the right */
+    font-size: 0.85rem !important;
+    min-height: 2.8rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 6px !important;
+    word-break: break-word !important;
+  }
+  
+  .admin-table td:last-child {
+    border-bottom: none !important;
+  }
+  
+  /* Generate left bold labels */
+  .admin-table td:before { 
+    position: absolute !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    left: 8px !important;
+    width: 40% !important; 
+    text-align: left !important;
+    font-weight: 800 !important;
+    color: var(--primary) !important;
+    white-space: nowrap !important;
+  }
+  
+  /* Products Table Labels */
+  #adminProductsTable td:nth-of-type(1):before { content: "Preview" !important; }
+  #adminProductsTable td:nth-of-type(2):before { content: "Name" !important; }
+  #adminProductsTable td:nth-of-type(3):before { content: "Price" !important; }
+  #adminProductsTable td:nth-of-type(4):before { content: "Stock" !important; }
+  #adminProductsTable td:nth-of-type(5):before { content: "Sizes" !important; }
+  #adminProductsTable td:nth-of-type(6):before { content: "Actions" !important; }
+  
+  /* Orders Table Labels */
+  #adminOrdersTable td:nth-of-type(1):before { content: "OrderID" !important; }
+  #adminOrdersTable td:nth-of-type(2):before { content: "Customer" !important; }
+  #adminOrdersTable td:nth-of-type(3):before { content: "Date" !important; }
+  #adminOrdersTable td:nth-of-type(4):before { content: "Amount" !important; }
+  #adminOrdersTable td:nth-of-type(5):before { content: "Payment" !important; }
+  #adminOrdersTable td:nth-of-type(6):before { content: "Status" !important; }
+  #adminOrdersTable td:nth-of-type(7):before { content: "Shipment" !important; }
+
+  /* Inquiries Table Labels */
+  #adminInquiriesTable td:nth-of-type(1):before { content: "Date" !important; }
+  #adminInquiriesTable td:nth-of-type(2):before { content: "Sender" !important; }
+  #adminInquiriesTable td:nth-of-type(3):before { content: "Subject" !important; }
+  #adminInquiriesTable td:nth-of-type(4):before { content: "Message" !important; }
+  #adminInquiriesTable td:nth-of-type(5):before { content: "Actions" !important; }
+
+  /* Promotions Table Labels */
+  #adminPromotionsTable td:nth-of-type(1):before { content: "Priority" !important; }
+  #adminPromotionsTable td:nth-of-type(2):before { content: "Campaign" !important; }
+  #adminPromotionsTable td:nth-of-type(3):before { content: "Duration" !important; }
+  #adminPromotionsTable td:nth-of-type(4):before { content: "Color" !important; }
+  #adminPromotionsTable td:nth-of-type(5):before { content: "Actions" !important; }
+
+  /* Coupons Table Labels */
+  #adminCouponsTable td:nth-of-type(1):before { content: "Code" !important; }
+  #adminCouponsTable td:nth-of-type(2):before { content: "Discount" !important; }
+  #adminCouponsTable td:nth-of-type(3):before { content: "Description" !important; }
+  #adminCouponsTable td:nth-of-type(4):before { content: "Tag" !important; }
+  #adminCouponsTable td:nth-of-type(5):before { content: "Actions" !important; }
+
+  /* Error Logs Table Labels */
+  #adminErrorLogsTable td:nth-of-type(1):before { content: "Timestamp" !important; }
+  #adminErrorLogsTable td:nth-of-type(2):before { content: "Path" !important; }
+  #adminErrorLogsTable td:nth-of-type(3):before { content: "Message" !important; }
+  #adminErrorLogsTable td:nth-of-type(4):before { content: "Severity" !important; }
+  #adminErrorLogsTable td:nth-of-type(5):before { content: "Suggested Fix" !important; }
+
+  /* Force elements inside td to stretch or flex correctly */
+  .admin-table td img {
+    margin-left: auto !important;
+  }
+  .admin-table td select, .admin-table td .btn {
+    margin-top: 0 !important;
+  }
 }
