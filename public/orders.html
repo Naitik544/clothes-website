@@ -41,6 +41,9 @@
     .status-shipped { background: #eff6ff; color: #3b82f6; }
     .status-delivered { background: hsl(162, 72%, 95%); color: hsl(162, 72%, 41%); }
     .status-cancelled { background: #fee2e2; color: var(--danger); }
+    .status-return-requested { background: #ffedd5; color: #ea580c; }
+    .status-return-approved { background: #ccfbf1; color: #0d9488; }
+    .status-return-rejected { background: #f3f4f6; color: #4b5563; }
 
     /* Modal Styling */
     .items-modal {
@@ -120,6 +123,36 @@
     </div>
   </div>
 
+  <!-- Return Order Modal -->
+  <div class="items-modal" id="returnOrderModal">
+    <div class="items-modal-content" style="max-width: 500px;">
+      <span class="close-modal" onclick="closeReturnModal()">&times;</span>
+      <h3 style="font-size: 1.4rem; color: var(--primary); font-weight: 800; margin-bottom: 1.5rem;">Request Order Return</h3>
+      <form id="returnOrderForm" onsubmit="submitReturnRequest(event)">
+        <input type="hidden" id="returnOrderId">
+        
+        <div class="form-group" style="margin-bottom: 1.2rem;">
+          <label style="font-weight: 700; font-size: 0.85rem; display: block; margin-bottom: 0.4rem;">Reason for Return</label>
+          <select id="returnReason" class="form-input" style="width: 100%; padding: 0.6rem; border: 1px solid var(--border-color); border-radius: 6px;" required>
+            <option value="" disabled selected>Select a reason...</option>
+            <option value="Size doesn't fit">Size doesn't fit</option>
+            <option value="Wrong product received">Wrong product received</option>
+            <option value="Defective or damaged item">Defective or damaged item</option>
+            <option value="Product not as expected">Product not as expected</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label style="font-weight: 700; font-size: 0.85rem; display: block; margin-bottom: 0.4rem;">Comments / Details</label>
+          <textarea id="returnComments" class="form-input" rows="4" style="width: 100%; padding: 0.6rem; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit;" placeholder="Please provide details about the return reason..." required></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.8rem; font-weight: 700;">Submit Return Request</button>
+      </form>
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer></footer>
 
@@ -174,6 +207,9 @@
             else if (o.status === 'Shipped') statusClass = 'status-shipped';
             else if (o.status === 'Delivered') statusClass = 'status-delivered';
             else if (o.status === 'Cancelled') statusClass = 'status-cancelled';
+            else if (o.status === 'Return Requested') statusClass = 'status-return-requested';
+            else if (o.status === 'Return Approved') statusClass = 'status-return-approved';
+            else if (o.status === 'Return Rejected') statusClass = 'status-return-rejected';
 
             container.innerHTML += `
               <div class="order-card">
@@ -213,6 +249,16 @@
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1.5rem; border-top:1px dashed var(--border-color); padding-top:1rem">
+                  ${(o.status === 'Pending' || o.status === 'Processing') ? `
+                    <button class="btn" onclick="cancelOrder(${o.id})" style="padding:0.5rem 1.2rem; font-size:0.8rem; background:var(--danger, #ef4444); color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; display:flex; align-items:center; gap:5px">
+                      <i class="fas fa-ban"></i> Cancel Order
+                    </button>
+                  ` : ''}
+                  ${o.status === 'Delivered' ? `
+                    <button class="btn" onclick="openReturnModal(${o.id})" style="padding:0.5rem 1.2rem; font-size:0.8rem; background:var(--marigold, #eab308); color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; display:flex; align-items:center; gap:5px">
+                      <i class="fas fa-undo-alt"></i> Return Order
+                    </button>
+                  ` : ''}
                   <button class="btn" onclick="downloadInvoice(${o.id})" style="padding:0.5rem 1.2rem; font-size:0.8rem; background:#10b981; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; display:flex; align-items:center; gap:5px">
                     <i class="fas fa-file-download"></i> Download Invoice
                   </button>
@@ -275,10 +321,77 @@
       document.getElementById('orderItemsModal').style.display = 'none';
     }
 
+    async function cancelOrder(orderId) {
+      if (!confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
+        return;
+      }
+      try {
+        const res = await fetch(`/api/orders/${orderId}/cancel`, {
+          method: 'POST',
+          headers: { 
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('🎉 Order cancelled successfully!', 'success');
+          loadOrdersHistory();
+        } else {
+          showToast(data.message || 'Failed to cancel order', 'error');
+        }
+      } catch (err) {
+        showToast('Error cancelling order', 'error');
+      }
+    }
+
+    function openReturnModal(orderId) {
+      document.getElementById('returnOrderId').value = orderId;
+      document.getElementById('returnReason').value = '';
+      document.getElementById('returnComments').value = '';
+      document.getElementById('returnOrderModal').style.display = 'flex';
+    }
+
+    function closeReturnModal() {
+      document.getElementById('returnOrderModal').style.display = 'none';
+    }
+
     window.onclick = function(event) {
       const modal = document.getElementById('orderItemsModal');
+      const rModal = document.getElementById('returnOrderModal');
       if (event.target === modal) {
         closeModal();
+      }
+      if (event.target === rModal) {
+        closeReturnModal();
+      }
+    }
+
+    async function submitReturnRequest(e) {
+      e.preventDefault();
+      const orderId = document.getElementById('returnOrderId').value;
+      const reason = document.getElementById('returnReason').value;
+      const comments = document.getElementById('returnComments').value.trim();
+
+      try {
+        const res = await fetch(`/api/orders/${orderId}/return`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ reason, comments })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('🎉 Return request submitted successfully!', 'success');
+          closeReturnModal();
+          loadOrdersHistory();
+        } else {
+          showToast(data.message || 'Failed to submit return request', 'error');
+        }
+      } catch (err) {
+        showToast('Error submitting return request', 'error');
       }
     }
 

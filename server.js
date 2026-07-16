@@ -908,6 +908,66 @@ app.get('/api/orders/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Cancel Order (User only)
+app.post('/api/orders/:id/cancel', authenticateToken, async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const order = await db.get('SELECT * FROM orders WHERE id = ? AND customer_id = ?', [orderId, req.user.id]);
+    
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+    
+    if (order.status !== 'Pending' && order.status !== 'Processing') {
+      return res.status(400).json({ success: false, message: `Orders in '${order.status}' status cannot be cancelled` });
+    }
+    
+    // Update status
+    await db.run('UPDATE orders SET status = "Cancelled" WHERE id = ?', [orderId]);
+    
+    // Restore inventory
+    const items = await db.query('SELECT * FROM order_items WHERE order_id = ?', [orderId]);
+    for (const item of items) {
+      await db.run('UPDATE products SET stock = stock + ? WHERE id = ?', [item.quantity, item.product_id]);
+    }
+    
+    res.json({ success: true, message: 'Order cancelled successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Request Order Return (User only)
+app.post('/api/orders/:id/return', authenticateToken, async (req, res) => {
+  const { reason, comments } = req.body;
+  if (!reason || !comments) {
+    return res.status(400).json({ success: false, message: 'Reason and comments are required' });
+  }
+
+  try {
+    const orderId = req.params.id;
+    const order = await db.get('SELECT * FROM orders WHERE id = ? AND customer_id = ?', [orderId, req.user.id]);
+    
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+    
+    if (order.status !== 'Delivered') {
+      return res.status(400).json({ success: false, message: 'Only delivered orders can be returned' });
+    }
+    
+    // Update status and store return reason/comments
+    await db.run(
+      'UPDATE orders SET status = "Return Requested", return_reason = ?, return_comments = ? WHERE id = ?',
+      [reason, comments, orderId]
+    );
+    
+    res.json({ success: true, message: 'Return request submitted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // Get Order Invoice (HTML format)
 app.get('/api/orders/:id/invoice', authenticateToken, async (req, res) => {
   try {
@@ -1453,6 +1513,20 @@ app.put('/api/orders/:id/status', adminIpFilter, authenticateAdmin, async (req, 
   if (!status) return res.status(400).json({ success: false, message: 'Status is required' });
 
   try {
+    const order = await db.get('SELECT status FROM orders WHERE id = ?', [req.params.id]);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    // If changing to Cancelled or Return Approved from a normal status, restore inventory stock
+    const isCancelling = status === 'Cancelled' && order.status !== 'Cancelled';
+    const isApprovedReturn = status === 'Return Approved' && order.status !== 'Return Approved';
+    
+    if (isCancelling || isApprovedReturn) {
+      const items = await db.query('SELECT * FROM order_items WHERE order_id = ?', [req.params.id]);
+      for (const item of items) {
+        await db.run('UPDATE products SET stock = stock + ? WHERE id = ?', [item.quantity, item.product_id]);
+      }
+    }
+
     await db.run('UPDATE orders SET status = ? WHERE id = ?', [status, req.params.id]);
     res.json({ success: true, message: `Order status updated to ${status}` });
   } catch (err) {

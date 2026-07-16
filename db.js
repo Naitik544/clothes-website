@@ -374,7 +374,9 @@ async function createTables() {
     `ALTER TABLE orders ADD COLUMN shiprocket_order_id VARCHAR(50)`,
     `ALTER TABLE orders ADD COLUMN shiprocket_shipment_id VARCHAR(50)`,
     `ALTER TABLE orders ADD COLUMN tracking_number VARCHAR(100)`,
-    `ALTER TABLE orders ADD COLUMN tracking_link TEXT`
+    `ALTER TABLE orders ADD COLUMN tracking_link TEXT`,
+    `ALTER TABLE orders ADD COLUMN return_reason TEXT`,
+    `ALTER TABLE orders ADD COLUMN return_comments TEXT`
   ];
 
   for (const q of alterQueries) {

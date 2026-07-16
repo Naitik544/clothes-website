@@ -338,6 +338,13 @@ async function loadAdminOrders() {
             <td>
               <strong>${o.customer_name}</strong><br>
               <span style="font-size:0.78rem; color:var(--text-light)">${o.customer_email}</span>
+              ${o.return_reason ? `
+                <div style="margin-top:6px; padding:4px 8px; background:#fff7ed; border-left:3px solid #ea580c; border-radius:3px; font-size:0.75rem; text-align:left; line-height:1.2">
+                  <strong style="color:#ea580c">Return Request:</strong><br>
+                  <strong>Reason:</strong> ${o.return_reason}<br>
+                  <strong>Comments:</strong> ${o.return_comments || 'None'}
+                </div>
+              ` : ''}
             </td>
             <td>${date}</td>
             <td><strong>₹${parseFloat(o.total_amount).toFixed(2)}</strong></td>
@@ -349,6 +356,9 @@ async function loadAdminOrders() {
                 <option value="Shipped" ${o.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
                 <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
                 <option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                <option value="Return Requested" ${o.status === 'Return Requested' ? 'selected' : ''}>Return Requested</option>
+                <option value="Return Approved" ${o.status === 'Return Approved' ? 'selected' : ''}>Return Approved</option>
+                <option value="Return Rejected" ${o.status === 'Return Rejected' ? 'selected' : ''}>Return Rejected</option>
               </select>
             </td>
             <td>${shiprocketColHtml}</td>
