@@ -102,15 +102,19 @@ function renderPaymentDetails(method) {
     `;
   } 
   else if (method === 'COD') {
-    const captcha = Math.floor(1000 + Math.random() * 9000).toString();
     container.innerHTML = `
-      <div style="text-align:center; padding:1rem; border:1px dashed var(--border-color); border-radius:var(--radius); background:#fafafa">
-        <p style="font-size:0.88rem; color:var(--text-light); margin-bottom:0.8rem">Cash on Delivery option selected. Please verify yourself to avoid fraud orders.</p>
-        <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:0.8rem">
-          <span id="captchaCode" style="font-size:1.4rem; font-weight:800; background:#eee; padding:0.3rem 1rem; border-radius:4px; letter-spacing:4px; user-select:none; color:var(--primary)">${captcha}</span>
-          <button type="button" onclick="refreshCaptcha()" style="background:none; border:none; color:var(--text-light); cursor:pointer"><i class="fas fa-sync-alt"></i></button>
+      <div style="text-align:center; padding:1.5rem; border:1px dashed var(--border-color); border-radius:12px; background:#fafafa; display:flex; flex-direction:column; gap:10px; align-items:center;">
+        <p style="font-size:0.88rem; color:var(--text-light); margin:0 0 5px 0">Cash on Delivery selected. For security, we require SMS OTP verification.</p>
+        
+        <div id="otpInputArea" style="display:none; width:100%; max-width:280px; flex-direction:column; gap:10px; margin-top:5px;">
+          <p style="font-size:0.8rem; color:#10b981; font-weight:600; margin:0">✔ Verification code sent via SMS!</p>
+          <input type="text" id="codOtpInput" placeholder="Enter 4-Digit OTP" maxlength="4" style="width:100%; text-align:center; padding:0.6rem; border:1px solid var(--border-color); border-radius:6px; font-weight:bold; letter-spacing:4px">
+          <small style="color:var(--text-light); font-size:0.75rem">Enter the OTP sent to your phone number</small>
         </div>
-        <input type="text" id="captchaInput" placeholder="Enter 4-Digit Code" maxlength="4" style="width:180px; text-align:center; padding:0.5rem; border:1px solid var(--border-color); border-radius:6px" required>
+
+        <button type="button" id="sendOtpBtn" onclick="sendCodVerificationOtp()" class="btn btn-primary" style="padding:0.6rem 1.5rem; font-size:0.8rem; font-weight:700; cursor:pointer; width:100%; max-width:280px; border-radius:6px;">
+          Send SMS OTP
+        </button>
       </div>
     `;
   }
@@ -286,13 +290,13 @@ async function processOrderSubmit(e) {
   const shipping = subtotal >= threshold ? 0 : fee;
   const totalAmount = subtotal - discount + shipping;
 
-  // If COD, run captcha validation
+  // If COD, run OTP verification
   if (activePaymentMethod === 'COD') {
-    const captcha = document.getElementById('captchaCode').textContent;
-    const input = document.getElementById('captchaInput').value.trim();
+    const otpInput = document.getElementById('codOtpInput');
+    const otp = otpInput ? otpInput.value.trim() : '';
 
-    if (captcha !== input) {
-      showToast('Verification code is incorrect!', 'error');
+    if (!otp) {
+      showToast('Please request and enter the SMS verification OTP!', 'error');
       return;
     }
 
@@ -307,7 +311,9 @@ async function processOrderSubmit(e) {
       total_amount: totalAmount,
       shipping_address: `${name}, ${address}, ${state} - ${pincode} (Tel: ${phone})`,
       payment_method: 'COD',
-      transaction_id: 'COD-' + Date.now() + '-' + Math.floor(Math.random() * 1000)
+      transaction_id: 'COD-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+      otp: otp,
+      phone: phone
     };
 
     try {
@@ -455,5 +461,53 @@ async function processOrderSubmit(e) {
       console.error('Razorpay Init Error:', err);
       showToast('Payment gateway initialization failed: ' + err.message, 'error');
     }
+  }
+}
+
+async function sendCodVerificationOtp() {
+  const phone = document.getElementById('shippingPhone').value.trim();
+  if (!phone || phone.length < 10) {
+    showToast('Please enter a valid 10-digit phone number in shipping details first!', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('sendOtpBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  try {
+    const res = await fetch('/api/orders/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('🎉 OTP sent to your phone!', 'success');
+      document.getElementById('otpInputArea').style.display = 'flex';
+      btn.textContent = 'Resend OTP';
+      btn.style.background = '#6b7280';
+      
+      let cooldown = 30;
+      const interval = setInterval(() => {
+        cooldown--;
+        if (cooldown <= 0) {
+          clearInterval(interval);
+          btn.disabled = false;
+          btn.textContent = 'Resend OTP';
+          btn.style.background = 'var(--primary)';
+        } else {
+          btn.textContent = `Wait ${cooldown}s`;
+        }
+      }, 1000);
+    } else {
+      showToast(data.message || 'Failed to send verification OTP', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Send SMS OTP';
+    }
+  } catch (err) {
+    showToast('Error sending OTP. Please try again.', 'error');
+    btn.disabled = false;
+    btn.textContent = 'Send SMS OTP';
   }
 }

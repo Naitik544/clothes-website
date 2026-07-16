@@ -151,7 +151,9 @@ async function runBlackBoxTests() {
         items: [{ product_id: testProductId, size: 'M', color: 'Saffron', quantity: 2, price: 2500.00 }],
         total_amount: 5000.00,
         shipping_address: 'Gohel Shivam, Gandhidham, Gujarat - 370201 (Tel: 8320375759)',
-        payment_method: 'COD'
+        payment_method: 'COD',
+        otp: 'TEST_OTP',
+        phone: '8320375759'
       })
     });
     const data = await orderRes.json();

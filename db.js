@@ -356,6 +356,15 @@ async function createTables() {
     )
   `);
 
+  // OTP Verifications Table
+  await run(`
+    CREATE TABLE IF NOT EXISTS otp_verifications (
+      phone VARCHAR(15) PRIMARY KEY,
+      otp VARCHAR(6) NOT NULL,
+      expires_at VARCHAR(100) NOT NULL
+    )
+  `);
+
   // Alter tables to add new columns for user settings and dynamic product details
   const alterQueries = [
     `ALTER TABLE customers ADD COLUMN phone_alt VARCHAR(15)`,

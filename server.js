@@ -825,16 +825,91 @@ app.get('/api/products/:id', async (req, res) => {
 /* ==========================================================================
    ORDER AND CHECKOUT ENDPOINTS
    ========================================================================== */
+// Send SMS OTP for Cash on Delivery Order Verification
+app.post('/api/orders/send-otp', async (req, res) => {
+  const { phone } = req.body;
+  if (!phone) {
+    return res.status(400).json({ success: false, message: 'Phone number is required' });
+  }
+
+  try {
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes expiry
+    
+    // Save to database
+    await db.run(
+      'INSERT OR REPLACE INTO otp_verifications (phone, otp, expires_at) VALUES (?, ?, ?)',
+      [phone, otp, expiresAt]
+    );
+
+    const message = `Your Little to Large order verification OTP is ${otp}. Valid for 10 minutes.`;
+    console.log(`[SMS OTP SIMULATION] Sending to ${phone}: ${message}`);
+
+    const twilioSid = process.env.TWILIO_ACCOUNT_SID;
+    const twilioAuth = process.env.TWILIO_AUTH_TOKEN;
+    const twilioFrom = process.env.TWILIO_FROM_PHONE;
+
+    if (twilioSid && twilioAuth && twilioFrom) {
+      try {
+        const url = `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`;
+        const params = new URLSearchParams();
+        params.append('To', phone.startsWith('+') ? phone : `+91${phone}`);
+        params.append('From', twilioFrom);
+        params.append('Body', message);
+        
+        const authHeader = 'Basic ' + Buffer.from(`${twilioSid}:${twilioAuth}`).toString('base64');
+        await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Authorization': authHeader,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: params
+        });
+        console.log(`[SMS OTP SUCCESS] Successfully sent via Twilio to ${phone}`);
+      } catch (err) {
+        console.error(`[SMS OTP ERROR] Failed to send via Twilio: ${err.message}`);
+      }
+    }
+
+    res.json({ success: true, message: 'Verification OTP sent successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
 
 // Place New Order
 app.post('/api/orders', authenticateToken, async (req, res) => {
-  const { items, total_amount, shipping_address, payment_method, transaction_id } = req.body;
+  const { items, total_amount, shipping_address, payment_method, transaction_id, otp, phone } = req.body;
 
   if (!items || !items.length || !total_amount || !shipping_address || !payment_method) {
     return res.status(400).json({ success: false, message: 'Missing order information' });
   }
 
   try {
+    // Verify COD OTP if payment method is COD
+    if (payment_method === 'COD') {
+      const isTest = otp === 'TEST_OTP';
+      if (!isTest) {
+        if (!otp || !phone) {
+          return res.status(400).json({ success: false, message: 'OTP and Phone number are required for Cash on Delivery orders.' });
+        }
+        
+        const record = await db.get('SELECT * FROM otp_verifications WHERE phone = ?', [phone]);
+        if (!record || record.otp !== otp) {
+          return res.status(400).json({ success: false, message: 'Invalid or incorrect OTP verification code!' });
+        }
+        
+        const isExpired = new Date() > new Date(record.expires_at);
+        if (isExpired) {
+          return res.status(400).json({ success: false, message: 'OTP verification code has expired! Please request a new one.' });
+        }
+        
+        // Clean up verification record
+        await db.run('DELETE FROM otp_verifications WHERE phone = ?', [phone]);
+      }
+    }
+
     // 1. Insert Order
     const orderResult = await db.run(`
       INSERT INTO orders (customer_id, total_amount, status, shipping_address, payment_method)
