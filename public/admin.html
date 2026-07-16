@@ -518,6 +518,36 @@
             </button>
           </form>
         </div>
+
+        <div style="background-color:#fff; padding:2.5rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); max-width:650px; margin: 2rem auto 0 auto;">
+          <h2 style="font-size:1.5rem; color:var(--primary); font-weight:800; border-bottom:1px solid var(--border-color); padding-bottom:12px; margin-bottom:1.5rem; display:flex; align-items:center; gap:10px">
+            🔒 Change Admin Password
+          </h2>
+          <p style="font-size:0.85rem; color:var(--text-light); margin-bottom:2rem; line-height:1.6">
+            Ensure your admin credentials remain secure. Update your password regularly using this form.
+          </p>
+
+          <form id="changePasswordForm" onsubmit="handleAdminPasswordChange(event)" style="display:flex; flex-direction:column; gap:1.5rem">
+            <div class="form-group">
+              <label style="font-size:0.85rem; font-weight:800; color:var(--primary); display:block; margin-bottom:0.4rem">Current Password</label>
+              <input type="password" id="adminOldPassword" class="form-input" required placeholder="Enter current password" style="width:100%; box-sizing:border-box">
+            </div>
+
+            <div class="form-group">
+              <label style="font-size:0.85rem; font-weight:800; color:var(--primary); display:block; margin-bottom:0.4rem">New Password</label>
+              <input type="password" id="adminNewPassword" class="form-input" required placeholder="Enter new password (min. 6 characters)" style="width:100%; box-sizing:border-box" minlength="6">
+            </div>
+
+            <div class="form-group">
+              <label style="font-size:0.85rem; font-weight:800; color:var(--primary); display:block; margin-bottom:0.4rem">Confirm New Password</label>
+              <input type="password" id="adminConfirmPassword" class="form-input" required placeholder="Confirm new password" style="width:100%; box-sizing:border-box" minlength="6">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="padding:0.8rem 2rem; font-size:0.9rem; font-weight:700; width:100%; margin-top:1rem; cursor:pointer">
+              🔑 Update Password
+            </button>
+          </form>
+        </div>
       </section>
 
     </main>

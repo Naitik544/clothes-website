@@ -1162,3 +1162,36 @@ async function saveShippingSettings(e) {
     showToast('Error saving shipping settings', 'error');
   }
 }
+
+async function handleAdminPasswordChange(e) {
+  e.preventDefault();
+  const oldPassword = document.getElementById('adminOldPassword').value;
+  const newPassword = document.getElementById('adminNewPassword').value;
+  const confirmPassword = document.getElementById('adminConfirmPassword').value;
+
+  if (newPassword !== confirmPassword) {
+    showToast('New passwords do not match!', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/auth/password', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ oldPassword, newPassword })
+    });
+    
+    const data = await res.json();
+    if (data.success) {
+      showToast('🎉 Admin password updated successfully!', 'success');
+      document.getElementById('changePasswordForm').reset();
+    } else {
+      showToast(data.message || 'Failed to update password', 'error');
+    }
+  } catch (err) {
+    showToast('Error updating password', 'error');
+  }
+}
