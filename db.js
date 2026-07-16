@@ -357,9 +357,11 @@ async function createTables() {
   `);
 
   // OTP Verifications Table
+  await run('DROP TABLE IF EXISTS otp_verifications');
   await run(`
     CREATE TABLE IF NOT EXISTS otp_verifications (
-      phone VARCHAR(15) PRIMARY KEY,
+      id ${idType},
+      phone VARCHAR(15) UNIQUE NOT NULL,
       otp VARCHAR(6) NOT NULL,
       expires_at VARCHAR(100) NOT NULL
     )
