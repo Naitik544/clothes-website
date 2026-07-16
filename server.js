@@ -837,8 +837,9 @@ app.post('/api/orders/send-otp', async (req, res) => {
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes expiry
     
     // Save to database
+    await db.run('DELETE FROM otp_verifications WHERE phone = ?', [phone]);
     await db.run(
-      'INSERT OR REPLACE INTO otp_verifications (phone, otp, expires_at) VALUES (?, ?, ?)',
+      'INSERT INTO otp_verifications (phone, otp, expires_at) VALUES (?, ?, ?)',
       [phone, otp, expiresAt]
     );
 
@@ -1641,10 +1642,12 @@ app.post('/api/admin/settings', adminIpFilter, authenticateAdmin, async (req, re
   const { shipping_fee, free_shipping_threshold } = req.body;
   try {
     if (shipping_fee !== undefined) {
-      await db.run("INSERT OR REPLACE INTO settings (key, value) VALUES ('shipping_fee', ?)", [shipping_fee.toString()]);
+      await db.run("DELETE FROM settings WHERE key = 'shipping_fee'");
+      await db.run("INSERT INTO settings (key, value) VALUES ('shipping_fee', ?)", [shipping_fee.toString()]);
     }
     if (free_shipping_threshold !== undefined) {
-      await db.run("INSERT OR REPLACE INTO settings (key, value) VALUES ('free_shipping_threshold', ?)", [free_shipping_threshold.toString()]);
+      await db.run("DELETE FROM settings WHERE key = 'free_shipping_threshold'");
+      await db.run("INSERT INTO settings (key, value) VALUES ('free_shipping_threshold', ?)", [free_shipping_threshold.toString()]);
     }
     res.json({ success: true, message: 'Settings updated successfully' });
   } catch (err) {
