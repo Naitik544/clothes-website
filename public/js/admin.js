@@ -45,12 +45,13 @@ function setupSidebarNavigation() {
   const links = document.querySelectorAll('.admin-sidebar-menu a');
   links.forEach(link => {
     link.addEventListener('click', (e) => {
-      e.preventDefault();
-      links.forEach(l => l.classList.remove('active'));
-      link.classList.add('active');
-
       const targetSection = link.getAttribute('data-section');
-      showSection(targetSection);
+      if (targetSection) {
+        e.preventDefault();
+        links.forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+        showSection(targetSection);
+      }
     });
   });
 }
