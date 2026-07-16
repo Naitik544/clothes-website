@@ -485,6 +485,7 @@ function openAddProductModal() {
   editingProductId = null;
   document.getElementById('productModalTitle').textContent = 'Add New Clothing Product';
   document.getElementById('productForm').reset();
+  document.getElementById('prodReturnWindow').value = '7';
   document.getElementById('productModal').style.display = 'flex';
 }
 
@@ -503,6 +504,7 @@ function openEditProductModal(id) {
   document.getElementById('prodDiscountPrice').value = product.discount_price || '';
   document.getElementById('prodStock').value = product.stock;
   document.getElementById('prodSizes').value = product.size_variants;
+  document.getElementById('prodReturnWindow').value = product.return_window_days !== undefined ? product.return_window_days : '7';
   document.getElementById('prodDesc').value = product.description;
 
   document.getElementById('productModal').style.display = 'flex';

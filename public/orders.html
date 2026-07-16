@@ -301,6 +301,10 @@
                   <p style="margin:2px 0 0 0; font-size:0.8rem; color:var(--text-light)">
                     Size: <strong>${item.size}</strong> | Color: <strong style="text-transform:capitalize">${item.color || 'Default'}</strong>
                   </p>
+                  <span style="font-size:0.72rem; display:inline-block; margin-top:3px; font-weight:600; color:${item.return_window_days === 0 ? '#ef4444' : '#f59e0b'}">
+                    <i class="${item.return_window_days === 0 ? 'fas fa-times-circle' : 'fas fa-undo-alt'}"></i> 
+                    ${item.return_window_days === 0 ? 'Non-returnable item' : `${item.return_window_days}-day return policy`}
+                  </span>
                 </div>
                 <div style="text-align:right">
                   <span style="font-size:0.85rem; color:var(--text-light); display:block">Qty: ${item.quantity}</span>

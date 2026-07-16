@@ -896,7 +896,7 @@ app.get('/api/orders/:id', authenticateToken, async (req, res) => {
     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
 
     const items = await db.query(`
-      SELECT oi.*, p.name, p.image_urls
+      SELECT oi.*, p.name, p.image_urls, p.return_window_days
       FROM order_items oi
       JOIN products p ON oi.product_id = p.id
       WHERE oi.order_id = ?
@@ -936,7 +936,6 @@ app.post('/api/orders/:id/cancel', authenticateToken, async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
-
 // Request Order Return (User only)
 app.post('/api/orders/:id/return', authenticateToken, async (req, res) => {
   const { reason, comments } = req.body;
@@ -956,6 +955,44 @@ app.post('/api/orders/:id/return', authenticateToken, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Only delivered orders can be returned' });
     }
     
+    // Fetch items with their return windows
+    const items = await db.query(`
+      SELECT oi.*, p.name, p.return_window_days
+      FROM order_items oi
+      JOIN products p ON oi.product_id = p.id
+      WHERE oi.order_id = ?
+    `, [orderId]);
+
+    const orderDate = new Date(order.created_at);
+    const now = new Date();
+    const diffTime = Math.abs(now - orderDate);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); // Days since order creation
+
+    let returnableItemsCount = 0;
+    let nonReturnableItems = [];
+    let expiredItems = [];
+
+    for (const item of items) {
+      const windowDays = item.return_window_days !== null && item.return_window_days !== undefined ? item.return_window_days : 7;
+      if (windowDays === 0) {
+        nonReturnableItems.push(item.name);
+      } else if (diffDays > windowDays) {
+        expiredItems.push(`${item.name} (${windowDays}-day limit expired)`);
+      } else {
+        returnableItemsCount++;
+      }
+    }
+
+    if (returnableItemsCount === 0) {
+      if (nonReturnableItems.length > 0 && expiredItems.length === 0) {
+        return res.status(400).json({ success: false, message: `This order is non-returnable: ${nonReturnableItems.join(', ')}` });
+      }
+      if (expiredItems.length > 0) {
+        return res.status(400).json({ success: false, message: `Return window has expired for: ${expiredItems.join(', ')}` });
+      }
+      return res.status(400).json({ success: false, message: 'This order is not eligible for returns.' });
+    }
+
     // Update status and store return reason/comments
     await db.run(
       'UPDATE orders SET status = "Return Requested", return_reason = ?, return_comments = ? WHERE id = ?',
@@ -1631,12 +1668,12 @@ app.post('/api/admin/orders/:id/ship', adminIpFilter, authenticateAdmin, async (
 
 // Add New Product
 app.post('/api/products', adminIpFilter, authenticateAdmin, upload.array('images', 5), async (req, res) => {
-  const { name, category, subcategory, price, discount_price, stock, description, size_variants } = req.body;
-
+  const { name, category, subcategory, price, discount_price, stock, description, size_variants, return_window_days } = req.body;
+ 
   if (!name || !category || !price) {
     return res.status(400).json({ success: false, message: 'Name, Category, and Price are required' });
   }
-
+ 
   try {
     let images = [];
     if (req.files && req.files.length > 0) {
@@ -1646,11 +1683,13 @@ app.post('/api/products', adminIpFilter, authenticateAdmin, upload.array('images
       images = ['/images/products/placeholder.jpg'];
     }
 
+    const returnDays = return_window_days !== undefined && return_window_days !== '' ? parseInt(return_window_days) : 7;
+ 
     const result = await db.run(`
-      INSERT INTO products (name, category, subcategory, price, discount_price, stock, description, size_variants, image_urls)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [name, category, subcategory || null, parseFloat(price), discount_price ? parseFloat(discount_price) : null, parseInt(stock) || 0, description || '', size_variants || 'M', JSON.stringify(images)]);
-
+      INSERT INTO products (name, category, subcategory, price, discount_price, stock, description, size_variants, image_urls, return_window_days)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [name, category, subcategory || null, parseFloat(price), discount_price ? parseFloat(discount_price) : null, parseInt(stock) || 0, description || '', size_variants || 'M', JSON.stringify(images), returnDays]);
+ 
     res.status(201).json({ success: true, message: 'Product added successfully', productId: result.insertId });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -1659,7 +1698,7 @@ app.post('/api/products', adminIpFilter, authenticateAdmin, upload.array('images
 
 // Edit Product
 app.put('/api/products/:id', adminIpFilter, authenticateAdmin, upload.array('images', 5), async (req, res) => {
-  const { name, category, subcategory, price, discount_price, stock, description, size_variants } = req.body;
+  const { name, category, subcategory, price, discount_price, stock, description, size_variants, return_window_days } = req.body;
   
   try {
     const existing = await db.get('SELECT image_urls FROM products WHERE id = ?', [req.params.id]);
@@ -1672,11 +1711,13 @@ app.put('/api/products/:id', adminIpFilter, authenticateAdmin, upload.array('ima
       images = [...images, ...newImages];
     }
 
+    const returnDays = return_window_days !== undefined && return_window_days !== '' ? parseInt(return_window_days) : 7;
+
     await db.run(`
       UPDATE products 
-      SET name = ?, category = ?, subcategory = ?, price = ?, discount_price = ?, stock = ?, description = ?, size_variants = ?, image_urls = ?
+      SET name = ?, category = ?, subcategory = ?, price = ?, discount_price = ?, stock = ?, description = ?, size_variants = ?, image_urls = ?, return_window_days = ?
       WHERE id = ?
-    `, [name, category, subcategory || null, parseFloat(price), discount_price ? parseFloat(discount_price) : null, parseInt(stock) || 0, description || '', size_variants || 'M', JSON.stringify(images), req.params.id]);
+    `, [name, category, subcategory || null, parseFloat(price), discount_price ? parseFloat(discount_price) : null, parseInt(stock) || 0, description || '', size_variants || 'M', JSON.stringify(images), returnDays, req.params.id]);
 
     res.json({ success: true, message: 'Product updated successfully' });
   } catch (err) {
