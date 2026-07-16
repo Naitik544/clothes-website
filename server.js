@@ -1230,6 +1230,7 @@ app.get('/api/orders/:id/invoice', authenticateToken, async (req, res) => {
         <td style="padding-bottom: 15px; vertical-align: top;">
           <div style="font-size: 1.8rem; font-weight: 800; color: #1e1b4b; font-family: sans-serif;">🛍️ Little <span style="color: #d97706;">to Large</span></div>
           <p style="font-size: 0.8rem; color: #666; margin: 5px 0 0 0; font-family: sans-serif;">Premium Family Wardrobe E-Store</p>
+          <p style="font-size: 0.8rem; color: #333; margin: 3px 0 0 0; font-family: sans-serif;"><strong>GSTIN:</strong> 24DDFPG6913P1Z8</p>
         </td>
         <td style="text-align: right; padding-bottom: 15px; vertical-align: top; font-family: sans-serif;">
           <h2 style="margin: 0; color: #333; font-size: 1.5rem; letter-spacing: 1px; font-weight: 800;">TAX INVOICE</h2>

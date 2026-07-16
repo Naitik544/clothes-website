@@ -428,6 +428,7 @@ function renderHeaderFooter() {
             <span>Little <span class="logo-accent">to</span> Large</span>
           </div>
           <p>India's premium family clothing store. We bring comfortable, beautiful ethnic and western outfits from infants to adults. Designed to grow and scale with Indian family values.</p>
+          <p style="font-size:0.8rem; margin-top:0.6rem; color:rgba(255,255,255,0.7); font-weight:600">GSTIN: 24DDFPG6913P1Z8</p>
           <div class="social-links">
             <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
             <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
