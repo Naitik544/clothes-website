@@ -329,6 +329,9 @@ async function loadAdminOrders() {
             <button onclick="shipOrderViaShiprocket(${o.id})" class="btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:var(--secondary); color:#fff; border:none; border-radius:4px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:4px">
               <i class="fas fa-rocket"></i> Ship order
             </button>
+            <button onclick="adminCancelOrder(${o.id})" class="btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:var(--danger); color:#fff; border:none; border-radius:4px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:4px; margin-top:4px">
+              <i class="fas fa-ban"></i> Cancel
+            </button>
           `;
         }
 
@@ -368,6 +371,29 @@ async function loadAdminOrders() {
     }
   } catch (err) {
     showToast('Failed to load orders', 'error');
+  }
+}
+
+async function adminCancelOrder(orderId) {
+  if (!confirm(`Are you sure you want to cancel Order #${orderId}? This will automatically restock the items.`)) return;
+  try {
+    const res = await fetch(`/api/orders/${orderId}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ status: 'Cancelled' })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Order cancelled and inventory restocked!', 'success');
+      loadAdminOrders();
+    } else {
+      showToast(data.message || 'Failed to cancel order', 'error');
+    }
+  } catch (err) {
+    showToast('Error cancelling order', 'error');
   }
 }
 
