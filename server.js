@@ -908,6 +908,44 @@ app.get('/api/orders/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Process automated Razorpay refund
+async function processRazorpayRefund(orderId, reason = 'Order Cancelled') {
+  try {
+    const payment = await db.get('SELECT * FROM payments WHERE order_id = ? AND status = "Success"', [orderId]);
+    if (!payment) {
+      console.log(`[Refund info] No successful payment found for Order #${orderId}. Assuming COD or free order. Skipping gateway refund.`);
+      return { success: true, refunded: false, message: 'COD or unpaid order. No gateway refund needed.' };
+    }
+
+    if (payment.method !== 'Razorpay' && !payment.transaction_id.startsWith('pay_')) {
+      console.log(`[Refund info] Payment method is '${payment.method}' (transaction ID: '${payment.transaction_id}'). Skipping gateway refund.`);
+      return { success: true, refunded: false, message: 'Non-Razorpay payment. No gateway refund needed.' };
+    }
+
+    console.log(`[Refund action] Initiating Razorpay refund for payment ID: ${payment.transaction_id}, amount: ${payment.amount}`);
+    
+    // Trigger Razorpay API refund
+    const refundAmountInPaise = Math.round(parseFloat(payment.amount) * 100);
+    const refundRes = await razorpay.payments.refund(payment.transaction_id, {
+      amount: refundAmountInPaise,
+      notes: {
+        order_id: orderId.toString(),
+        reason: reason
+      }
+    });
+
+    console.log(`[Refund success] Razorpay refund succeeded: ${refundRes.id}`);
+    
+    // Update payment record status
+    await db.run('UPDATE payments SET status = "Refunded" WHERE id = ?', [payment.id]);
+    
+    return { success: true, refunded: true, refundId: refundRes.id };
+  } catch (err) {
+    console.error(`[Refund error] Failed to refund via Razorpay: ${err.message}`);
+    return { success: false, error: err.message };
+  }
+}
+
 // Cancel Order (User only)
 app.post('/api/orders/:id/cancel', authenticateToken, async (req, res) => {
   try {
@@ -930,8 +968,18 @@ app.post('/api/orders/:id/cancel', authenticateToken, async (req, res) => {
     for (const item of items) {
       await db.run('UPDATE products SET stock = stock + ? WHERE id = ?', [item.quantity, item.product_id]);
     }
+
+    // Process payment refund
+    const refundRes = await processRazorpayRefund(orderId, 'Customer Cancelled Order');
     
-    res.json({ success: true, message: 'Order cancelled successfully' });
+    if (refundRes.success) {
+      const msg = refundRes.refunded 
+        ? 'Order cancelled and refund processed successfully.' 
+        : 'Order cancelled successfully.';
+      res.json({ success: true, message: msg });
+    } else {
+      res.json({ success: true, message: `Order cancelled successfully. Note: Automated refund failed (${refundRes.error}). Refund will be processed manually.` });
+    }
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -1565,6 +1613,18 @@ app.put('/api/orders/:id/status', adminIpFilter, authenticateAdmin, async (req, 
     }
 
     await db.run('UPDATE orders SET status = ? WHERE id = ?', [status, req.params.id]);
+
+    // Handle automated payment refund
+    if (isCancelling || isApprovedReturn) {
+      const refundRes = await processRazorpayRefund(req.params.id, `Admin ${status}`);
+      if (!refundRes.success) {
+        return res.json({ success: true, message: `Order status updated to ${status}. Note: Automated refund failed (${refundRes.error}). Please process the refund manually from your Razorpay Dashboard.` });
+      }
+      if (refundRes.refunded) {
+        return res.json({ success: true, message: `Order status updated to ${status} and payment refunded successfully.` });
+      }
+    }
+
     res.json({ success: true, message: `Order status updated to ${status}` });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
