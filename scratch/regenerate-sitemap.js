@@ -8,13 +8,22 @@ const path = require('path');
     const products = await db.query('SELECT id FROM products');
     let sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
     
-    const pages = ['index.html', 'products.html', 'cart.html', 'login.html', 'account.html', 'offers.html', 'about.html'];
+    const pages = [
+      { file: 'index.html', route: '' },
+      { file: 'products.html', route: 'products' },
+      { file: 'cart.html', route: 'cart' },
+      { file: 'login.html', route: 'login' },
+      { file: 'account.html', route: 'account' },
+      { file: 'offers.html', route: 'offers' },
+      { file: 'about.html', route: 'about' }
+    ];
+
     pages.forEach(p => {
-      sitemap += `  <url>\n    <loc>https://littletolargee.com/${p}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+      sitemap += `  <url>\n    <loc>https://littletolargee.com/${p.route}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
     });
 
     products.forEach(p => {
-      sitemap += `  <url>\n    <loc>https://littletolargee.com/product-detail.html?id=${p.id}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+      sitemap += `  <url>\n    <loc>https://littletolargee.com/product-detail?id=${p.id}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
     });
 
     sitemap += `</urlset>\n`;

@@ -175,12 +175,28 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Protect admin.html from unauthorized client access before serving static files
-app.get('/admin.html', adminIpFilter, (req, res) => {
+// Redirect .html requests to clean URLs
+app.use((req, res, next) => {
+  if (req.path.endsWith('.html') && req.path !== '/index.html') {
+    const cleanPath = req.path.slice(0, -5);
+    const query = req.url.slice(req.path.length);
+    return res.redirect(301, cleanPath + query);
+  }
+  if (req.path === '/index.html') {
+    const query = req.url.slice(req.path.length);
+    return res.redirect(301, '/' + query);
+  }
+  next();
+});
+
+// Protect admin.html and /admin from unauthorized client access before serving static files
+app.get(['/admin.html', '/admin'], adminIpFilter, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  extensions: ['html', 'htm']
+}));
 
 // Configure Multer for Image Uploads
 const storage = multer.diskStorage({
@@ -2320,13 +2336,24 @@ async function autoGenerateSitemap() {
     const products = await db.query('SELECT id FROM products');
     let sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
     
-    const pages = ['index.html', 'products.html', 'cart.html', 'login.html', 'account.html', 'offers.html', 'about.html', 'orders.html'];
+    // Clean, extensionless URLs
+    const pages = [
+      { file: 'index.html', route: '' },
+      { file: 'products.html', route: 'products' },
+      { file: 'cart.html', route: 'cart' },
+      { file: 'login.html', route: 'login' },
+      { file: 'account.html', route: 'account' },
+      { file: 'offers.html', route: 'offers' },
+      { file: 'about.html', route: 'about' },
+      { file: 'orders.html', route: 'orders' }
+    ];
+
     pages.forEach(p => {
-      sitemap += `  <url>\n    <loc>https://littletolargee.com/${p}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+      sitemap += `  <url>\n    <loc>https://littletolargee.com/${p.route}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
     });
 
     products.forEach(p => {
-      sitemap += `  <url>\n    <loc>https://littletolargee.com/product-detail.html?id=${p.id}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+      sitemap += `  <url>\n    <loc>https://littletolargee.com/product-detail?id=${p.id}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
     });
 
     sitemap += `</urlset>\n`;

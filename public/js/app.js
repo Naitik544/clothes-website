@@ -309,26 +309,26 @@ function renderHeaderFooter() {
         <div class="nav-actions">
           <button class="mobile-search-toggle" onclick="toggleMobileSearch()"><i class="fas fa-search"></i></button>
           
-          <form class="search-bar" action="products.html" method="GET">
+          <form class="search-bar" action="/products" method="GET">
             <input type="text" name="search" placeholder="Search clothes..." required>
             <button type="submit"><i class="fas fa-search"></i></button>
           </form>
           
-          <a href="account.html" class="action-icon" title="My Account" style="display:flex; align-items:center">
+          <a href="/account" class="action-icon" title="My Account" style="display:flex; align-items:center">
             ${user ? `<img src="${avatarImg}" class="header-avatar" alt="Avatar">` : `<i class="far fa-user"></i>`}
           </a>
           
-          <a href="account.html?tab=wishlist" class="action-icon" title="Wishlist">
+          <a href="/account?tab=wishlist" class="action-icon" title="Wishlist">
             <i class="far fa-heart"></i>
           </a>
 
-          <a href="cart.html" class="action-icon" title="Cart">
+          <a href="/cart" class="action-icon" title="Cart">
             <i class="fas fa-shopping-bag"></i>
             <span class="badge cart-badge">0</span>
           </a>
 
-          ${isAdmin ? `<a href="admin.html" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Admin</a>` : ''}
-          ${user ? `<button onclick="logout()" class="btn btn-accent" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Logout</button>` : `<a href="login.html" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Login</a>`}
+          ${isAdmin ? `<a href="/admin" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Admin</a>` : ''}
+          ${user ? `<button onclick="logout()" class="btn btn-accent" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Logout</button>` : `<a href="/login" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Login</a>`}
         </div>
       </div>
       
@@ -376,38 +376,38 @@ function renderHeaderFooter() {
                 <div class="drawer-user-email">Shop premium clothes</div>
               </div>
             </div>
-            <a href="login.html" class="drawer-login-btn" onclick="toggleNavDrawer()">Login / Sign Up</a>
+            <a href="/login" class="drawer-login-btn" onclick="toggleNavDrawer()">Login / Sign Up</a>
           `}
         </div>
 
         <div class="drawer-body">
           <!-- Section 1: Quick Actions -->
           <div class="drawer-links-group">
-            <a href="index.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-home"></i> Home</a>
-            <a href="products.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-shopping-bag"></i> Shop All Collections</a>
-            <a href="lookbook.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-book-open"></i> Interactive Lookbook</a>
-            <a href="account.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-user-circle"></i> My Profile Settings</a>
-            ${user ? `<a href="orders.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-box"></i> My Orders History</a>` : ''}
-            <a href="account.html?tab=wishlist" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-heart"></i> My Wishlist</a>
-            <a href="cart.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-shopping-cart"></i> My Shopping Bag</a>
+            <a href="/" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-home"></i> Home</a>
+            <a href="/products" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-shopping-bag"></i> Shop All Collections</a>
+            <a href="/lookbook" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-book-open"></i> Interactive Lookbook</a>
+            <a href="/account" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-user-circle"></i> My Profile Settings</a>
+            ${user ? `<a href="/orders" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-box"></i> My Orders History</a>` : ''}
+            <a href="/account?tab=wishlist" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-heart"></i> My Wishlist</a>
+            <a href="/cart" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-shopping-cart"></i> My Shopping Bag</a>
           </div>
 
           <!-- Section 2: Shop by Category -->
           <div class="drawer-section-title">Shop Categories</div>
           <div class="drawer-links-group">
-            <a href="products.html?category=Men" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-male"></i> Men's Wear</a>
-            <a href="products.html?category=Women" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-female"></i> Women's Wear</a>
-            <a href="products.html?category=Kids" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-child"></i> Children's Wear</a>
-            <a href="products.html?style=Ethnic" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-star"></i> Festival Wear</a>
-            <a href="products.html?sort=newest" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-fire"></i> New Trends</a>
+            <a href="/products?category=Men" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-male"></i> Men's Wear</a>
+            <a href="/products?category=Women" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-female"></i> Women's Wear</a>
+            <a href="/products?category=Kids" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-child"></i> Children's Wear</a>
+            <a href="/products?style=Ethnic" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-star"></i> Festival Wear</a>
+            <a href="/products?sort=newest" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-fire"></i> New Trends</a>
           </div>
 
           <!-- Section 3: More Info -->
           <div class="drawer-section-title">More Info</div>
           <div class="drawer-links-group">
-            <a href="offers.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-tags"></i> Promo Offers & Deals</a>
-            <a href="about.html" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-info-circle"></i> Our Brand Story</a>
-            <a href="about.html#contact" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-headset"></i> Contact Support</a>
+            <a href="/offers" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-tags"></i> Promo Offers & Deals</a>
+            <a href="/about" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-info-circle"></i> Our Brand Story</a>
+            <a href="/about#contact" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-headset"></i> Contact Support</a>
           </div>
 
           <!-- Section 4: Logout (If logged in) -->
@@ -439,19 +439,19 @@ function renderHeaderFooter() {
         <div class="footer-col">
           <h3>Quick Links</h3>
           <ul>
-            <li><a href="products.html">Collections</a></li>
-            <li><a href="offers.html">Deals & Coupons</a></li>
-            <li><a href="about.html">Our Brand Story</a></li>
-            <li><a href="about.html#contact">Contact Support</a></li>
+            <li><a href="/products">Collections</a></li>
+            <li><a href="/offers">Deals & Coupons</a></li>
+            <li><a href="/about">Our Brand Story</a></li>
+            <li><a href="/about#contact">Contact Support</a></li>
           </ul>
         </div>
         <div class="footer-col">
           <h3>Family Wardrobe</h3>
           <ul>
-            <li><a href="products.html?category=Men">Men's Apparel</a></li>
-            <li><a href="products.html?category=Women">Women's Sarees & Dresses</a></li>
-            <li><a href="products.html?category=Kids">Kids' Ethnic & Toddler Sets</a></li>
-            <li><a href="products.html?category=Accessories">Premium Accessories</a></li>
+            <li><a href="/products?category=Men">Men's Apparel</a></li>
+            <li><a href="/products?category=Women">Women's Sarees & Dresses</a></li>
+            <li><a href="/products?category=Kids">Kids' Ethnic & Toddler Sets</a></li>
+            <li><a href="/products?category=Accessories">Premium Accessories</a></li>
           </ul>
         </div>
         <div class="footer-col">
@@ -504,7 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Chatbot UI dynamic loader (External Integration)
 function setupChatbotUI() {
-  if (window.location.pathname.includes('admin.html')) return;
+  if (window.location.pathname.includes('admin')) return;
 
   const script = document.createElement('script');
   script.src = 'https://www.noupe.com/embed/019ef86078af765e89d9a700fd6f73d533b6.js';
