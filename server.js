@@ -339,7 +339,7 @@ app.post('/api/auth/firebase-login', async (req, res) => {
       const result = await db.run(`
         INSERT INTO customers (name, email, phone, password_hash, address_line, city, state, pincode)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `, [name, email, 'fb-' + Date.now(), 'firebase-auth-oauth', '', '', '', '']);
+      `, [name, email, 'fb' + Date.now().toString().slice(-12), 'firebase-auth-oauth', '', '', '', '']);
       customer = await db.get('SELECT * FROM customers WHERE id = ?', [result.insertId]);
     }
 
