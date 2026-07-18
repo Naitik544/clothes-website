@@ -316,30 +316,6 @@ async function processOrderSubmit(e) {
       return;
     }
 
-    const checkoutBtn = document.querySelector('.checkout-btn');
-    const originalText = checkoutBtn ? checkoutBtn.textContent : 'Place Secure Order';
-    if (checkoutBtn) {
-      checkoutBtn.disabled = true;
-      checkoutBtn.textContent = 'Verifying OTP...';
-    }
-
-    try {
-      if (window.confirmationResult) {
-        await window.confirmationResult.confirm(otp);
-        showToast('🎉 Phone number verified successfully!', 'success');
-      } else {
-        console.warn('Firebase confirmationResult missing. Verifying simulation OTP via backend.');
-      }
-    } catch (err) {
-      console.error('OTP Verification Failure:', err);
-      showToast('Invalid or incorrect verification OTP code!', 'error');
-      if (checkoutBtn) {
-        checkoutBtn.disabled = false;
-        checkoutBtn.textContent = originalText;
-      }
-      return;
-    }
-
     const orderPayload = {
       items: cart.map(item => ({
         product_id: item.product_id,
@@ -352,7 +328,7 @@ async function processOrderSubmit(e) {
       shipping_address: `${name}, ${address}, ${state} - ${pincode} (Tel: ${phone})`,
       payment_method: 'COD',
       transaction_id: 'COD-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-      otp: window.confirmationResult ? 'FIREBASE_VERIFIED' : otp,
+      otp: otp,
       phone: phone
     };
 
@@ -515,74 +491,38 @@ async function sendCodVerificationOtp() {
   btn.disabled = true;
   btn.textContent = 'Sending...';
 
-  // Check if Firebase is available
-  if (typeof firebase === 'undefined') {
-    console.warn('Firebase SDK not found. Falling back to backend simulation mode.');
-    try {
-      const res = await fetch('/api/orders/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone })
-      });
-      const data = await res.json();
-      if (data.success) {
-        showToast('🎉 Simulation OTP sent to server console!', 'success');
-        document.getElementById('otpInputArea').style.display = 'flex';
-        btn.textContent = 'Resend OTP';
-        btn.style.background = '#6b7280';
-        
-        let cooldown = 30;
-        const interval = setInterval(() => {
-          cooldown--;
-          if (cooldown <= 0) {
-            clearInterval(interval);
-            btn.disabled = false;
-            btn.textContent = 'Resend OTP';
-            btn.style.background = 'var(--primary)';
-          } else {
-            btn.textContent = `Wait ${cooldown}s`;
-          }
-        }, 1000);
-      } else {
-        showToast(data.message || 'Failed to send verification OTP', 'error');
-        btn.disabled = false;
-        btn.textContent = 'Send SMS OTP';
-      }
-    } catch (err) {
-      showToast('Error sending OTP. Please try again.', 'error');
+  try {
+    const res = await fetch('/api/orders/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('🎉 OTP verification code sent via SMS!', 'success');
+      document.getElementById('otpInputArea').style.display = 'flex';
+      btn.textContent = 'Resend OTP';
+      btn.style.background = '#6b7280';
+      
+      let cooldown = 30;
+      const interval = setInterval(() => {
+        cooldown--;
+        if (cooldown <= 0) {
+          clearInterval(interval);
+          btn.disabled = false;
+          btn.textContent = 'Resend OTP';
+          btn.style.background = 'var(--primary)';
+        } else {
+          btn.textContent = `Wait ${cooldown}s`;
+        }
+      }, 1000);
+    } else {
+      showToast(data.message || 'Failed to send verification OTP', 'error');
       btn.disabled = false;
       btn.textContent = 'Send SMS OTP';
     }
-    return;
-  }
-
-  // Real Firebase Phone OTP Authentication
-  const phoneNumber = '+91' + phone; // India prefix
-  const appVerifier = window.recaptchaVerifier;
-
-  try {
-    const confirmationResult = await firebase.auth().signInWithPhoneNumber(phoneNumber, appVerifier);
-    window.confirmationResult = confirmationResult;
-    showToast('🎉 Firebase OTP verification code sent via SMS!', 'success');
-    document.getElementById('otpInputArea').style.display = 'flex';
-    btn.textContent = 'Resend OTP';
-    btn.style.background = '#6b7280';
-    
-    let cooldown = 30;
-    const interval = setInterval(() => {
-      cooldown--;
-      if (cooldown <= 0) {
-        clearInterval(interval);
-        btn.disabled = false;
-        btn.textContent = 'Resend OTP';
-        btn.style.background = 'var(--primary)';
-      } else {
-        btn.textContent = `Wait ${cooldown}s`;
-      }
-    }, 1000);
   } catch (err) {
-    console.error('Firebase COD OTP Send Error:', err);
-    showToast(err.message || 'Failed to send OTP. Ensure Phone Auth is enabled in Firebase.', 'error');
+    showToast('Error sending OTP. Please try again.', 'error');
     btn.disabled = false;
     btn.textContent = 'Send SMS OTP';
   }

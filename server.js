@@ -892,6 +892,7 @@ app.post('/api/orders/send-otp', async (req, res) => {
     const twilioSid = process.env.TWILIO_ACCOUNT_SID;
     const twilioAuth = process.env.TWILIO_AUTH_TOKEN;
     const twilioFrom = process.env.TWILIO_FROM_PHONE;
+    const fast2smsKey = process.env.FAST2SMS_API_KEY;
 
     if (twilioSid && twilioAuth && twilioFrom) {
       try {
@@ -913,6 +914,18 @@ app.post('/api/orders/send-otp', async (req, res) => {
         console.log(`[SMS OTP SUCCESS] Successfully sent via Twilio to ${phone}`);
       } catch (err) {
         console.error(`[SMS OTP ERROR] Failed to send via Twilio: ${err.message}`);
+      }
+    } else if (fast2smsKey) {
+      try {
+        const cleanPhone = phone.replace(/\D/g, '');
+        const tenDigitPhone = cleanPhone.length > 10 ? cleanPhone.slice(-10) : cleanPhone;
+        const url = `https://www.fast2sms.com/dev/bulkV2?authorization=${fast2smsKey}&variables_values=${otp}&route=otp&numbers=${tenDigitPhone}`;
+        
+        const f2sRes = await fetch(url);
+        const f2sData = await f2sRes.json();
+        console.log(`[SMS OTP SUCCESS] Fast2SMS Response for ${tenDigitPhone}:`, f2sData);
+      } catch (err) {
+        console.error(`[SMS OTP ERROR] Failed to send via Fast2SMS: ${err.message}`);
       }
     }
 

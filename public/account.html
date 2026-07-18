@@ -727,6 +727,38 @@
                   </div>
                 </div>
 
+                <!-- Visual Order Timeline -->
+                <div style="margin: 1.5rem 0 1rem 0; display:flex; justify-content:space-between; align-items:center; position:relative; padding:0 20px;">
+                  <!-- Background Progress Line -->
+                  <div style="position:absolute; top:10px; left:10%; right:10%; height:4px; background:#e0e0e0; z-index:1;">
+                    <div style="height:100%; width:${o.status.toUpperCase() === 'DELIVERED' ? '100%' : (o.status.toUpperCase() === 'SHIPPED' || o.tracking_number ? '50%' : '0%')}; background:#10b981; transition: width 0.4s ease;"></div>
+                  </div>
+                  
+                  <!-- Step 1: Placed -->
+                  <div style="position:relative; z-index:2; text-align:center; display:flex; flex-direction:column; align-items:center; gap:6px;">
+                    <div style="width:22px; height:22px; border-radius:50%; background:#10b981; color:#fff; display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.1)">
+                      <i class="fas fa-check"></i>
+                    </div>
+                    <span style="font-size:0.75rem; font-weight:700; color:var(--text-main)">Placed</span>
+                  </div>
+                  
+                  <!-- Step 2: Shipped -->
+                  <div style="position:relative; z-index:2; text-align:center; display:flex; flex-direction:column; align-items:center; gap:6px;">
+                    <div style="width:22px; height:22px; border-radius:50%; background:${o.status.toUpperCase() === 'DELIVERED' || o.status.toUpperCase() === 'SHIPPED' || o.tracking_number ? '#10b981' : '#e0e0e0'}; color:#fff; display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.1)">
+                      <i class="fas fa-shipping-fast"></i>
+                    </div>
+                    <span style="font-size:0.75rem; font-weight:700; color:${o.status.toUpperCase() === 'DELIVERED' || o.status.toUpperCase() === 'SHIPPED' || o.tracking_number ? 'var(--text-main)' : 'var(--text-light)'}">Shipped</span>
+                  </div>
+                  
+                  <!-- Step 3: Delivered -->
+                  <div style="position:relative; z-index:2; text-align:center; display:flex; flex-direction:column; align-items:center; gap:6px;">
+                    <div style="width:22px; height:22px; border-radius:50%; background:${o.status.toUpperCase() === 'DELIVERED' ? '#10b981' : '#e0e0e0'}; color:#fff; display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.1)">
+                      <i class="fas fa-box-open"></i>
+                    </div>
+                    <span style="font-size:0.75rem; font-weight:700; color:${o.status.toUpperCase() === 'DELIVERED' ? 'var(--text-main)' : 'var(--text-light)'}">Delivered</span>
+                  </div>
+                </div>
+
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1.2rem; border-top:1px dashed var(--border-color); padding-top:0.8rem; flex-wrap:wrap; gap:10px">
                   <div style="display:flex; flex-direction:column; gap:4px">
                     <span style="font-size:0.88rem">Status: <strong style="color:${statusColor}">${o.status}</strong></span>
