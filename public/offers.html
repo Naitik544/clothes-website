@@ -23,40 +23,7 @@
     </div>
   </section>
 
-  <!-- Deal of the Day Count Down -->
-  <section class="container" style="margin: 3.5rem auto; text-align:center">
-    <div style="background-color: var(--primary); color:#fff; border-radius:var(--radius-lg); padding:2rem; display:inline-flex; align-items:center; gap:2rem; flex-wrap:wrap; justify-content:center">
-      <div style="text-align:left">
-        <h3 style="font-size:1.2rem; font-weight:700; color:var(--marigold)">⚡ FLASH DEAL OF THE DAY</h3>
-        <p style="font-size:0.88rem; color:rgba(255,255,255,0.8)">Get an extra 15% off on Men's Saffron silk Kurtas.</p>
-      </div>
-      <div style="display:flex; gap:8px" id="countdownTimerContainer">
-        <div class="timer-box"><span id="timeHr">04</span><p>Hrs</p></div>
-        <div class="timer-box"><span id="timeMin">59</span><p>Mins</p></div>
-        <div class="timer-box"><span id="timeSec">59</span><p>Secs</p></div>
-      </div>
-    </div>
-    <style>
-      .timer-box {
-        background: rgba(255,255,255,0.1);
-        padding: 0.5rem 0.8rem;
-        border-radius: 8px;
-        min-width: 60px;
-        border: 1px solid rgba(255,255,255,0.1);
-      }
-      .timer-box span {
-        font-size: 1.4rem;
-        font-weight: 800;
-        color: var(--marigold);
-      }
-      .timer-box p {
-        font-size: 0.68rem;
-        text-transform: uppercase;
-        margin: 0;
-        opacity: 0.7;
-      }
-    </style>
-  </section>
+
 
   <!-- Coupon Code Cards -->
   <section class="container" style="margin-bottom: 5rem;">
@@ -164,28 +131,7 @@
       });
     }
 
-    // Countdown Timer animation
-    function startCountdown() {
-      let seconds = 17999; // 5 hours approx
-      const hDisplay = document.getElementById('timeHr');
-      const mDisplay = document.getElementById('timeMin');
-      const sDisplay = document.getElementById('timeSec');
 
-      setInterval(() => {
-        seconds--;
-        if (seconds <= 0) seconds = 17999;
-        
-        const hrs = Math.floor(seconds / 3600).toString().padStart(2, '0');
-        const mins = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
-        const secs = (seconds % 60).toString().padStart(2, '0');
-
-        if (hDisplay) {
-          hDisplay.textContent = hrs;
-          mDisplay.textContent = mins;
-          sDisplay.textContent = secs;
-        }
-      }, 1000);
-    }
 
     // Load clearance items
     async function loadClearanceItems() {
@@ -298,7 +244,6 @@
       }
     }
 
-    startCountdown();
     loadClearanceItems();
     loadCoupons();
   </script>
