@@ -1246,11 +1246,13 @@ function generateBannerImage(type) {
     previewImg.src = url;
     previewArea.style.display = 'block';
     
+    // Assign instantly so the admin doesn't have to wait for preview download to click save
+    if (targetInput) {
+      targetInput.value = url;
+    }
+    
     previewImg.onload = () => {
-      if (targetInput) {
-        targetInput.value = url;
-        showToast('🎉 AI Image successfully generated and applied!', 'success');
-      }
+      showToast('🎉 AI Image successfully generated and applied!', 'success');
     };
   }
 }
