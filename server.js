@@ -1043,7 +1043,7 @@ app.get('/api/orders/:id', authenticateToken, async (req, res) => {
 // Process automated Razorpay refund
 async function processRazorpayRefund(orderId, reason = 'Order Cancelled') {
   try {
-    const payment = await db.get('SELECT * FROM payments WHERE order_id = ? AND status = "Success"', [orderId]);
+    const payment = await db.get("SELECT * FROM payments WHERE order_id = ? AND status = 'Success'", [orderId]);
     if (!payment) {
       console.log(`[Refund info] No successful payment found for Order #${orderId}. Assuming COD or free order. Skipping gateway refund.`);
       return { success: true, refunded: false, message: 'COD or unpaid order. No gateway refund needed.' };
@@ -1069,7 +1069,7 @@ async function processRazorpayRefund(orderId, reason = 'Order Cancelled') {
     console.log(`[Refund success] Razorpay refund succeeded: ${refundRes.id}`);
     
     // Update payment record status
-    await db.run('UPDATE payments SET status = "Refunded" WHERE id = ?', [payment.id]);
+    await db.run("UPDATE payments SET status = 'Refunded' WHERE id = ?", [payment.id]);
     
     return { success: true, refunded: true, refundId: refundRes.id };
   } catch (err) {
@@ -1093,7 +1093,7 @@ app.post('/api/orders/:id/cancel', authenticateToken, async (req, res) => {
     }
     
     // Update status
-    await db.run('UPDATE orders SET status = "Cancelled" WHERE id = ?', [orderId]);
+    await db.run("UPDATE orders SET status = 'Cancelled' WHERE id = ?", [orderId]);
     
     // Restore inventory
     const items = await db.query('SELECT * FROM order_items WHERE order_id = ?', [orderId]);
@@ -1175,7 +1175,7 @@ app.post('/api/orders/:id/return', authenticateToken, async (req, res) => {
 
     // Update status and store return reason/comments
     await db.run(
-      'UPDATE orders SET status = "Return Requested", return_reason = ?, return_comments = ? WHERE id = ?',
+      "UPDATE orders SET status = 'Return Requested', return_reason = ?, return_comments = ? WHERE id = ?",
       [reason, comments, orderId]
     );
     
