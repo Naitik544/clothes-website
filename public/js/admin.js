@@ -487,6 +487,8 @@ function openAddProductModal() {
   document.getElementById('productModalTitle').textContent = 'Add New Clothing Product';
   document.getElementById('productForm').reset();
   document.getElementById('prodReturnWindow').value = '7';
+  document.getElementById('productAiPreviewArea').style.display = 'none';
+  document.getElementById('productAiPrompt').value = '';
   document.getElementById('productModal').style.display = 'flex';
 }
 
@@ -507,6 +509,11 @@ function openEditProductModal(id) {
   document.getElementById('prodSizes').value = product.size_variants;
   document.getElementById('prodReturnWindow').value = product.return_window_days !== undefined ? product.return_window_days : '7';
   document.getElementById('prodDesc').value = product.description;
+  
+  const urls = JSON.parse(product.image_urls || '[]');
+  document.getElementById('prodImageUrl').value = urls.length > 0 ? urls[0] : '';
+  document.getElementById('productAiPreviewArea').style.display = 'none';
+  document.getElementById('productAiPrompt').value = '';
 
   document.getElementById('productModal').style.display = 'flex';
 }
@@ -1194,5 +1201,56 @@ async function handleAdminPasswordChange(e) {
     }
   } catch (err) {
     showToast('Error updating password', 'error');
+  }
+}
+
+// Generate banner/product image via Pollinations.ai API
+function generateBannerImage(type) {
+  let promptId, previewAreaId, previewImgId, targetInputId;
+  
+  if (type === 'hero') {
+    promptId = 'heroAiPrompt';
+    previewAreaId = 'heroAiPreviewArea';
+    previewImgId = 'heroAiPreview';
+    targetInputId = 'heroMediaUrlInput';
+  } else if (type === 'promo') {
+    promptId = 'promoAiPrompt';
+    previewAreaId = 'promoAiPreviewArea';
+    previewImgId = 'promoAiPreview';
+    targetInputId = 'promoMediaUrl';
+  } else if (type === 'product') {
+    promptId = 'productAiPrompt';
+    previewAreaId = 'productAiPreviewArea';
+    previewImgId = 'productAiPreview';
+    targetInputId = 'prodImageUrl';
+  }
+
+  const promptInput = document.getElementById(promptId);
+  const prompt = promptInput ? promptInput.value.trim() : '';
+
+  if (!prompt) {
+    showToast('Please type a descriptive prompt first!', 'warning');
+    return;
+  }
+
+  showToast('Generating AI Image... please wait a few seconds.', 'info');
+  
+  const previewArea = document.getElementById(previewAreaId);
+  const previewImg = document.getElementById(previewImgId);
+  const targetInput = document.getElementById(targetInputId);
+  
+  const seed = Math.floor(Math.random() * 1000000);
+  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1080&height=1080&nologo=true&seed=${seed}`;
+
+  if (previewImg && previewArea) {
+    previewImg.src = url;
+    previewArea.style.display = 'block';
+    
+    previewImg.onload = () => {
+      if (targetInput) {
+        targetInput.value = url;
+        showToast('🎉 AI Image successfully generated and applied!', 'success');
+      }
+    };
   }
 }

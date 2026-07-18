@@ -1444,7 +1444,7 @@ app.get('/api/orders/:id/invoice', authenticateToken, async (req, res) => {
     <!-- Footer -->
     <div style="border-top: 1px solid #eee; padding-top: 20px; text-align: center; font-size: 0.8rem; color: #888; line-height: 1.5; font-family: sans-serif;">
       <p>Thank you for shopping with Little to Large! We hope your family loves the new wardrobe styles.</p>
-      <p><strong>Return Policy:</strong> Garments can be returned or exchanged within 7 days of delivery. Keep original tags intact.</p>
+      <p><strong>Replacement Policy:</strong> Order replacement is allowed, no returns. Keep original tags intact.</p>
       <p>Need help? Contact our support team at <strong>support@littlelarge.in</strong> or call <strong>+91 9988776655</strong>.</p>
       <button class="print-btn" onclick="window.print()">Print Invoice</button>
     </div>
@@ -1873,6 +1873,8 @@ app.post('/api/products', adminIpFilter, authenticateAdmin, upload.array('images
     let images = [];
     if (req.files && req.files.length > 0) {
       images = req.files.map(f => '/images/uploads/' + f.filename);
+    } else if (req.body.image_url) {
+      images = [req.body.image_url];
     } else {
       // Fallback placeholder image
       images = ['/images/products/placeholder.jpg'];
@@ -1904,6 +1906,8 @@ app.put('/api/products/:id', adminIpFilter, authenticateAdmin, upload.array('ima
       // Append new images
       const newImages = req.files.map(f => '/images/uploads/' + f.filename);
       images = [...images, ...newImages];
+    } else if (req.body.image_url) {
+      images = [req.body.image_url];
     }
 
     const returnDays = return_window_days !== undefined && return_window_days !== '' ? parseInt(return_window_days) : 7;
@@ -2015,11 +2019,23 @@ app.post('/api/chat', async (req, res) => {
 
   // 2. Fetch inventory catalog data
   let catalogSummary = '';
+  let productsList = [];
   try {
-    const products = await db.query('SELECT id, name, category, price FROM products LIMIT 6');
-    catalogSummary = products.map(p => `#${p.id} ${p.name} (Cat: ${p.category}, Price: ₹${p.price})`).join('; ');
+    productsList = await db.query('SELECT id, name, category, subcategory, price, description, stock FROM products LIMIT 50');
+    catalogSummary = productsList.map(p => `#${p.id} ${p.name} (Category: ${p.category}, Style: ${p.subcategory || 'General'}, Price: ₹${p.price}, Stock: ${p.stock} units. Description: ${p.description})`).join('\n');
   } catch (err) {
-    // Ignore catalog fetch failures
+    console.error('Catalog fetch error:', err.message);
+  }
+
+  // 3. Fetch active promotions/banners
+  let activePromosSummary = 'No active promotions.';
+  try {
+    const activePromos = await db.query("SELECT title, subtitle FROM promotions WHERE status = 'active'");
+    if (activePromos.length > 0) {
+      activePromosSummary = activePromos.map(p => `- ${p.title}: ${p.subtitle || ''}`).join('\n');
+    }
+  } catch (err) {
+    console.error('Promotions fetch error:', err.message);
   }
 
   const geminiKey = process.env.GEMINI_API_KEY;
@@ -2029,13 +2045,24 @@ app.post('/api/chat', async (req, res) => {
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       
       const prompt = `
-        You are "Little to Large Assistant", a friendly AI style consultant.
-        Customer Profile History: ${historySummary}
-        Available Store Catalog: ${catalogSummary}
+        You are "Noupe", the official AI shopping assistant for "Little to Large" premium family clothing e-store.
         
-        Customer says: "${message}"
-        Provide a customized response. Recommend products from our catalog when relevant.
-        Keep it concise, under 3 paragraphs. Do not mention code placeholders.
+        STRICT RULES:
+        1. You must ONLY discuss products, categories, active promotions, shipping fees, return/replacement policies, and information of "Little to Large" store.
+        2. DO NOT hallucinate, invent, or recommend products not present in the Store Catalog list below. If a requested category or item is missing, politely say we don't have it.
+        3. If the user asks about anything unrelated to this website (e.g., general knowledge, math, other brands, writing code, general questions), politely refuse and guide them back to shopping here.
+        4. Do not mention code variables, database ids, or technical placeholders.
+        
+        STORE INFO:
+        - Categories: Men, Women, Kids, Accessories.
+        - Active Promotions:\n${activePromosSummary}
+        - Store Catalog:\n${catalogSummary || 'No products currently available.'}
+        - Customer Past Purchases: ${historySummary}
+        - Policies: Free shipping on orders above ₹999. Shipping fee is ₹60 otherwise. Replacement is allowed, no returns.
+        
+        Customer message: "${message}"
+        
+        Provide a helpful, precise, and concise style response. Recommendation links should point to product-detail.html?id=[ID].
       `;
       
       const result = await model.generateContent(prompt);
@@ -2046,19 +2073,22 @@ app.post('/api/chat', async (req, res) => {
     }
   }
 
-  // Local sandbox fallback mode
+  // Local sandbox fallback mode (fully dynamic)
   const query = message.toLowerCase();
-  let reply = `🤖 [Local Assistant Sandbox Mode - Configure GEMINI_API_KEY in .env for full AI] \n\n`;
-  if (query.includes('ethnic') || query.includes('kurta') || query.includes('saree')) {
-    reply += `✨ We have beautiful ethnic collections like "Men's Saffron Silk Kurta" and "Women's Emerald Banarasi Saree". Check out the ethnic catalog!`;
-  } else if (query.includes('kids') || query.includes('baby') || query.includes('boy') || query.includes('girl')) {
-    reply += `👶 For kids, our "Cotton Dungaree Set" and "Girl's Lehenga Choli Set" are very popular family selections!`;
-  } else if (query.includes('offer') || query.includes('discount') || query.includes('coupon')) {
-    reply += `🏷️ Use coupon code **WELCOME10** for 10% off, or **FAMILY40** for 40% off accessories!`;
-  } else if (query.includes('shipping') || query.includes('delivery')) {
-    reply += `🚚 We offer free shipping on orders above ₹999. Normal delivery takes 3-5 business days.`;
+  let reply = `🤖 [Noupe Local Assistant - Configure GEMINI_API_KEY for full AI] \n\n`;
+  if (productsList.length > 0) {
+    const matches = productsList.filter(p => query.includes(p.name.toLowerCase()) || query.includes(p.category.toLowerCase()) || query.includes((p.subcategory || '').toLowerCase()));
+    if (matches.length > 0) {
+      reply += `🛍️ Based on your query, here are some items we have:\n`;
+      matches.slice(0, 3).forEach(p => {
+        reply += `- **${p.name}** (₹${p.price}) in ${p.category} - ${p.description}\n`;
+      });
+      reply += `\nType 'order status' or ask about shipping/replacement rules for more info!`;
+    } else {
+      reply += `Hello! I'm Noupe. We offer premium family fashion in Men, Women, Kids, and Accessories. Tell me, what category are you looking for today?`;
+    }
   } else {
-    reply += `Hello! I'm your fashion consultant. I see your history matches: "${historySummary}". Tell me, are you shopping for Men, Women, or Kids outfits today?`;
+    reply += `Welcome to Little to Large! We are currently uploading our new arrivals. Please check back shortly to see our premium family clothing catalog!`;
   }
 
   return res.json({ success: true, response: reply });
@@ -2124,11 +2154,19 @@ app.post('/api/promotions', adminIpFilter, authenticateAdmin, upload.single('ima
     return res.status(400).json({ success: false, message: 'Please upload a banner image file OR paste an image URL/path' });
   }
 
+  let formattedStart, formattedEnd;
+  try {
+    formattedStart = new Date(start_date).toISOString();
+    formattedEnd = new Date(end_date).toISOString();
+  } catch (e) {
+    return res.status(400).json({ success: false, message: 'Invalid start or end date format provided' });
+  }
+
   try {
     await db.run(
       `INSERT INTO promotions (title, subtitle, bg_color, media_url, link_url, start_date, end_date, priority, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
-      [title, subtitle, bg_color || 'var(--primary)', final_media_url, link_url, start_date, end_date, parseInt(priority) || 0]
+      [title, subtitle, bg_color || 'var(--primary)', final_media_url, link_url, formattedStart, formattedEnd, parseInt(priority) || 0]
     );
     res.json({ success: true, message: 'Promotion added successfully' });
   } catch (err) {

@@ -297,6 +297,122 @@ function initEntranceAnimations() {
   });
 }
 
+// 11. INTERACTIVE SHOPPING GUIDE & USER ONBOARDING WIDGET
+function initInteractiveShopperGuide() {
+  // Only inject on storefront customer pages (avoid admin)
+  if (window.location.pathname.includes('admin') || window.location.pathname.includes('login') && !window.location.pathname.endsWith('/')) {
+    return;
+  }
+
+  const guideBtn = document.createElement('div');
+  guideBtn.id = 'shopperGuideBtn';
+  guideBtn.innerHTML = `<i class="fas fa-lightbulb"></i> Guide`;
+  guideBtn.style.cssText = `
+    position: fixed;
+    bottom: 85px;
+    right: 20px;
+    background: linear-gradient(135deg, var(--marigold), #f59e0b);
+    color: var(--primary);
+    padding: 10px 18px;
+    border-radius: 50px;
+    font-weight: 800;
+    font-size: 0.85rem;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+    cursor: pointer;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255,255,255,0.2);
+  `;
+  
+  const guideCard = document.createElement('div');
+  guideCard.id = 'shopperGuideCard';
+  guideCard.style.cssText = `
+    position: fixed;
+    bottom: 145px;
+    right: -400px;
+    width: 320px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(30, 27, 75, 0.15);
+    border: 1px solid var(--border-color);
+    padding: 18px;
+    z-index: 9999;
+    font-family: inherit;
+    transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  `;
+  
+  guideCard.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid #f1f5f9; padding-bottom:10px; margin-bottom:12px;">
+      <h4 style="margin:0; font-size:0.95rem; color:var(--primary); font-weight:800; display:flex; align-items:center; gap:6px;">
+        <span style="font-size:1.1rem;">🛍️</span> Shopper Guide
+      </h4>
+      <button id="closeGuideBtn" style="background:none; border:none; color:var(--text-light); cursor:pointer; font-size:0.9rem;"><i class="fas fa-times"></i></button>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:0.8rem; line-height:1.45; color:var(--text-dark);">
+      <div style="display:flex; gap:8px;">
+        <span style="font-weight:800; color:var(--marigold-dark);">1.</span>
+        <span>Browse categories like <strong>Men, Women, or Kids</strong> outfits from the navigation.</span>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <span style="font-weight:800; color:var(--marigold-dark);">2.</span>
+        <span>Select your desired <strong>Color swatch</strong> and <strong>Size</strong> on product details.</span>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <span style="font-weight:800; color:var(--marigold-dark);">3.</span>
+        <span>Add items to cart. (Cart gets <strong>Free Shipping</strong> above ₹999!)</span>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <span style="font-weight:800; color:var(--marigold-dark);">4.</span>
+        <span>Open Cart, type active promo code like <strong>WELCOME10</strong>, and click Apply.</span>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <span style="font-weight:800; color:var(--marigold-dark);">5.</span>
+        <span>Select Cash on Delivery (COD) or online payment, fill shipping details, type the Captcha, and click Place Order!</span>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(guideBtn);
+  document.body.appendChild(guideCard);
+  
+  // Show card on button click
+  guideBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    guideCard.style.right = '20px';
+    guideBtn.style.transform = 'scale(0.9) rotate(-3deg)';
+  });
+  
+  // Hide card on close click
+  guideCard.querySelector('#closeGuideBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    guideCard.style.right = '-400px';
+    guideBtn.style.transform = 'scale(1) rotate(0deg)';
+  });
+  
+  // Hide on click outside
+  document.addEventListener('click', (e) => {
+    if (!guideCard.contains(e.target) && e.target !== guideBtn) {
+      guideCard.style.right = '-400px';
+      guideBtn.style.transform = 'scale(1) rotate(0deg)';
+    }
+  });
+
+  // Pulse effect periodically to draw attention
+  setInterval(() => {
+    if (guideCard.style.right !== '20px') {
+      guideBtn.style.transform = 'scale(1.1)';
+      setTimeout(() => {
+        if (guideCard.style.right !== '20px') {
+          guideBtn.style.transform = 'scale(1)';
+        }
+      }, 300);
+    }
+  }, 8000);
+}
+
 // Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
   initGlobalProgressBar();
@@ -305,4 +421,5 @@ document.addEventListener('DOMContentLoaded', () => {
   setupLazyImages();
   initPremium3DEffects();
   initEntranceAnimations();
+  initInteractiveShopperGuide();
 });

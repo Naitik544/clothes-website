@@ -115,6 +115,20 @@
     </div>
   </section>
 
+  <!-- New Arrivals & Recommended Section -->
+  <section class="container" style="margin-bottom: 5rem;">
+    <div class="section-title">
+      <h2>🔥 New Arrivals & Recommended</h2>
+      <p>Check out the freshest additions to our premium family wardrobe</p>
+    </div>
+    
+    <div class="products-grid" id="newArrivalsGrid">
+      <div style="grid-column: 1/-1; text-align:center; padding:2rem; color:var(--text-light)">
+        Loading new arrivals...
+      </div>
+    </div>
+  </section>
+
   <!-- Promotional Banner -->
   <section class="container" style="margin-bottom: 5rem;">
     <div style="background: linear-gradient(135deg, hsl(243, 75%, 19%) 0%, hsl(16, 96%, 53%) 100%); border-radius: var(--radius-lg); padding: 4rem; color: #fff; position: relative; overflow: hidden; box-shadow: var(--shadow-lg);">
@@ -282,7 +296,6 @@
             const discountPercentHtml = p.discount_price ? `<span class="discount-pct">${Math.round(((p.price - p.discount_price) / p.price) * 100)}% OFF</span>` : '';
             const priceVal = p.discount_price || p.price;
             
-            // Build stars
             let stars = '';
             const floorRating = Math.floor(p.rating || 0);
             for (let i = 1; i <= 5; i++) {
@@ -295,7 +308,6 @@
               }
             }
 
-            // Check if wishlist contains item
             const wishlist = getLocalWishlist();
             const isInWishlist = wishlist.includes(p.id);
 
@@ -333,6 +345,70 @@
               </div>
             `;
           });
+
+          // Show latest 4 products as New Arrivals & Recommended
+          const newGrid = document.getElementById('newArrivalsGrid');
+          if (newGrid) {
+            newGrid.innerHTML = '';
+            const sortedNew = [...data.products].sort((a, b) => b.id - a.id).slice(0, 4);
+            sortedNew.forEach(p => {
+              const images = JSON.parse(p.image_urls || '[]');
+              const mainImg = images[0] || 'images/products/placeholder.jpg';
+              const oldPriceHtml = p.discount_price ? `<span class="old-price">₹${p.price}</span>` : '';
+              const discountPercentHtml = p.discount_price ? `<span class="discount-pct">${Math.round(((p.price - p.discount_price) / p.price) * 100)}% OFF</span>` : '';
+              const priceVal = p.discount_price || p.price;
+              
+              let stars = '';
+              const floorRating = Math.floor(p.rating || 0);
+              for (let i = 1; i <= 5; i++) {
+                if (i <= floorRating) stars += '<i class="fas fa-star"></i>';
+                else if (i - 0.5 <= (p.rating || 0)) stars += '<i class="fas fa-star-half-alt"></i>';
+                else stars += '<i class="far fa-star"></i>';
+              }
+
+              const wishlist = getLocalWishlist();
+              const isInWishlist = wishlist.includes(p.id);
+
+              newGrid.innerHTML += `
+                <div class="product-card">
+                  <span class="badge-tag" style="background:#10b981">New</span>
+                  <div class="product-img-wrapper" onclick="window.location.href='product-detail.html?id=${p.id}'" style="cursor:pointer">
+                    <img src="${mainImg}" alt="${p.name}" onerror="this.src='/images/products/placeholder.jpg'">
+                  </div>
+                  <button class="wishlist-btn ${isInWishlist ? 'active' : ''}" onclick="event.stopPropagation(); handleWishlistToggle(${p.id}, this)">
+                    <i class="fas fa-heart"></i>
+                  </button>
+                  <div class="product-details">
+                    <span class="product-cat">${p.category} | ${p.subcategory}</span>
+                    <a href="product-detail.html?id=${p.id}" class="product-name">${p.name}</a>
+                    <div class="product-rating">
+                      ${stars}
+                      <span class="rating-num">(${p.rating || '5.0'})</span>
+                    </div>
+                    <div class="product-pricing">
+                      <span class="price">₹${priceVal}</span>
+                      ${oldPriceHtml}
+                      ${discountPercentHtml}
+                    </div>
+                    ${p.stock <= 0 ? `
+                      <button class="btn-add-cart out-of-stock" disabled style="background:#cbd5e1 !important; border-color:#cbd5e1 !important; color:#64748b !important; cursor:not-allowed">
+                        <i class="fas fa-ban"></i> Out of Stock
+                      </button>
+                    ` : `
+                      <button class="btn-add-cart" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')})">
+                        <i class="fas fa-shopping-basket"></i> Add to Box
+                      </button>
+                    `}
+                  </div>
+                </div>
+              `;
+            });
+          }
+        } else {
+          const grid = document.getElementById('featuredProductsGrid');
+          const newGrid = document.getElementById('newArrivalsGrid');
+          if (grid) grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:2rem; color:var(--text-light)">No featured products available.</div>';
+          if (newGrid) newGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:2rem; color:var(--text-light)">No new arrivals available.</div>';
         }
       } catch (err) {
         console.error('Failed to load products', err);

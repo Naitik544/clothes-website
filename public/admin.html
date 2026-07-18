@@ -280,6 +280,20 @@
                   <input type="text" id="heroMediaUrlInput" class="form-input" placeholder="e.g. images/hero_ethnic.png" style="width:100%">
                 </div>
               </div>
+
+              <!-- AI Image Generator for Hero Banner -->
+              <div style="background: hsl(243, 75%, 97%); border: 1px dashed var(--primary); padding: 12px; border-radius: 8px; margin-top: 5px; width: 100%;">
+                <label style="font-weight:700; font-size:0.8rem; color:var(--primary); display:block; margin-bottom:5px;">✨ Generate Hero Image with AI (Pollinations.ai)</label>
+                <div style="display:flex; gap:8px;">
+                  <input type="text" id="heroAiPrompt" class="form-input" placeholder="e.g. Luxury ethnic family fashion banner, warm lighting, gold accents" style="flex:1; font-size:0.8rem;">
+                  <button type="button" onclick="generateBannerImage('hero')" class="btn btn-primary" style="padding:0.4rem 1rem; font-size:0.8rem; white-space:nowrap; cursor:pointer;">Generate</button>
+                </div>
+                <div id="heroAiPreviewArea" style="display:none; margin-top:10px; text-align:center;">
+                  <img id="heroAiPreview" src="" alt="AI Preview" style="max-height:120px; border-radius:6px; border:1px solid #ddd; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+                  <div style="font-size:0.75rem; color:var(--text-light); margin-top:4px;">AI Image applied to URL input field!</div>
+                </div>
+              </div>
+
               <div style="display:flex; gap:1rem">
                 <div class="form-group" style="flex:1">
                   <label style="font-weight:700; font-size:0.8rem">Media Type</label>
@@ -345,6 +359,20 @@
                   <input type="text" id="promoMediaUrl" class="form-input" placeholder="e.g. images/hero_ethnic.png">
                 </div>
               </div>
+
+              <!-- AI Image Generator for Promo Banner -->
+              <div style="background: hsl(243, 75%, 97%); border: 1px dashed var(--primary); padding: 12px; border-radius: 8px; margin-top: 5px; width: 100%;">
+                <label style="font-weight:700; font-size:0.8rem; color:var(--primary); display:block; margin-bottom:5px;">✨ Generate Promo Image with AI (Pollinations.ai)</label>
+                <div style="display:flex; gap:8px;">
+                  <input type="text" id="promoAiPrompt" class="form-input" placeholder="e.g. Diwali super sale banner, festive shopping, hanging clothes" style="flex:1; font-size:0.8rem;">
+                  <button type="button" onclick="generateBannerImage('promo')" class="btn btn-primary" style="padding:0.4rem 1rem; font-size:0.8rem; white-space:nowrap; cursor:pointer;">Generate</button>
+                </div>
+                <div id="promoAiPreviewArea" style="display:none; margin-top:10px; text-align:center;">
+                  <img id="promoAiPreview" src="" alt="AI Preview" style="max-height:120px; border-radius:6px; border:1px solid #ddd; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+                  <div style="font-size:0.75rem; color:var(--text-light); margin-top:4px;">AI Image applied to URL input field!</div>
+                </div>
+              </div>
+
               <div class="form-group">
                 <label style="font-weight:700; font-size:0.8rem">Redirect Link</label>
                 <input type="text" id="promoLinkUrl" class="form-input" placeholder="products.html?category=Men">
@@ -614,9 +642,29 @@
           <textarea id="prodDesc" name="description" rows="3" class="form-input" placeholder="Product details, material blend, size tips..." style="font-family:inherit" required></textarea>
         </div>
 
-        <div class="form-group">
-          <label>Upload Images (Max 5)</label>
-          <input type="file" id="prodImages" name="images" multiple accept="image/*" class="form-input" style="padding:0.4rem">
+        <div style="display:flex; gap:1rem; align-items:center;">
+          <div class="form-group" style="flex:1">
+            <label>Upload Images (Max 5)</label>
+            <input type="file" id="prodImages" name="images" multiple accept="image/*" class="form-input" style="padding:0.4rem">
+          </div>
+          <div style="font-size:0.8rem; font-weight:700; color:var(--text-light); margin-top:1.2rem">OR</div>
+          <div class="form-group" style="flex:1.2">
+            <label>Paste Image URL</label>
+            <input type="text" id="prodImageUrl" name="image_url" class="form-input" placeholder="e.g. https://example.com/image.jpg">
+          </div>
+        </div>
+
+        <!-- AI Image Generator for Product -->
+        <div style="background: hsl(243, 75%, 97%); border: 1px dashed var(--primary); padding: 12px; border-radius: 8px; margin-top: 5px; width: 100%;">
+          <label style="font-weight:700; font-size:0.8rem; color:var(--primary); display:block; margin-bottom:5px;">✨ Generate Product Image with AI (Pollinations.ai)</label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="productAiPrompt" class="form-input" placeholder="e.g. Saffron yellow silk kurta, high quality studio photo, solid background" style="flex:1; font-size:0.8rem;">
+            <button type="button" onclick="generateBannerImage('product')" class="btn btn-primary" style="padding:0.4rem 1rem; font-size:0.8rem; white-space:nowrap; cursor:pointer;">Generate</button>
+          </div>
+          <div id="productAiPreviewArea" style="display:none; margin-top:10px; text-align:center;">
+            <img id="productAiPreview" src="" alt="AI Preview" style="max-height:120px; border-radius:6px; border:1px solid #ddd; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+            <div style="font-size:0.75rem; color:var(--text-light); margin-top:4px;">AI Image applied to URL input field!</div>
+          </div>
         </div>
 
         <button type="submit" class="auth-btn" style="margin-top:10px">Save Product</button>
