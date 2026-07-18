@@ -345,18 +345,45 @@ app.post('/api/auth/firebase-login', async (req, res) => {
       return res.status(401).json({ success: false, message: `Firebase Token Verification Error: ${error}` });
     }
 
-    const email = payload.email;
-    const name = payload.name || email.split('@')[0];
-    
-    // Check if customer exists in database
-    let customer = await db.get('SELECT * FROM customers WHERE email = ?', [email]);
-    if (!customer) {
-      // Create new customer
-      const result = await db.run(`
-        INSERT INTO customers (name, email, phone, password_hash, address_line, city, state, pincode)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `, [name, email, 'fb' + Date.now().toString().slice(-12), 'firebase-auth-oauth', '', '', '', '']);
-      customer = await db.get('SELECT * FROM customers WHERE id = ?', [result.insertId]);
+    let customer;
+
+    // Check if the login is via Firebase Phone Authentication
+    if (payload.phone_number) {
+      let phone = payload.phone_number.replace(/\D/g, ''); // strip non-digits
+      if (phone.startsWith('91') && phone.length === 12) {
+        phone = phone.substring(2); // extract last 10 digits
+      }
+
+      // Check if customer exists by phone number
+      customer = await db.get('SELECT * FROM customers WHERE phone = ?', [phone]);
+      if (!customer) {
+        const name = 'User-' + phone;
+        const email = phone + '@ltl.mock'; // mock unique email
+
+        const result = await db.run(`
+          INSERT INTO customers (name, email, phone, password_hash, address_line, city, state, pincode)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `, [name, email, phone, 'firebase-auth-phone', '', '', '', '']);
+
+        customer = await db.get('SELECT * FROM customers WHERE id = ?', [result.insertId]);
+      }
+    } else {
+      // Traditional Email/Google OAuth sync
+      const email = payload.email;
+      if (!email) {
+        return res.status(400).json({ success: false, message: 'Invalid token payload: missing email address' });
+      }
+      const name = payload.name || email.split('@')[0];
+
+      customer = await db.get('SELECT * FROM customers WHERE email = ?', [email]);
+      if (!customer) {
+        const result = await db.run(`
+          INSERT INTO customers (name, email, phone, password_hash, address_line, city, state, pincode)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `, [name, email, 'fb' + Date.now().toString().slice(-12), 'firebase-auth-oauth', '', '', '', '']);
+
+        customer = await db.get('SELECT * FROM customers WHERE id = ?', [result.insertId]);
+      }
     }
 
     // Generate local JWT

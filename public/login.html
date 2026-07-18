@@ -144,19 +144,15 @@
               <input type="text" id="loginOtp" class="form-input" style="text-align:center; font-size:1.5rem; letter-spacing:8px; font-weight:800" placeholder="123456" maxlength="6">
             </div>
             
-            <!-- OTP DEMO NOTIFICATION -->
-            <div style="background-color: var(--success-light); border:1px solid var(--success); padding:1rem; border-radius:8px; margin-bottom:1.2rem; text-align:center" id="demoOtpBox">
-              <p style="font-size:0.8rem; color:var(--success); margin:0"><strong>Demo SMS Simulator:</strong></p>
-              <h4 style="font-size:1.5rem; color:var(--primary); font-weight:800; margin:0.3rem 0" id="demoOtpValue">000000</h4>
-              <p style="font-size:0.75rem; color:var(--text-light); margin:0">Use this generated OTP to log in immediately.</p>
-            </div>
-
             <button type="submit" class="auth-btn">Verify & Sign In</button>
           </div>
 
           <div style="text-align: center; margin-top: 1.5rem;">
             <a href="#" onclick="toggleOtpForm(false)" style="color: var(--primary); font-weight: 700; font-size: 0.85rem;"><i class="fas fa-arrow-left"></i> Back to Email Sign In</a>
           </div>
+          
+          <!-- Invisible reCAPTCHA container for Firebase Phone Auth -->
+          <div id="recaptcha-container"></div>
         </form>
       </div>
 
@@ -331,7 +327,15 @@
       }
     });
 
-    // Send Mobile OTP
+    // Initialize Firebase Recaptcha Verifier for Phone Auth
+    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+      'size': 'invisible',
+      'callback': (response) => {
+        // reCAPTCHA solved
+      }
+    });
+
+    // Send Mobile OTP via Firebase
     async function sendMobileOtp() {
       const phone = document.getElementById('loginPhone').value.trim();
       if (phone.length < 10 || isNaN(phone)) {
@@ -339,33 +343,28 @@
         return;
       }
 
+      startGlobalProgressBar();
+      const phoneNumber = '+91' + phone; // India prefix
+      const appVerifier = window.recaptchaVerifier;
+
       try {
-        const res = await fetch('/api/auth/otp-send', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone })
-        });
-        const data = await res.json();
-        if (data.success) {
-          showToast(data.message);
-          document.getElementById('phoneInputGroup').style.display = 'none';
-          document.getElementById('otpInputGroup').style.display = 'block';
-          
-          // Display simulated OTP on screen
-          document.getElementById('demoOtpValue').textContent = data.demoOtp;
-        } else {
-          showToast(data.message, 'error');
-        }
+        const confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, appVerifier);
+        completeGlobalProgressBar();
+        window.confirmationResult = confirmationResult;
+        showToast('🎉 OTP verification code sent via SMS!', 'success');
+        document.getElementById('phoneInputGroup').style.display = 'none';
+        document.getElementById('otpInputGroup').style.display = 'block';
       } catch (err) {
-        showToast('OTP request failed', 'error');
+        completeGlobalProgressBar();
+        console.error('Firebase Phone Auth Error:', err);
+        showToast(err.message || 'Failed to send OTP. Ensure Phone Auth is enabled in Firebase Console.', 'error');
       }
     }
 
-    // Submit Verify OTP
+    // Submit Verify Firebase OTP
     document.getElementById('otpLoginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const phone = document.getElementById('loginPhone').value.trim();
       const otp = document.getElementById('loginOtp').value.trim();
 
       if (otp.length < 6) {
@@ -373,25 +372,34 @@
         return;
       }
 
+      startGlobalProgressBar();
       try {
-        const res = await fetch('/api/auth/otp-verify', {
+        const result = await window.confirmationResult.confirm(otp);
+        const firebaseUser = result.user;
+        const idToken = await firebaseUser.getIdToken();
+
+        // Sync token with backend to establish local JWT session
+        const res = await fetch('/api/auth/firebase-login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone, otp })
+          body: JSON.stringify({ idToken })
         });
         const data = await res.json();
         
+        completeGlobalProgressBar();
         if (data.success) {
           saveToken(data.token, data.user);
           showToast(`OTP Verified! Welcome, ${data.user.name}!`, 'success');
           setTimeout(() => {
-            window.location.href = 'index.html';
+            window.location.href = '/'; // Redirect to clean home path
           }, 1200);
         } else {
-          showToast(data.message || 'Verification failed', 'error');
+          showToast(data.message || 'Firebase login sync failed', 'error');
         }
       } catch (err) {
-        showToast('Server verification error', 'error');
+        completeGlobalProgressBar();
+        console.error('OTP Verification Error:', err);
+        showToast('Invalid or incorrect verification code!', 'error');
       }
     });
 
