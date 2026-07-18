@@ -124,7 +124,7 @@ function renderPaymentDetails(method) {
         
         <div id="otpInputArea" style="display:none; width:100%; max-width:280px; flex-direction:column; gap:10px; margin-top:5px;">
           <p style="font-size:0.8rem; color:#10b981; font-weight:600; margin:0">✔ Verification code sent via SMS!</p>
-          <input type="text" id="codOtpInput" placeholder="Enter 6-Digit OTP" maxlength="6" style="width:100%; text-align:center; padding:0.6rem; border:1px solid var(--border-color); border-radius:6px; font-weight:bold; letter-spacing:6px">
+          <input type="text" id="codOtpInput" placeholder="Enter 4-Digit OTP" maxlength="4" style="width:100%; text-align:center; padding:0.6rem; border:1px solid var(--border-color); border-radius:6px; font-weight:bold; letter-spacing:4px">
           <small style="color:var(--text-light); font-size:0.75rem">Enter the OTP sent to your phone number</small>
         </div>
 
