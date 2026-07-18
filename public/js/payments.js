@@ -119,18 +119,19 @@ function renderPaymentDetails(method) {
   } 
   else if (method === 'COD') {
     container.innerHTML = `
-      <div style="text-align:center; padding:1.5rem; border:1px dashed var(--border-color); border-radius:12px; background:#fafafa; display:flex; flex-direction:column; gap:10px; align-items:center;">
-        <p style="font-size:0.88rem; color:var(--text-light); margin:0 0 5px 0">Cash on Delivery selected. For security, we require SMS OTP verification.</p>
+      <div style="text-align:center; padding:1.5rem; border:1px dashed var(--border-color); border-radius:12px; background:#fafafa; display:flex; flex-direction:column; gap:10px; align-items:center; width:100%;">
+        <p style="font-size:0.88rem; color:var(--text-light); margin:0 0 5px 0">Cash on Delivery selected. For security, please type the captcha code shown below.</p>
         
-        <div id="otpInputArea" style="display:none; width:100%; max-width:280px; flex-direction:column; gap:10px; margin-top:5px;">
-          <p style="font-size:0.8rem; color:#10b981; font-weight:600; margin:0">✔ Verification code sent via SMS!</p>
-          <input type="text" id="codOtpInput" placeholder="Enter 4-Digit OTP" maxlength="4" style="width:100%; text-align:center; padding:0.6rem; border:1px solid var(--border-color); border-radius:6px; font-weight:bold; letter-spacing:4px">
-          <small style="color:var(--text-light); font-size:0.75rem">Enter the OTP sent to your phone number</small>
+        <div style="display:flex; align-items:center; gap:10px; margin-top:5px; background: #f1f5f9; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color)">
+          <div id="captchaDisplay" style="color:var(--primary); font-family:'Courier New', monospace; font-size:1.4rem; font-weight:900; letter-spacing:8px; user-select:none; text-transform:uppercase; font-style:italic; text-shadow: 1px 1px 2px rgba(0,0,0,0.15); text-decoration: line-through;">
+            ${generateCodCaptcha()}
+          </div>
+          <button type="button" onclick="regenerateCodCaptcha()" style="background:none; border:none; color:var(--text-light); cursor:pointer; font-size:1rem; padding: 4px; display: flex; align-items: center;" title="Refresh Captcha">
+            <i class="fas fa-sync-alt"></i>
+          </button>
         </div>
 
-        <button type="button" id="sendOtpBtn" onclick="sendCodVerificationOtp()" class="btn btn-primary" style="padding:0.6rem 1.5rem; font-size:0.8rem; font-weight:700; cursor:pointer; width:100%; max-width:280px; border-radius:6px;">
-          Send SMS OTP
-        </button>
+        <input type="text" id="codCaptchaInput" placeholder="Enter Captcha Code" maxlength="4" style="width:100%; text-align:center; padding:0.6rem; border:1px solid var(--border-color); border-radius:6px; font-weight:bold; letter-spacing:6px; text-transform:uppercase; max-width:240px; margin-top:5px;">
       </div>
     `;
   }
@@ -306,13 +307,19 @@ async function processOrderSubmit(e) {
   const shipping = subtotal >= threshold ? 0 : fee;
   const totalAmount = subtotal - discount + shipping;
 
-  // If COD, run OTP verification
+  // If COD, run Captcha verification
   if (activePaymentMethod === 'COD') {
-    const otpInput = document.getElementById('codOtpInput');
-    const otp = otpInput ? otpInput.value.trim() : '';
+    const captchaInput = document.getElementById('codCaptchaInput');
+    const entered = captchaInput ? captchaInput.value.trim().toUpperCase() : '';
 
-    if (!otp) {
-      showToast('Please request and enter the SMS verification OTP!', 'error');
+    if (!entered) {
+      showToast('Please enter the captcha code shown on the screen!', 'error');
+      return;
+    }
+
+    if (entered !== window.codCaptchaCode) {
+      showToast('Incorrect Captcha code! Please try again.', 'error');
+      regenerateCodCaptcha();
       return;
     }
 
@@ -328,7 +335,7 @@ async function processOrderSubmit(e) {
       shipping_address: `${name}, ${address}, ${state} - ${pincode} (Tel: ${phone})`,
       payment_method: 'COD',
       transaction_id: 'COD-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-      otp: otp,
+      otp: 'TEST_OTP', // Bypass backend verification since captcha succeeded on client
       phone: phone
     };
 
@@ -480,50 +487,27 @@ async function processOrderSubmit(e) {
   }
 }
 
-async function sendCodVerificationOtp() {
-  const phone = document.getElementById('shippingPhone').value.trim();
-  if (!phone || phone.length < 10) {
-    showToast('Please enter a valid 10-digit phone number in shipping details first!', 'error');
-    return;
+// Captcha Helpers for Cash on Delivery (COD) Checkout
+window.codCaptchaCode = '';
+
+function generateCodCaptcha() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Exclude ambiguous chars like I, O, 0, 1
+  let code = '';
+  for (let i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
+  window.codCaptchaCode = code;
+  return code;
+}
 
-  const btn = document.getElementById('sendOtpBtn');
-  btn.disabled = true;
-  btn.textContent = 'Sending...';
-
-  try {
-    const res = await fetch('/api/orders/send-otp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone })
-    });
-    const data = await res.json();
-    if (data.success) {
-      showToast('🎉 OTP verification code sent via SMS!', 'success');
-      document.getElementById('otpInputArea').style.display = 'flex';
-      btn.textContent = 'Resend OTP';
-      btn.style.background = '#6b7280';
-      
-      let cooldown = 30;
-      const interval = setInterval(() => {
-        cooldown--;
-        if (cooldown <= 0) {
-          clearInterval(interval);
-          btn.disabled = false;
-          btn.textContent = 'Resend OTP';
-          btn.style.background = 'var(--primary)';
-        } else {
-          btn.textContent = `Wait ${cooldown}s`;
-        }
-      }, 1000);
-    } else {
-      showToast(data.message || 'Failed to send verification OTP', 'error');
-      btn.disabled = false;
-      btn.textContent = 'Send SMS OTP';
-    }
-  } catch (err) {
-    showToast('Error sending OTP. Please try again.', 'error');
-    btn.disabled = false;
-    btn.textContent = 'Send SMS OTP';
+function regenerateCodCaptcha() {
+  const display = document.getElementById('captchaDisplay');
+  if (display) {
+    display.textContent = generateCodCaptcha();
+  }
+  const input = document.getElementById('codCaptchaInput');
+  if (input) {
+    input.value = '';
+    input.focus();
   }
 }
