@@ -533,3 +533,18 @@ function toggleMobileSearch() {
     searchContainer.classList.toggle('active');
   }
 }
+
+// Global Single URL Hiding Handler (keeps address bar as littletolargee.com)
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const path = window.location.pathname;
+    // Keep admin paths intact so that settings navigation doesn't get confused
+    if (path !== '/' && path !== '/index.html' && !path.includes('admin')) {
+      try {
+        history.replaceState(null, '', '/');
+      } catch (e) {
+        console.warn('URL cleanup failed:', e.message);
+      }
+    }
+  }, 400); // 400ms delay ensures local page scripts successfully read query params
+});
