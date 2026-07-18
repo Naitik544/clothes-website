@@ -2156,10 +2156,13 @@ app.post('/api/promotions', adminIpFilter, authenticateAdmin, upload.single('ima
 
   let formattedStart, formattedEnd;
   try {
-    formattedStart = new Date(start_date).toISOString();
-    formattedEnd = new Date(end_date).toISOString();
+    const dStart = start_date ? new Date(start_date) : new Date();
+    const dEnd = end_date ? new Date(end_date) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    formattedStart = isNaN(dStart.getTime()) ? new Date().toISOString() : dStart.toISOString();
+    formattedEnd = isNaN(dEnd.getTime()) ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : dEnd.toISOString();
   } catch (e) {
-    return res.status(400).json({ success: false, message: 'Invalid start or end date format provided' });
+    formattedStart = new Date().toISOString();
+    formattedEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
   }
 
   try {

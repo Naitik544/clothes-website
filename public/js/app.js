@@ -410,7 +410,10 @@ function renderHeaderFooter() {
             <a href="/about#contact" class="drawer-link" onclick="toggleNavDrawer()"><i class="fas fa-headset"></i> Contact Support</a>
           </div>
 
-          <!-- Section 4: Logout (If logged in) -->
+          <!-- Section 4: Admin & Logout -->
+          ${isAdmin ? `
+            <a href="admin.html" class="drawer-link" onclick="toggleNavDrawer()" style="background:#e0f2fe; color:#0369a1; font-weight:700;"><i class="fas fa-user-shield"></i> Admin Control Panel</a>
+          ` : ''}
           ${user ? `
             <a href="#" class="drawer-link logout-link" onclick="toggleNavDrawer(); logout();"><i class="fas fa-sign-out-alt"></i> Logout</a>
           ` : ''}
@@ -459,8 +462,8 @@ function renderHeaderFooter() {
           <h3>Customer Trust & Grievance</h3>
           <p>📞 Support: +91 7383874045<br>✉️ Email: indiancloths980@gmail.com</p>
           <p style="font-size:0.75rem; margin-top:0.6rem; color:rgba(255,255,255,0.7); line-height:1.4">
-            <strong>Grievance Officer:</strong> Mr. N. Kumar<br>
-            Email: grievance@littlelarge.in<br>
+            <strong>Grievance Officer:</strong> Reenaben<br>
+            Email: indiancloths980@gmail.com<br>
             <strong>Registered Office:</strong> HQ Little to Large, Sector 4, Gandhidham, Gujarat - 370201
           </p>
           <p style="margin-top: 0.8rem; font-size: 0.8rem; color: rgba(255,255,255,0.5)">🔒 Safe Payments: UPI, Credit Card, Cash on Delivery</p>

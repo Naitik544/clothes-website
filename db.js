@@ -287,8 +287,8 @@ async function createTables() {
       title VARCHAR(150) NOT NULL,
       subtitle VARCHAR(255),
       bg_color VARCHAR(50) DEFAULT 'var(--primary)',
-      media_url VARCHAR(255),
-      link_url VARCHAR(255),
+      media_url TEXT,
+      link_url TEXT,
       start_date ${datetimeType} NOT NULL,
       end_date ${datetimeType} NOT NULL,
       priority INTEGER DEFAULT 0,
@@ -330,7 +330,7 @@ async function createTables() {
     CREATE TABLE IF NOT EXISTS lookbook_pages (
       id ${idType},
       page_number INTEGER UNIQUE NOT NULL,
-      image_url VARCHAR(255) NOT NULL,
+      image_url TEXT NOT NULL,
       created_at ${datetimeType} DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -396,6 +396,23 @@ async function createTables() {
       await run(q);
     } catch (e) {
       // Ignore if columns already exist
+    }
+  }
+
+  // PostgreSQL specific column type alterations for long AI generated URLs
+  if (dbType === 'postgres') {
+    const pgAlterQueries = [
+      `ALTER TABLE promotions ALTER COLUMN media_url TYPE TEXT`,
+      `ALTER TABLE promotions ALTER COLUMN link_url TYPE TEXT`,
+      `ALTER TABLE lookbook_pages ALTER COLUMN image_url TYPE TEXT`,
+      `ALTER TABLE products ALTER COLUMN video_url TYPE TEXT`
+    ];
+    for (const q of pgAlterQueries) {
+      try {
+        await run(q);
+      } catch (e) {
+        console.warn('Postgres column alter warning:', e.message);
+      }
     }
   }
 

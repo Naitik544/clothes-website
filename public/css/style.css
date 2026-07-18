@@ -1743,6 +1743,16 @@ footer {
   .search-bar {
     display: none !important;
   }
+  .nav-actions .btn,
+  .nav-actions a[title="Wishlist"] {
+    display: none !important;
+  }
+  .logo span {
+    font-size: 1.1rem !important;
+  }
+  .nav-actions {
+    gap: 0.8rem !important;
+  }
   
   .navbar {
     padding: 0.8rem 0;
