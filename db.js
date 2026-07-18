@@ -398,6 +398,24 @@ async function createTables() {
       // Ignore if columns already exist
     }
   }
+
+  // Create database indexes for performance optimization (fixes website lagging)
+  const indexQueries = [
+    `CREATE INDEX IF NOT EXISTS idx_orders_customer_id ON orders(customer_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_order_items_product_id ON order_items(product_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)`,
+    `CREATE INDEX IF NOT EXISTS idx_products_subcategory ON products(subcategory)`,
+    `CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id)`
+  ];
+  for (const q of indexQueries) {
+    try {
+      await run(q);
+    } catch (e) {
+      console.warn('Index creation warning:', e.message);
+    }
+  }
 }
 
 async function seedDatabase() {

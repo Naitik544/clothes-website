@@ -1,68 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://littletolargee.com/index.html</loc>
+    <loc>https://littletolargee.com/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://littletolargee.com/products.html</loc>
+    <loc>https://littletolargee.com/products</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://littletolargee.com/cart.html</loc>
+    <loc>https://littletolargee.com/cart</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://littletolargee.com/login.html</loc>
+    <loc>https://littletolargee.com/login</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://littletolargee.com/account.html</loc>
+    <loc>https://littletolargee.com/account</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://littletolargee.com/offers.html</loc>
+    <loc>https://littletolargee.com/offers</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://littletolargee.com/about.html</loc>
+    <loc>https://littletolargee.com/about</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://littletolargee.com/product-detail.html?id=11</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://littletolargee.com/product-detail.html?id=12</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://littletolargee.com/product-detail.html?id=14</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://littletolargee.com/product-detail.html?id=15</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://littletolargee.com/product-detail.html?id=16</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://littletolargee.com/product-detail.html?id=17</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
+    <loc>https://littletolargee.com/orders</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
 </urlset>

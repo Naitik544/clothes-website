@@ -290,11 +290,12 @@ async function processOrderSubmit(e) {
   const name = document.getElementById('shippingName').value.trim();
   const phone = document.getElementById('shippingPhone').value.trim();
   const address = document.getElementById('shippingAddress').value.trim();
+  const addressLine2 = document.getElementById('shippingAddressLine2').value.trim();
   const state = document.getElementById('shippingState').value;
   const pincode = document.getElementById('shippingPincode').value.trim();
 
-  if (!name || !phone || !address || !state || !pincode) {
-    showToast('Please fill in all shipping details!', 'error');
+  if (!name || !phone || !address || !addressLine2 || !state || !pincode) {
+    showToast('Please fill in all shipping details, including Landmark!', 'error');
     return;
   }
 
@@ -332,7 +333,7 @@ async function processOrderSubmit(e) {
         price: item.price
       })),
       total_amount: totalAmount,
-      shipping_address: `${name}, ${address}, ${state} - ${pincode} (Tel: ${phone})`,
+      shipping_address: `${name}, ${address}, Near ${addressLine2}, ${state} - ${pincode} (Tel: ${phone})`,
       payment_method: 'COD',
       transaction_id: 'COD-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
       otp: 'TEST_OTP', // Bypass backend verification since captcha succeeded on client
@@ -384,7 +385,7 @@ async function processOrderSubmit(e) {
           price: item.price
         })),
         total_amount: totalAmount,
-        shipping_address: `${name}, ${address}, ${state} - ${pincode} (Tel: ${phone})`,
+        shipping_address: `${name}, ${address}, Near ${addressLine2}, ${state} - ${pincode} (Tel: ${phone})`,
         payment_method: activePaymentMethod,
         transaction_id: 'PENDING-' + Date.now() + '-' + Math.floor(Math.random() * 1000000)
       };

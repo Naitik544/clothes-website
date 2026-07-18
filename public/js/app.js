@@ -439,25 +439,31 @@ function renderHeaderFooter() {
         <div class="footer-col">
           <h3>Quick Links</h3>
           <ul>
-            <li><a href="/products">Collections</a></li>
-            <li><a href="/offers">Deals & Coupons</a></li>
-            <li><a href="/about">Our Brand Story</a></li>
-            <li><a href="/about#contact">Contact Support</a></li>
+            <li><a href="products.html">Collections</a></li>
+            <li><a href="about.html">Our Brand Story</a></li>
+            <li><a href="about.html#contact">Contact Support</a></li>
+            <li><a href="#" onclick="alert('Replacement Policy: Order replacement is allowed within 7 days of delivery. No cash refunds.')">Replacement Policy</a></li>
+            <li><a href="#" onclick="alert('Terms of Service: By placing an order, you agree to our terms of shipping, replacement policy, and local regulations.')">Terms & Conditions</a></li>
           </ul>
         </div>
         <div class="footer-col">
           <h3>Family Wardrobe</h3>
           <ul>
-            <li><a href="/products?category=Men">Men's Apparel</a></li>
-            <li><a href="/products?category=Women">Women's Sarees & Dresses</a></li>
-            <li><a href="/products?category=Kids">Kids' Ethnic & Toddler Sets</a></li>
-            <li><a href="/products?category=Accessories">Premium Accessories</a></li>
+            <li><a href="products.html?category=Men">Men's Apparel</a></li>
+            <li><a href="products.html?category=Women">Women's Sarees & Dresses</a></li>
+            <li><a href="products.html?category=Kids">Kids' Ethnic & Toddler Sets</a></li>
+            <li><a href="products.html?category=Accessories">Premium Accessories</a></li>
           </ul>
         </div>
         <div class="footer-col">
-          <h3>Customer Trust</h3>
+          <h3>Customer Trust & Grievance</h3>
           <p>📞 Support: +91 7383874045<br>✉️ Email: indiancloths980@gmail.com</p>
-          <p style="margin-top: 1rem; font-size: 0.8rem; color: rgba(255,255,255,0.5)">🔒 Safe Payments: UPI, Credit Card, Cash on Delivery</p>
+          <p style="font-size:0.75rem; margin-top:0.6rem; color:rgba(255,255,255,0.7); line-height:1.4">
+            <strong>Grievance Officer:</strong> Mr. N. Kumar<br>
+            Email: grievance@littlelarge.in<br>
+            <strong>Registered Office:</strong> HQ Little to Large, Sector 4, Gandhidham, Gujarat - 370201
+          </p>
+          <p style="margin-top: 0.8rem; font-size: 0.8rem; color: rgba(255,255,255,0.5)">🔒 Safe Payments: UPI, Credit Card, Cash on Delivery</p>
         </div>
       </div>
       <div class="footer-bottom">

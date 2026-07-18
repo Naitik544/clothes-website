@@ -2490,6 +2490,36 @@ app.use(async (err, req, res, next) => {
 
 // Connect DB and Start Server
 if (require.main === module) {
+  // Backup database before initialization to prevent data loss (database replication backup)
+  try {
+    const dbPath = path.join(__dirname, 'little_to_large.db');
+    if (fs.existsSync(dbPath)) {
+      const backupsDir = path.join(__dirname, 'backups');
+      if (!fs.existsSync(backupsDir)) {
+        fs.mkdirSync(backupsDir, { recursive: true });
+      }
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const backupPath = path.join(backupsDir, `little_to_large_backup_${timestamp}.db`);
+      fs.copyFileSync(dbPath, backupPath);
+      console.log(`[Backup Success] Created database replication backup at: ${backupPath}`);
+
+      const files = fs.readdirSync(backupsDir)
+        .filter(f => f.startsWith('little_to_large_backup_') && f.endsWith('.db'))
+        .map(f => ({ name: f, time: fs.statSync(path.join(backupsDir, f)).mtime.getTime() }))
+        .sort((a, b) => b.time - a.time);
+
+      if (files.length > 5) {
+        const toDelete = files.slice(5);
+        for (const f of toDelete) {
+          fs.unlinkSync(path.join(backupsDir, f.name));
+          console.log(`[Backup Prune] Deleted old backup file: ${f.name}`);
+        }
+      }
+    }
+  } catch (err) {
+    console.error(`[Backup Error] Failed to create database replication: ${err.message}`);
+  }
+
   db.initDB().then(async () => {
     await autoGenerateSitemap();
     app.listen(PORT, () => {
