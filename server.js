@@ -2190,7 +2190,17 @@ app.delete('/api/promotions/:id', adminIpFilter, authenticateAdmin, async (req, 
 // Get Homepage settings
 app.get('/api/homepage-settings', async (req, res) => {
   try {
-    const settings = await db.get('SELECT * FROM homepage_settings WHERE id = 1');
+    let settings = await db.get('SELECT * FROM homepage_settings WHERE id = 1');
+    if (!settings) {
+      settings = {
+        id: 1,
+        hero_title: 'Coordinated Styles for Every Generation',
+        hero_subtitle: 'Discover premium matching vacation outfits, lounge wear, and festival wear tailored for the entire family.',
+        media_url: 'images/hero_vacation.png',
+        media_type: 'image',
+        festival_mode: 'none'
+      };
+    }
     res.json({ success: true, settings });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -2217,12 +2227,23 @@ app.put('/api/homepage-settings', adminIpFilter, authenticateAdmin, upload.singl
   }
 
   try {
-    await db.run(
-      `UPDATE homepage_settings 
-       SET hero_title = ?, hero_subtitle = ?, media_url = ?, media_type = ?, festival_mode = ?, updated_at = CURRENT_TIMESTAMP
-       WHERE id = 1`,
-      [hero_title, hero_subtitle, final_media_url, media_type || 'image', festival_mode || 'none']
-    );
+    const existing = await db.get('SELECT id FROM homepage_settings WHERE id = 1');
+    if (!existing) {
+      // Row doesn't exist, let's insert it
+      await db.run(
+        `INSERT INTO homepage_settings (id, hero_title, hero_subtitle, media_url, media_type, festival_mode)
+         VALUES (1, ?, ?, ?, ?, ?)`,
+        [hero_title, hero_subtitle, final_media_url, media_type || 'image', festival_mode || 'none']
+      );
+    } else {
+      // Row exists, let's update it
+      await db.run(
+        `UPDATE homepage_settings 
+         SET hero_title = ?, hero_subtitle = ?, media_url = ?, media_type = ?, festival_mode = ?, updated_at = CURRENT_TIMESTAMP
+         WHERE id = 1`,
+        [hero_title, hero_subtitle, final_media_url, media_type || 'image', festival_mode || 'none']
+      );
+    }
     res.json({ success: true, message: 'Homepage hero updated successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
