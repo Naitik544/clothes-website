@@ -330,6 +330,9 @@ async function loadAdminOrders() {
             <button onclick="shipOrderViaShiprocket(${o.id})" class="btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:var(--secondary); color:#fff; border:none; border-radius:4px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:4px">
               <i class="fas fa-rocket"></i> Ship order
             </button>
+            <button onclick="shipOrderManually(${o.id})" class="btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:#4b5563; color:#fff; border:none; border-radius:4px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:4px; margin-top:4px">
+              <i class="fas fa-edit"></i> Manual AWB
+            </button>
             <button onclick="adminCancelOrder(${o.id})" class="btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:var(--danger); color:#fff; border:none; border-radius:4px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:4px; margin-top:4px">
               <i class="fas fa-ban"></i> Cancel
             </button>
@@ -424,7 +427,47 @@ async function shipOrderViaShiprocket(orderId) {
   }
 }
 
+async function shipOrderManually(orderId) {
+  const trackingNumber = prompt("Enter Courier Tracking Number (AWB):");
+  if (!trackingNumber) {
+    loadAdminOrders();
+    return;
+  }
+  const trackingLink = prompt("Enter Tracking Link (Optional, leave blank for Delhivery auto-link):");
+  
+  try {
+    showToast('Saving shipment details...', 'info');
+    const res = await fetch(`/api/admin/orders/${orderId}/manual-ship`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        tracking_number: trackingNumber.trim(),
+        tracking_link: trackingLink ? trackingLink.trim() : `https://www.delhivery.com/track/package/${trackingNumber.trim()}`
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('🎉 Order successfully marked as Shipped with Tracking AWB!', 'success');
+      loadAdminOrders();
+    } else {
+      showToast(data.message || 'Manual shipment save failed', 'error');
+      loadAdminOrders();
+    }
+  } catch (err) {
+    showToast('Failed to save manual shipment details', 'error');
+    loadAdminOrders();
+  }
+}
+
 async function updateOrderStatus(orderId, newStatus) {
+  if (newStatus === 'Shipped') {
+    shipOrderManually(orderId);
+    return;
+  }
+  
   try {
     const res = await fetch(`/api/orders/${orderId}/status`, {
       method: 'PUT',
@@ -1139,6 +1182,21 @@ async function loadAdminShippingSettings() {
   } catch (err) {
     showToast('Error connecting to settings API', 'error');
   }
+
+  // Load Shiprocket configurations
+  try {
+    const res = await fetch('/api/admin/shiprocket-config', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('shiprocketEmail').value = data.email || '';
+      document.getElementById('shiprocketPickup').value = data.pickup_location || 'Primary';
+      document.getElementById('shiprocketPassword').value = ''; // keep blank for security
+    }
+  } catch (err) {
+    console.error('Failed to load Shiprocket settings:', err);
+  }
 }
 
 async function saveShippingSettings(e) {
@@ -1168,6 +1226,35 @@ async function saveShippingSettings(e) {
     }
   } catch (err) {
     showToast('Error saving shipping settings', 'error');
+  }
+}
+
+async function saveShiprocketSettings(e) {
+  e.preventDefault();
+  const email = document.getElementById('shiprocketEmail').value;
+  const password = document.getElementById('shiprocketPassword').value;
+  const pickup_location = document.getElementById('shiprocketPickup').value;
+
+  try {
+    showToast('Verifying connection with Shiprocket API...', 'info');
+    const res = await fetch('/api/admin/shiprocket-config', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ email, password, pickup_location })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('🎉 Shiprocket Configured and Connected successfully!', 'success');
+      document.getElementById('shiprocketPassword').value = ''; // clear input
+      loadAdminShippingSettings();
+    } else {
+      showToast(data.message || 'Connection failed', 'error');
+    }
+  } catch (err) {
+    showToast('Error saving Shiprocket settings', 'error');
   }
 }
 

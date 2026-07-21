@@ -764,7 +764,7 @@
                     <span style="font-size:0.88rem">Status: <strong style="color:${statusColor}">${o.status}</strong></span>
                     ${o.tracking_number ? `
                       <span style="font-size:0.78rem; color:var(--text-light)">
-                        Tracking: <a href="${o.tracking_link}" target="_blank" style="color:var(--secondary); font-weight:bold; text-decoration:underline">${o.tracking_number}</a> (Shiprocket)
+                        Tracking: <a href="${o.tracking_link}" target="_blank" style="color:var(--secondary); font-weight:bold; text-decoration:underline">${o.tracking_number}</a> ${o.shiprocket_order_id === 'MANUAL' ? '(Standard)' : '(Shiprocket)'}
                       </span>
                     ` : ''}
                   </div>

@@ -549,6 +549,37 @@
 
         <div style="background-color:#fff; padding:2.5rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); max-width:650px; margin: 2rem auto 0 auto;">
           <h2 style="font-size:1.5rem; color:var(--primary); font-weight:800; border-bottom:1px solid var(--border-color); padding-bottom:12px; margin-bottom:1.5rem; display:flex; align-items:center; gap:10px">
+            🚀 Shiprocket API Configurator
+          </h2>
+          <p style="font-size:0.85rem; color:var(--text-light); margin-bottom:2rem; line-height:1.6">
+            Configure your Shiprocket API details to fully automate order shipping. Once connected, clicking "Ship order" on any order will instantly book a pickup request from your store address and generate a tracking ID for your customers automatically.
+          </p>
+
+          <form id="shiprocketSettingsForm" onsubmit="saveShiprocketSettings(event)" style="display:flex; flex-direction:column; gap:1.5rem">
+            <div class="form-group">
+              <label style="font-size:0.85rem; font-weight:800; color:var(--primary); display:block; margin-bottom:0.4rem">Shiprocket Registered Email ID</label>
+              <input type="email" id="shiprocketEmail" class="form-input" required placeholder="e.g. your_email@example.com" style="width:100%; box-sizing:border-box">
+            </div>
+
+            <div class="form-group">
+              <label style="font-size:0.85rem; font-weight:800; color:var(--primary); display:block; margin-bottom:0.4rem">Shiprocket API Password</label>
+              <input type="password" id="shiprocketPassword" class="form-input" required placeholder="Enter Shiprocket Password" style="width:100%; box-sizing:border-box">
+            </div>
+
+            <div class="form-group">
+              <label style="font-size:0.85rem; font-weight:800; color:var(--primary); display:block; margin-bottom:0.4rem">Registered Pickup Location Nickname</label>
+              <input type="text" id="shiprocketPickup" class="form-input" required placeholder="e.g. Primary (Must match Shiprocket pickup address nickname)" style="width:100%; box-sizing:border-box">
+              <small style="color:var(--text-light); font-size:0.75rem; display:block; margin-top:4px">This must match the exact nickname of the pickup address added in your Shiprocket account settings.</small>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="padding:0.8rem 2rem; font-size:0.9rem; font-weight:700; width:100%; margin-top:1rem; cursor:pointer">
+              🔗 Connect & Verify Shiprocket
+            </button>
+          </form>
+        </div>
+
+        <div style="background-color:#fff; padding:2.5rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); max-width:650px; margin: 2rem auto 0 auto;">
+          <h2 style="font-size:1.5rem; color:var(--primary); font-weight:800; border-bottom:1px solid var(--border-color); padding-bottom:12px; margin-bottom:1.5rem; display:flex; align-items:center; gap:10px">
             🔒 Change Admin Password
           </h2>
           <p style="font-size:0.85rem; color:var(--text-light); margin-bottom:2rem; line-height:1.6">

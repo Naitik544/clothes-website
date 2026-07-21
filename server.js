@@ -21,17 +21,28 @@ const razorpay = new Razorpay({
 // Shiprocket Integration Service
 class ShiprocketService {
   constructor() {
-    this.email = process.env.SHIPROCKET_EMAIL;
-    this.password = process.env.SHIPROCKET_PASSWORD;
+    this.email = null;
+    this.password = null;
     this.token = null;
     this.tokenExpiry = null;
-    this.isSandbox = !this.email || !this.password;
-    if (this.isSandbox) {
-      console.log('⚡ Shiprocket running in Sandbox/Simulation mode. (No credentials in environment variables)');
+    this.isSandbox = true;
+  }
+
+  async loadCredentials() {
+    try {
+      const emailRow = await db.get("SELECT value FROM settings WHERE key = 'shiprocket_email'");
+      const passRow = await db.get("SELECT value FROM settings WHERE key = 'shiprocket_password'");
+      
+      this.email = emailRow ? emailRow.value : process.env.SHIPROCKET_EMAIL;
+      this.password = passRow ? passRow.value : process.env.SHIPROCKET_PASSWORD;
+      this.isSandbox = !this.email || !this.password;
+    } catch (e) {
+      this.isSandbox = true;
     }
   }
 
   async getAuthToken() {
+    await this.loadCredentials();
     if (this.isSandbox) return 'sandbox_token_12345';
     
     if (this.token && this.tokenExpiry && Date.now() < this.tokenExpiry) {
@@ -58,6 +69,7 @@ class ShiprocketService {
   }
 
   async createAdhocOrder(orderDetails) {
+    await this.loadCredentials();
     if (this.isSandbox) {
       const orderId = Math.floor(Math.random() * 10000000);
       const shipmentId = Math.floor(Math.random() * 10000000);
@@ -1685,7 +1697,9 @@ app.get('/api/settings', async (req, res) => {
     const rows = await db.query('SELECT * FROM settings');
     const settings = {};
     rows.forEach(r => {
-      settings[r.key] = r.value;
+      if (!r.key.startsWith('shiprocket_')) {
+        settings[r.key] = r.value;
+      }
     });
     res.json({ success: true, settings });
   } catch (err) {
@@ -1706,6 +1720,64 @@ app.post('/api/admin/settings', adminIpFilter, authenticateAdmin, async (req, re
       await db.run("INSERT INTO settings (key, value) VALUES ('free_shipping_threshold', ?)", [free_shipping_threshold.toString()]);
     }
     res.json({ success: true, message: 'Settings updated successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET Shiprocket Config (Admin Only)
+app.get('/api/admin/shiprocket-config', adminIpFilter, authenticateAdmin, async (req, res) => {
+  try {
+    const emailRow = await db.get("SELECT value FROM settings WHERE key = 'shiprocket_email'");
+    const pickupRow = await db.get("SELECT value FROM settings WHERE key = 'shiprocket_pickup_location'");
+    res.json({
+      success: true,
+      email: emailRow ? emailRow.value : '',
+      pickup_location: pickupRow ? pickupRow.value : 'Primary'
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST Update Shiprocket Config & Verify Connection (Admin Only)
+app.post('/api/admin/shiprocket-config', adminIpFilter, authenticateAdmin, async (req, res) => {
+  const { email, password, pickup_location } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ success: false, message: 'Email and password are required' });
+  }
+
+  try {
+    // Test login against Shiprocket API before saving to make sure credentials are valid!
+    const response = await fetch('https://apiv2.shiprocket.in/v1/external/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.trim(), password: password.trim() })
+    });
+    const data = await response.json();
+    
+    if (!response.ok || !data.token) {
+      return res.status(400).json({
+        success: false,
+        message: `Shiprocket API rejected these credentials: ${data.message || 'Invalid Email/Password or account verification pending'}`
+      });
+    }
+
+    // Save verified credentials to DB
+    await db.run("DELETE FROM settings WHERE key = 'shiprocket_email'");
+    await db.run("INSERT INTO settings (key, value) VALUES ('shiprocket_email', ?)", [email.trim()]);
+
+    await db.run("DELETE FROM settings WHERE key = 'shiprocket_password'");
+    await db.run("INSERT INTO settings (key, value) VALUES ('shiprocket_password', ?)", [password.trim()]);
+
+    const finalPickup = pickup_location ? pickup_location.trim() : 'Primary';
+    await db.run("DELETE FROM settings WHERE key = 'shiprocket_pickup_location'");
+    await db.run("INSERT INTO settings (key, value) VALUES ('shiprocket_pickup_location', ?)", [finalPickup]);
+
+    res.json({
+      success: true,
+      message: '✅ Shiprocket configured successfully! Credentials verified and saved.'
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -1798,10 +1870,13 @@ app.post('/api/admin/orders/:id/ship', adminIpFilter, authenticateAdmin, async (
     const city = addressParts[addressParts.length - 2]?.trim() || 'Gandhidham';
     const state = addressParts[addressParts.length - 1]?.replace(/\b\d{6}\b/g, '')?.trim() || 'Gujarat';
 
+    const pickupRow = await db.get("SELECT value FROM settings WHERE key = 'shiprocket_pickup_location'");
+    const pickupLocation = pickupRow ? pickupRow.value : 'Primary';
+
     const shiprocketPayload = {
       order_id: `L2L-ORD-${orderId}`,
       order_date: new Date(order.created_at).toISOString().slice(0, 19).replace('T', ' '),
-      pickup_location: "Primary",
+      pickup_location: pickupLocation,
       billing_customer_name: order.cust_name.split(' ')[0] || 'Customer',
       billing_last_name: order.cust_name.split(' ').slice(1).join(' ') || 'L2L',
       billing_address: order.shipping_address,
@@ -1856,6 +1931,44 @@ app.post('/api/admin/orders/:id/ship', adminIpFilter, authenticateAdmin, async (
     } else {
       res.status(500).json({ success: false, message: 'Shiprocket failed to create order' });
     }
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST Admin ship order manually (fallback if Shiprocket fails or for private couriers)
+app.post('/api/admin/orders/:id/manual-ship', adminIpFilter, authenticateAdmin, async (req, res) => {
+  const orderId = req.params.id;
+  const { tracking_number, tracking_link } = req.body;
+  if (!tracking_number) {
+    return res.status(400).json({ success: false, message: 'Tracking number (AWB) is required' });
+  }
+
+  try {
+    const order = await db.get('SELECT id FROM orders WHERE id = ?', [orderId]);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    await db.run(
+      `UPDATE orders 
+       SET status = 'Shipped',
+           tracking_number = ?,
+           tracking_link = ?,
+           shiprocket_order_id = 'MANUAL',
+           shiprocket_shipment_id = 'MANUAL'
+       WHERE id = ?`,
+      [
+        tracking_number,
+        tracking_link || `https://www.delhivery.com/track/package/${tracking_number}`,
+        orderId
+      ]
+    );
+
+    res.json({
+      success: true,
+      message: 'Order status updated to Shipped with manual tracking details!',
+      tracking_number,
+      tracking_link: tracking_link || `https://www.delhivery.com/track/package/${tracking_number}`
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
