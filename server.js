@@ -11,6 +11,13 @@ const db = require('./db');
 const adminIpFilter = require('./middleware/ipFilter');
 const crypto = require('crypto');
 const Razorpay = require('razorpay');
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'wzknhexk',
+  api_key: process.env.CLOUDINARY_API_KEY || '775349879285534',
+  api_secret: process.env.CLOUDINARY_API_SECRET || 'UioxSzxXyfcVORlZRZy_36JOS68'
+});
 require('dotenv').config();
 
 const razorpay = new Razorpay({
@@ -232,6 +239,29 @@ const upload = multer({
     }
   }
 });
+
+// Helper function to upload files to Cloudinary and clean up local temporary files
+async function uploadToCloudinary(localFilePath, folder = 'products') {
+  try {
+    if (!fs.existsSync(localFilePath)) {
+      throw new Error(`File not found at: ${localFilePath}`);
+    }
+    const result = await cloudinary.uploader.upload(localFilePath, {
+      folder: `little_to_large/${folder}`,
+      resource_type: 'auto'
+    });
+    // Safely delete local temporary file
+    try {
+      fs.unlinkSync(localFilePath);
+    } catch (e) {
+      console.error('Failed to delete temp file:', e);
+    }
+    return result.secure_url;
+  } catch (err) {
+    console.error('Cloudinary Upload Error:', err);
+    throw err;
+  }
+}
 
 // Authentication Middleware
 function authenticateToken(req, res, next) {
@@ -1985,12 +2015,15 @@ app.post('/api/products', adminIpFilter, authenticateAdmin, upload.array('images
   try {
     let images = [];
     if (req.files && req.files.length > 0) {
-      images = req.files.map(f => '/images/uploads/' + f.filename);
+      for (const file of req.files) {
+        const cloudUrl = await uploadToCloudinary(file.path, 'products');
+        images.push(cloudUrl);
+      }
     } else if (req.body.image_url) {
       images = [req.body.image_url];
     } else {
       // Fallback placeholder image
-      images = ['/images/products/placeholder.jpg'];
+      images = ['https://res.cloudinary.com/wzknhexk/image/upload/v1721564126/placeholder.jpg'];
     }
 
     const returnDays = return_window_days !== undefined && return_window_days !== '' ? parseInt(return_window_days) : 7;
@@ -2017,7 +2050,11 @@ app.put('/api/products/:id', adminIpFilter, authenticateAdmin, upload.array('ima
     let images = JSON.parse(existing.image_urls || '[]');
     if (req.files && req.files.length > 0) {
       // Append new images
-      const newImages = req.files.map(f => '/images/uploads/' + f.filename);
+      const newImages = [];
+      for (const file of req.files) {
+        const cloudUrl = await uploadToCloudinary(file.path, 'products');
+        newImages.push(cloudUrl);
+      }
       images = [...images, ...newImages];
     } else if (req.body.image_url) {
       images = [req.body.image_url];
@@ -2260,7 +2297,7 @@ app.post('/api/promotions', adminIpFilter, authenticateAdmin, upload.single('ima
 
   let final_media_url = '';
   if (req.file) {
-    final_media_url = 'images/uploads/' + req.file.filename;
+    final_media_url = await uploadToCloudinary(req.file.path, 'promotions');
   } else if (media_url) {
     final_media_url = media_url;
   } else {
@@ -2327,7 +2364,7 @@ app.put('/api/homepage-settings', adminIpFilter, authenticateAdmin, upload.singl
   
   let final_media_url = '';
   if (req.file) {
-    final_media_url = 'images/uploads/' + req.file.filename;
+    final_media_url = await uploadToCloudinary(req.file.path, 'homepage');
   } else if (media_url) {
     final_media_url = media_url;
   } else {
@@ -2481,7 +2518,7 @@ app.post('/api/admin/lookbook/upload', adminIpFilter, authenticateAdmin, upload.
       return res.status(400).json({ success: false, message: 'Please upload an image file' });
     }
     
-    const imageUrl = 'images/uploads/' + req.file.filename;
+    const imageUrl = await uploadToCloudinary(req.file.path, 'lookbook');
     
     // Check if page already exists
     const existing = await db.get('SELECT id FROM lookbook_pages WHERE page_number = ?', [pageNumber]);
