@@ -13,20 +13,27 @@ let sqliteDb = null;
 
 // Initialize connection
 async function initDB() {
-  const usePG = process.env.PGHOST && process.env.PGUSER && process.env.PGDATABASE;
+  const usePG = process.env.DATABASE_URL || (process.env.PGHOST && process.env.PGUSER && process.env.PGDATABASE);
   const useMySQL = process.env.DB_HOST && process.env.DB_USER && process.env.DB_NAME;
 
   if (usePG) {
     try {
       console.log('Attempting to connect to PostgreSQL database...');
-      pgPool = new Pool({
-        host: process.env.PGHOST,
-        user: process.env.PGUSER,
-        password: process.env.PGPASSWORD,
-        database: process.env.PGDATABASE,
-        port: process.env.PGPORT || 5432,
-        ssl: process.env.PGSSL === 'false' ? false : { rejectUnauthorized: false }
-      });
+      const poolConfig = process.env.DATABASE_URL 
+        ? { connectionString: process.env.DATABASE_URL }
+        : {
+            host: process.env.PGHOST,
+            user: process.env.PGUSER,
+            password: process.env.PGPASSWORD,
+            database: process.env.PGDATABASE,
+            port: process.env.PGPORT || 5432
+          };
+      
+      if (process.env.PGSSL !== 'false') {
+        poolConfig.ssl = { rejectUnauthorized: false };
+      }
+
+      pgPool = new Pool(poolConfig);
       // Test connection
       await pgPool.query('SELECT NOW()');
       console.log('Successfully connected to PostgreSQL database.');
