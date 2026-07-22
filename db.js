@@ -233,7 +233,7 @@ async function createTables() {
       id ${idType},
       order_id INTEGER,
       product_id INTEGER,
-      size VARCHAR(10),
+      size VARCHAR(50),
       quantity INTEGER NOT NULL,
       price DECIMAL(10, 2) NOT NULL
     )
@@ -414,7 +414,8 @@ async function createTables() {
       `ALTER TABLE promotions ALTER COLUMN media_url TYPE TEXT`,
       `ALTER TABLE promotions ALTER COLUMN link_url TYPE TEXT`,
       `ALTER TABLE lookbook_pages ALTER COLUMN image_url TYPE TEXT`,
-      `ALTER TABLE products ALTER COLUMN video_url TYPE TEXT`
+      `ALTER TABLE products ALTER COLUMN video_url TYPE TEXT`,
+      `ALTER TABLE order_items ALTER COLUMN size TYPE VARCHAR(50)`
     ];
     for (const q of pgAlterQueries) {
       try {
