@@ -1798,7 +1798,7 @@ app.post('/api/admin/shiprocket-config', adminIpFilter, authenticateAdmin, async
     if (!response.ok || !data.token) {
       return res.status(400).json({
         success: false,
-        message: `Shiprocket API rejected these credentials: ${data.message || 'Invalid Email/Password or account verification pending'}`
+        message: `Shiprocket API: ${data.message || 'Error'} | Raw Response: ${JSON.stringify(data)}`
       });
     }
 
