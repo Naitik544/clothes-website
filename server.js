@@ -111,7 +111,8 @@ class ShiprocketService {
           tracking_link: `https://shiprocket.co/tracking/${trackingNumber}`
         };
       }
-      throw new Error(data.message || JSON.stringify(data.errors) || 'Failed to create Shiprocket order');
+      const errDetails = data.errors ? ' | Details: ' + JSON.stringify(data.errors) : '';
+      throw new Error((data.message || 'Failed to create Shiprocket order') + errDetails);
     } catch (err) {
       console.error('Shiprocket Create Order Error:', err.message);
       throw err;
