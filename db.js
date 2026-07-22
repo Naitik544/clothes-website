@@ -260,6 +260,7 @@ async function createTables() {
       product_id INTEGER,
       rating INTEGER NOT NULL,
       comment TEXT,
+      media_urls TEXT,
       created_at ${datetimeType} DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -395,7 +396,8 @@ async function createTables() {
     `ALTER TABLE orders ADD COLUMN tracking_link TEXT`,
     `ALTER TABLE orders ADD COLUMN return_reason TEXT`,
     `ALTER TABLE orders ADD COLUMN return_comments TEXT`,
-    `ALTER TABLE products ADD COLUMN return_window_days INTEGER DEFAULT 7`
+    `ALTER TABLE products ADD COLUMN return_window_days INTEGER DEFAULT 7`,
+    `ALTER TABLE reviews ADD COLUMN media_urls TEXT`
   ];
 
   for (const q of alterQueries) {

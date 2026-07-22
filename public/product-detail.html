@@ -160,6 +160,11 @@
             <label style="font-size:0.85rem; font-weight:700; display:block; margin-bottom:0.5rem">Comment / Feedback</label>
             <textarea id="reviewComment" rows="4" placeholder="How was the cloth fit? Tell us about the fabric quality!" style="width:100%; padding:0.7rem; border:1px solid var(--border-color); border-radius:6px" required></textarea>
           </div>
+          <div>
+            <label style="font-size:0.85rem; font-weight:700; display:block; margin-bottom:0.5rem">Add Photos or Videos (Optional, Max 5 files)</label>
+            <input type="file" id="reviewMedia" multiple accept="image/*,video/*" style="font-size:0.85rem; color:var(--text-light)">
+            <small style="color:var(--text-light); font-size:0.75rem; display:block; margin-top:4px">Share photos or videos of you wearing the outfit!</small>
+          </div>
           <button type="submit" class="btn btn-primary" style="width:100%">Submit Review</button>
         </form>
       </div>
@@ -548,6 +553,34 @@
           stars += `<i class="fas fa-star" style="color:${i <= r.rating ? '#f59e0b' : '#ccc'}"></i>`;
         }
 
+        // Compile customer uploaded images/videos
+        let mediaHtml = '';
+        try {
+          if (r.media_urls) {
+            const urls = JSON.parse(r.media_urls);
+            if (urls && urls.length > 0) {
+              mediaHtml = '<div style="display:flex; gap:10px; margin-top:0.8rem; flex-wrap:wrap">';
+              urls.forEach(url => {
+                const isVideo = url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.mov') || url.includes('/video/upload/');
+                if (isVideo) {
+                  mediaHtml += `
+                    <video src="${url}" controls style="max-width:150px; max-height:150px; border-radius:6px; border:1px solid var(--border-color)"></video>
+                  `;
+                } else {
+                  mediaHtml += `
+                    <a href="${url}" target="_blank">
+                      <img src="${url}" style="width:80px; height:80px; object-fit:cover; border-radius:6px; border:1px solid var(--border-color); cursor:pointer">
+                    </a>
+                  `;
+                }
+              });
+              mediaHtml += '</div>';
+            }
+          }
+        } catch(e) {
+          console.error(e);
+        }
+
         container.innerHTML += `
           <div style="background-color:#fff; padding:1.2rem; border-radius:var(--radius); border:1px solid var(--border-color)">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem">
@@ -555,7 +588,8 @@
               <span style="font-size:0.75rem; color:var(--text-light)">${date}</span>
             </div>
             <div style="font-size:0.85rem; margin-bottom:0.6rem">${stars}</div>
-            <p style="font-size:0.9rem; color:var(--text-light)">${r.comment || 'No comment details provided.'}</p>
+            <p style="font-size:0.9rem; color:var(--text-dark)">${r.comment || 'No comment details provided.'}</p>
+            ${mediaHtml}
           </div>
         `;
       });
@@ -601,20 +635,26 @@
           return;
         }
 
-        const payload = {
-          product_id: activeProduct.id,
-          rating: selectedRating,
-          comment: document.getElementById('reviewComment').value.trim()
-        };
+        const formData = new FormData();
+        formData.append('product_id', activeProduct.id);
+        formData.append('rating', selectedRating);
+        formData.append('comment', document.getElementById('reviewComment').value.trim());
+
+        const mediaInput = document.getElementById('reviewMedia');
+        if (mediaInput && mediaInput.files.length > 0) {
+          for (let i = 0; i < mediaInput.files.length; i++) {
+            formData.append('review_media', mediaInput.files[i]);
+          }
+        }
 
         try {
+          showToast('Uploading review details & media...', 'info');
           const res = await fetch('/api/reviews', {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json',
               'Authorization': `Bearer ${getToken()}`
             },
-            body: JSON.stringify(payload)
+            body: formData
           });
           const data = await res.json();
           if (data.success) {

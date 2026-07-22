@@ -1572,15 +1572,23 @@ app.post('/api/payment/verify', authenticateToken, async (req, res) => {
    ========================================================================== */
 
 // Submit review
-app.post('/api/reviews', authenticateToken, async (req, res) => {
+app.post('/api/reviews', authenticateToken, upload.array('review_media', 5), async (req, res) => {
   const { product_id, rating, comment } = req.body;
   if (!product_id || !rating) return res.status(400).json({ success: false, message: 'Product ID and Rating are required' });
 
   try {
+    let mediaUrls = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const cloudUrl = await uploadToCloudinary(file.path, 'reviews');
+        mediaUrls.push(cloudUrl);
+      }
+    }
+
     await db.run(`
-      INSERT INTO reviews (customer_id, product_id, rating, comment)
-      VALUES (?, ?, ?, ?)
-    `, [req.user.id, product_id, rating, comment]);
+      INSERT INTO reviews (customer_id, product_id, rating, comment, media_urls)
+      VALUES (?, ?, ?, ?, ?)
+    `, [req.user.id, product_id, rating, comment, JSON.stringify(mediaUrls)]);
 
     // Recalculate product rating
     const avgData = await db.get('SELECT AVG(rating) as avg_rating FROM reviews WHERE product_id = ?', [product_id]);
