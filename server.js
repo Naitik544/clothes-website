@@ -1786,13 +1786,14 @@ app.post('/api/admin/shiprocket-config', adminIpFilter, authenticateAdmin, async
   }
 
   try {
-    // Test login against Shiprocket API before saving to make sure credentials are valid!
+    console.log(`[Shiprocket Debug] Attempting authentication. Email length: ${email.trim().length}, Password length: ${password.trim().length}`);
     const response = await fetch('https://apiv2.shiprocket.in/v1/external/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: email.trim(), password: password.trim() })
     });
     const data = await response.json();
+    console.log('[Shiprocket Debug] Raw Response:', JSON.stringify(data));
     
     if (!response.ok || !data.token) {
       return res.status(400).json({
