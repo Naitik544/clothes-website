@@ -4,6 +4,39 @@
 
 const API_URL = ''; // Relative path for unified host
 
+// Global Fetch Interceptor to handle JWT token expiration and redirect to login page
+const originalFetch = window.fetch;
+window.fetch = async function(...args) {
+  try {
+    const response = await originalFetch(...args);
+    if (response.status === 401 || response.status === 403) {
+      const clone = response.clone();
+      try {
+        const data = await clone.json();
+        if (data.message && (data.message.includes('Expired Token') || data.message.includes('Invalid') || data.message.includes('Access Denied') || data.message.includes('Token'))) {
+          console.warn('Session expired or invalid token. Logging out...');
+          localStorage.removeItem('l2l_token');
+          localStorage.removeItem('l2l_user');
+          document.cookie = "l2l_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax";
+          
+          const pathname = window.location.pathname;
+          if (!pathname.includes('login.html') && !pathname.includes('index.html')) {
+            showToast('Session expired. Please log in again.', 'error');
+            setTimeout(() => {
+              window.location.href = 'login.html';
+            }, 1500);
+          }
+        }
+      } catch (e) {
+        // Response was not JSON, ignore
+      }
+    }
+    return response;
+  } catch (err) {
+    throw err;
+  }
+};
+
 // Global System Settings for shipping fee and threshold
 window.systemSettings = {
   shipping_fee: 60,
