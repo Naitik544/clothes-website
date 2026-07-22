@@ -138,10 +138,10 @@ async function get(sql, params = []) {
 async function run(sql, params = []) {
   if (dbType === 'postgres') {
     let finalSql = convertPlaceholders(sql);
-    // Append RETURNING id to INSERT queries to mimic lastID behavior
+    // Append RETURNING * to INSERT queries to mimic lastID behavior safely
     const isInsert = finalSql.trim().toUpperCase().startsWith('INSERT INTO');
     if (isInsert && !finalSql.toUpperCase().includes('RETURNING')) {
-      finalSql += ' RETURNING id';
+      finalSql += ' RETURNING *';
     }
     const res = await pgPool.query(finalSql, params);
     const insertId = res.rows[0] ? res.rows[0].id : null;
