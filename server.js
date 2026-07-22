@@ -1730,6 +1730,43 @@ app.get('/api/admin/analytics', adminIpFilter, authenticateAdmin, async (req, re
   }
 });
 
+// Danger: Reset all sales, orders, reviews, inquiries, and customer accounts (except admin)
+app.post('/api/admin/reset-all-data', adminIpFilter, authenticateAdmin, async (req, res) => {
+  try {
+    console.log('🧹 Beginning complete database analytics and orders reset...');
+    
+    // 1. Delete order items
+    await db.run('DELETE FROM order_items');
+    
+    // 2. Delete payments
+    await db.run('DELETE FROM payments');
+    
+    // 3. Delete orders
+    await db.run('DELETE FROM orders');
+    
+    // 4. Delete reviews
+    await db.run('DELETE FROM reviews');
+    
+    // 5. Delete support inquiries
+    await db.run('DELETE FROM inquiries');
+    
+    // 6. Delete wishlist items
+    await db.run('DELETE FROM wishlist');
+    
+    // 7. Delete customers except admin
+    await db.run("DELETE FROM customers WHERE email != 'admin@littlelarge.in'");
+    
+    // 8. Reset product ratings to default (0 or 5.0)
+    await db.run("UPDATE products SET rating = 0.00");
+    
+    console.log('✅ Complete database reset successful!');
+    res.json({ success: true, message: 'All analytics, orders, shoppers, and reviews have been reset to 0 successfully!' });
+  } catch (err) {
+    console.error('Reset Data Error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // Get System Settings (Public)
 app.get('/api/settings', async (req, res) => {
   try {

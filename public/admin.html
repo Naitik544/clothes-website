@@ -606,6 +606,18 @@
             </button>
           </form>
         </div>
+
+        <div style="background-color:#fff; padding:2.5rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); max-width:650px; margin: 2rem auto 0 auto; border: 2px solid var(--danger);">
+          <h2 style="font-size:1.5rem; color:var(--danger); font-weight:800; border-bottom:1px solid var(--border-color); padding-bottom:12px; margin-bottom:1.5rem; display:flex; align-items:center; gap:10px">
+            🧹 Complete Store Database Reset
+          </h2>
+          <p style="font-size:0.85rem; color:var(--text-light); margin-bottom:2rem; line-height:1.6">
+            <strong>⚠️ DANGER ZONE:</strong> This action will permanently delete all customer orders, transactions, shoppers (except admin), wishlist items, customer inquiries, and reviews to start fresh. This action is irreversible! Your products inventory will not be deleted.
+          </p>
+          <button onclick="triggerCompleteStoreReset()" class="btn btn-danger" style="padding:0.8rem 2rem; font-size:0.9rem; font-weight:700; width:100%; cursor:pointer; background-color:var(--danger); color:#fff; border:none; border-radius:6px">
+            🚨 Reset All Sales & Analytics Data to 0
+          </button>
+        </div>
       </section>
 
     </main>

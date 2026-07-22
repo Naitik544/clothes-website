@@ -1343,3 +1343,38 @@ function generateBannerImage(type) {
     };
   }
 }
+
+// Danger: Reset all sales, orders, reviews, inquiries, and customer accounts (except admin)
+async function triggerCompleteStoreReset() {
+  const confirm1 = confirm("⚠️ DANGER: Are you absolutely sure you want to delete all orders, transaction history, wishlist items, support inquiries, and customer accounts? This will reset all analytics charts to 0!");
+  if (!confirm1) return;
+
+  const confirm2 = prompt("To verify, please type 'RESET ALL DATA' in all caps:");
+  if (confirm2 !== 'RESET ALL DATA') {
+    showToast('Reset cancelled. Verification text did not match.', 'warning');
+    return;
+  }
+
+  showToast('Cleaning up database tables...', 'info');
+
+  try {
+    const res = await fetch('/api/admin/reset-all-data', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      showToast('🎉 ' + data.message, 'success');
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } else {
+      showToast(data.message || 'Reset failed', 'error');
+    }
+  } catch (err) {
+    showToast('Failed to connect to reset API', 'error');
+  }
+}
