@@ -1286,16 +1286,21 @@ header {
    ADMIN PANEL DASHBOARD
    ========================================================================== */
 .admin-layout {
-  display: grid;
-  grid-template-columns: 240px 1fr;
+  margin-left: 240px;
   min-height: 100vh;
   background-color: #f3f4f6;
 }
 
 .admin-sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 240px;
   background-color: var(--primary);
   color: #fff;
   padding: 2rem 1.2rem;
+  z-index: 100;
 }
 
 .admin-sidebar-logo {
@@ -1872,7 +1877,7 @@ footer {
 
   /* Admin Layout Structure Grid override */
   .admin-layout {
-    grid-template-columns: 1fr !important;
+    margin-left: 0 !important;
     display: block !important;
   }
 
@@ -1883,7 +1888,7 @@ footer {
     left: -260px !important;
     bottom: 0 !important;
     width: 260px !important;
-    z-index: 1001 !important;
+    z-index: 10005 !important;
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     box-shadow: 4px 0 15px rgba(0, 0, 0, 0.15) !important;
     overflow-y: auto !important;
@@ -1895,15 +1900,15 @@ footer {
 
   /* Overlay backdrop */
   .admin-sidebar-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(2px);
-    z-index: 1000;
-    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background-color: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(2px) !important;
+    z-index: 10002 !important;
+    display: none !important;
   }
   
   .admin-sidebar-overlay.show {

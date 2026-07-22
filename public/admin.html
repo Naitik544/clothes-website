@@ -41,27 +41,28 @@
     <div class="admin-mobile-brand">🛍️ LTL Control Center</div>
   </div>
   
+  <!-- Sidebar Backdrop Overlay -->
+  <div class="admin-sidebar-overlay" id="adminSidebarOverlay" onclick="toggleAdminSidebar(event)"></div>
+  
+  <!-- Sidebar -->
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="admin-sidebar-logo">
+      🛍️ Little <span>to Large</span>
+    </div>
+    <ul class="admin-sidebar-menu">
+      <li><a href="#" class="active" data-section="analyticsSection"><i class="fas fa-chart-line"></i> Analytics</a></li>
+      <li><a href="#" data-section="productsSection"><i class="fas fa-tshirt"></i> Products Inventory</a></li>
+      <li><a href="#" data-section="ordersSection"><i class="fas fa-shipping-fast"></i> Order Fulfillment</a></li>
+      <li><a href="#" data-section="promotionsSection"><i class="fas fa-ad"></i> Promotions & Hero</a></li>
+      <li><a href="#" data-section="errorSection"><i class="fas fa-bug"></i> Error Tracking</a></li>
+      <li><a href="#" data-section="inquiriesSection"><i class="far fa-envelope-open"></i> Customer Inquiries</a></li>
+      <li><a href="#" data-section="lookbookSection"><i class="fas fa-book-open"></i> Lookbook Manager</a></li>
+      <li><a href="#" data-section="settingsSection"><i class="fas fa-sliders-h"></i> Shipping Settings</a></li>
+      <li><a href="index.html" style="color:var(--marigold); margin-top:3rem"><i class="fas fa-home"></i> View Website</a></li>
+    </ul>
+  </aside>
+
   <div class="admin-layout">
-    <!-- Sidebar Backdrop Overlay -->
-    <div class="admin-sidebar-overlay" id="adminSidebarOverlay" onclick="toggleAdminSidebar(event)"></div>
-    
-    <!-- Sidebar -->
-    <aside class="admin-sidebar" id="adminSidebar">
-      <div class="admin-sidebar-logo">
-        🛍️ Little <span>to Large</span>
-      </div>
-      <ul class="admin-sidebar-menu">
-        <li><a href="#" class="active" data-section="analyticsSection"><i class="fas fa-chart-line"></i> Analytics</a></li>
-        <li><a href="#" data-section="productsSection"><i class="fas fa-tshirt"></i> Products Inventory</a></li>
-        <li><a href="#" data-section="ordersSection"><i class="fas fa-shipping-fast"></i> Order Fulfillment</a></li>
-        <li><a href="#" data-section="promotionsSection"><i class="fas fa-ad"></i> Promotions & Hero</a></li>
-        <li><a href="#" data-section="errorSection"><i class="fas fa-bug"></i> Error Tracking</a></li>
-        <li><a href="#" data-section="inquiriesSection"><i class="far fa-envelope-open"></i> Customer Inquiries</a></li>
-        <li><a href="#" data-section="lookbookSection"><i class="fas fa-book-open"></i> Lookbook Manager</a></li>
-        <li><a href="#" data-section="settingsSection"><i class="fas fa-sliders-h"></i> Shipping Settings</a></li>
-        <li><a href="index.html" style="color:var(--marigold); margin-top:3rem"><i class="fas fa-home"></i> View Website</a></li>
-      </ul>
-    </aside>
 
     <!-- Main Content Panel -->
     <main class="admin-main">
