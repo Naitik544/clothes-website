@@ -1938,7 +1938,7 @@ app.post('/api/admin/orders/:id/ship', adminIpFilter, authenticateAdmin, async (
       payment_method: order.payment_method === 'COD' ? 'COD' : 'Prepaid',
       sub_total: order.total_amount,
       length: 20,
-      width: 15,
+      breadth: 15,
       height: 5,
       weight: 0.4
     };
