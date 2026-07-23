@@ -48,6 +48,13 @@ async function initDB() {
 
   await createTables();
   await seedDatabase();
+
+  // Clear default seeded phone number for admin to prevent pre-filling dummy value
+  try {
+    await run("UPDATE customers SET phone = NULL WHERE email = 'admin@littlelarge.in' AND phone = '9999999999'");
+  } catch (err) {
+    console.warn("Failed to clear admin phone:", err.message);
+  }
 }
 
 async function initMySQLFallback(useMySQL) {
