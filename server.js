@@ -241,25 +241,28 @@ const upload = multer({
   }
 });
 
-// Helper function to upload files to Cloudinary and clean up local temporary files
+// Helper function to upload files to Cloudinary and clean up local temporary files (supports remote URLs)
 async function uploadToCloudinary(localFilePath, folder = 'products') {
   try {
-    if (!fs.existsSync(localFilePath)) {
+    const isUrl = typeof localFilePath === 'string' && (localFilePath.startsWith('http://') || localFilePath.startsWith('https://'));
+    if (!isUrl && !fs.existsSync(localFilePath)) {
       throw new Error(`File not found at: ${localFilePath}`);
     }
     const result = await cloudinary.uploader.upload(localFilePath, {
       folder: `little_to_large/${folder}`,
       resource_type: 'auto'
     });
-    // Safely delete local temporary file
-    try {
-      fs.unlinkSync(localFilePath);
-    } catch (e) {
-      console.error('Failed to delete temp file:', e);
+    if (!isUrl) {
+      // Safely delete local temporary file
+      try {
+        fs.unlinkSync(localFilePath);
+      } catch (e) {
+        console.error('Failed to delete temp file:', e);
+      }
     }
     return result.secure_url;
   } catch (err) {
-    console.error('Cloudinary Upload Error:', err);
+    console.error('Cloudinary Upload Error:', err.message);
     throw err;
   }
 }
@@ -2067,7 +2070,12 @@ app.post('/api/products', adminIpFilter, authenticateAdmin, upload.array('images
         images.push(cloudUrl);
       }
     } else if (req.body.image_url) {
-      images = [req.body.image_url];
+      if (req.body.image_url.startsWith('http://') || req.body.image_url.startsWith('https://')) {
+        const cloudUrl = await uploadToCloudinary(req.body.image_url.trim(), 'products');
+        images = [cloudUrl];
+      } else {
+        images = [req.body.image_url];
+      }
     } else {
       // Fallback placeholder image
       images = ['https://res.cloudinary.com/wzknhexk/image/upload/v1721564126/placeholder.jpg'];
@@ -2104,7 +2112,12 @@ app.put('/api/products/:id', adminIpFilter, authenticateAdmin, upload.array('ima
       }
       images = [...images, ...newImages];
     } else if (req.body.image_url) {
-      images = [req.body.image_url];
+      if (req.body.image_url.startsWith('http://') || req.body.image_url.startsWith('https://')) {
+        const cloudUrl = await uploadToCloudinary(req.body.image_url.trim(), 'products');
+        images = [cloudUrl];
+      } else {
+        images = [req.body.image_url];
+      }
     }
 
     const returnDays = return_window_days !== undefined && return_window_days !== '' ? parseInt(return_window_days) : 7;
@@ -2346,7 +2359,11 @@ app.post('/api/promotions', adminIpFilter, authenticateAdmin, upload.single('ima
   if (req.file) {
     final_media_url = await uploadToCloudinary(req.file.path, 'promotions');
   } else if (media_url) {
-    final_media_url = media_url;
+    if (media_url.startsWith('http://') || media_url.startsWith('https://')) {
+      final_media_url = await uploadToCloudinary(media_url.trim(), 'promotions');
+    } else {
+      final_media_url = media_url;
+    }
   } else {
     return res.status(400).json({ success: false, message: 'Please upload a banner image file OR paste an image URL/path' });
   }
@@ -2413,7 +2430,11 @@ app.put('/api/homepage-settings', adminIpFilter, authenticateAdmin, upload.singl
   if (req.file) {
     final_media_url = await uploadToCloudinary(req.file.path, 'homepage');
   } else if (media_url) {
-    final_media_url = media_url;
+    if (media_url.startsWith('http://') || media_url.startsWith('https://')) {
+      final_media_url = await uploadToCloudinary(media_url.trim(), 'homepage');
+    } else {
+      final_media_url = media_url;
+    }
   } else {
     try {
       const existing = await db.get('SELECT media_url FROM homepage_settings WHERE id = 1');
