@@ -319,7 +319,7 @@ function renderHeaderFooter() {
       <div class="top-bar">
         🚚 Free Shipping across India on orders above ₹999 | <span>Festive Sale: Up to 40% OFF</span>
       </div>
-      <div class="container navbar">
+      <div class="container navbar" style="max-width: 1400px; width: 95%;">
         <button class="hamburger-btn" onclick="toggleNavDrawer()"><i class="fas fa-bars"></i></button>
         
         <a href="index.html" class="logo" style="display: inline-flex; align-items: center; gap: 8px;">
@@ -329,14 +329,12 @@ function renderHeaderFooter() {
         
         <nav class="nav-links">
           <a href="index.html">Home</a>
-          <a href="products.html">Shop All</a>
-          ${user ? `<a href="orders.html">My Orders</a>` : ''}
+          <a href="products.html">Shop</a>
           <a href="lookbook.html">Lookbook</a>
           <a href="products.html?category=Men">Men</a>
           <a href="products.html?category=Women">Women</a>
           <a href="products.html?category=Kids">Kids</a>
           <a href="products.html?style=Ethnic">Festival Wear</a>
-          <a href="products.html?sort=newest">New Trends</a>
         </nav>
         
         <div class="nav-actions">

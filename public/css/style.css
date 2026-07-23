@@ -1828,6 +1828,22 @@ footer {
   }
 }
 
+/* Medium Desktop Responsiveness: Prevent squishing */
+@media (min-width: 769px) and (max-width: 1200px) {
+  .nav-links {
+    gap: 1rem !important;
+  }
+  .nav-links a {
+    font-size: 0.85rem !important;
+  }
+  .nav-actions {
+    gap: 0.8rem !important;
+  }
+  .search-bar input {
+    width: 120px !important;
+  }
+}
+
 /* ==========================================================================
    ADMIN PANEL MOBILE RESPONSIVENESS
    ========================================================================== */
