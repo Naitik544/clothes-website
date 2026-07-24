@@ -28,7 +28,7 @@
     <!-- Gallery Component -->
     <div class="product-gallery">
       <div class="main-image-wrapper" id="zoomContainer">
-        <img id="mainProdImage" src="/images/products/placeholder.jpg" alt="Product Image">
+        <img id="mainProdImage" src="/images/products/placeholder.jpg" alt="Product Image" onerror="this.src='/images/products/placeholder.jpg'">
       </div>
       <div class="thumbnail-list" id="thumbnailsContainer">
         <!-- Render thumbnails dynamically -->
@@ -270,23 +270,27 @@
 
       // Image Gallery
       const images = JSON.parse(p.image_urls || '[]');
+      const firstImg = formatLocalPath(images[0] || '/images/products/placeholder.jpg');
       const mainImg = document.getElementById('mainProdImage');
-      mainImg.src = images[0] || '/images/products/placeholder.jpg';
+      mainImg.src = firstImg;
+      mainImg.onerror = () => { mainImg.src = '/images/products/placeholder.jpg'; };
 
       // Thumbnails
       const thumbList = document.getElementById('thumbnailsContainer');
       thumbList.innerHTML = '';
       images.forEach((img, idx) => {
+        const formatted = formatLocalPath(img);
         thumbList.innerHTML += `
-          <div class="thumb ${idx === 0 ? 'active' : ''}" onclick="changeMainImage(this, '${img}')">
-            <img src="${img}" alt="${p.name}" onerror="this.src='/images/products/placeholder.jpg'">
+          <div class="thumb ${idx === 0 ? 'active' : ''}" onclick="changeMainImage(this, '${formatted}')">
+            <img src="${formatted}" alt="${p.name}" onerror="this.src='/images/products/placeholder.jpg'">
           </div>
         `;
       });
 
       // Initialize 360 viewer
       const img360 = document.getElementById('image360');
-      img360.src = images[0] || '/images/products/placeholder.jpg';
+      img360.src = firstImg;
+      img360.onerror = () => { img360.src = '/images/products/placeholder.jpg'; };
       
       const canvas360 = document.getElementById('viewer360Canvas');
       const range360 = document.getElementById('rotationRange');

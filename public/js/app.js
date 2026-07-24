@@ -84,6 +84,18 @@ async function loadSystemSettings() {
   }
 }
 
+// Helper function to format relative local image paths and remote Cloudinary URLs
+function formatLocalPath(pathStr) {
+  if (!pathStr) return '/images/products/placeholder.jpg';
+  if (pathStr.startsWith('http://') || pathStr.startsWith('https://') || pathStr.startsWith('data:')) {
+    return pathStr;
+  }
+  if (!pathStr.startsWith('/')) {
+    return '/' + pathStr;
+  }
+  return pathStr;
+}
+
 // Fetch settings immediately on import
 loadSystemSettings();
 
