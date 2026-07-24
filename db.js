@@ -55,6 +55,13 @@ async function initDB() {
   } catch (err) {
     console.warn("Failed to clear admin phone:", err.message);
   }
+
+  // Auto-correct any products where discount_price was entered higher than price
+  try {
+    await run("UPDATE products SET price = discount_price, discount_price = price WHERE discount_price IS NOT NULL AND discount_price > price");
+  } catch (err) {
+    console.warn("Failed to auto-correct reversed product prices:", err.message);
+  }
 }
 
 async function initMySQLFallback(useMySQL) {

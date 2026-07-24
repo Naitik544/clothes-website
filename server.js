@@ -2117,12 +2117,22 @@ app.post('/api/products', adminIpFilter, authenticateAdmin, upload.array('images
       images = ['https://res.cloudinary.com/wzknhexk/image/upload/v1721564126/placeholder.jpg'];
     }
 
+    let regPrice = parseFloat(price);
+    let offerPrice = discount_price && discount_price !== '' ? parseFloat(discount_price) : null;
+
+    // Auto-correct if admin entered MRP and selling price in reversed fields
+    if (offerPrice !== null && offerPrice > regPrice) {
+      const temp = regPrice;
+      regPrice = offerPrice;
+      offerPrice = temp;
+    }
+
     const returnDays = return_window_days !== undefined && return_window_days !== '' ? parseInt(return_window_days) : 7;
  
     const result = await db.run(`
       INSERT INTO products (name, category, subcategory, price, discount_price, stock, description, size_variants, image_urls, return_window_days)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [name, category, subcategory || null, parseFloat(price), discount_price ? parseFloat(discount_price) : null, parseInt(stock) || 0, description || '', size_variants || 'M', JSON.stringify(images), returnDays]);
+    `, [name, category, subcategory || null, regPrice, offerPrice, parseInt(stock) || 0, description || '', size_variants || 'M', JSON.stringify(images), returnDays]);
  
     res.status(201).json({ success: true, message: 'Product added successfully', productId: result.insertId });
   } catch (err) {
@@ -2156,13 +2166,23 @@ app.put('/api/products/:id', adminIpFilter, authenticateAdmin, upload.array('ima
       }
     }
 
+    let regPrice = parseFloat(price);
+    let offerPrice = discount_price && discount_price !== '' ? parseFloat(discount_price) : null;
+
+    // Auto-correct if admin entered MRP and selling price in reversed fields
+    if (offerPrice !== null && offerPrice > regPrice) {
+      const temp = regPrice;
+      regPrice = offerPrice;
+      offerPrice = temp;
+    }
+
     const returnDays = return_window_days !== undefined && return_window_days !== '' ? parseInt(return_window_days) : 7;
 
     await db.run(`
       UPDATE products 
       SET name = ?, category = ?, subcategory = ?, price = ?, discount_price = ?, stock = ?, description = ?, size_variants = ?, image_urls = ?, return_window_days = ?
       WHERE id = ?
-    `, [name, category, subcategory || null, parseFloat(price), discount_price ? parseFloat(discount_price) : null, parseInt(stock) || 0, description || '', size_variants || 'M', JSON.stringify(images), returnDays, req.params.id]);
+    `, [name, category, subcategory || null, regPrice, offerPrice, parseInt(stock) || 0, description || '', size_variants || 'M', JSON.stringify(images), returnDays, req.params.id]);
 
     res.json({ success: true, message: 'Product updated successfully' });
   } catch (err) {

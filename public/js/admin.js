@@ -509,7 +509,7 @@ async function loadAdminProducts() {
           <tr>
             <td><img src="${image}" style="width:40px; height:50px; object-fit:cover; border-radius:4px"></td>
             <td><strong>${p.name}</strong><br><span style="font-size:0.75rem; color:#888">${p.category} | ${p.subcategory}</span></td>
-            <td><strong>₹${p.price}</strong> ${p.discount_price ? `<br><span style="text-decoration:line-through; font-size:0.75rem; color:#999">₹${p.discount_price}</span>` : ''}</td>
+            <td><strong>₹${p.discount_price || p.price}</strong> ${p.discount_price ? `<br><span style="text-decoration:line-through; font-size:0.75rem; color:#999">₹${p.price}</span>` : ''}</td>
             <td>${p.stock} units</td>
             <td>${p.size_variants}</td>
             <td>
