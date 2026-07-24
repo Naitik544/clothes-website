@@ -218,49 +218,65 @@ app.use(express.static(path.join(__dirname, 'public'), {
   extensions: ['html', 'htm']
 }));
 
-// Configure Multer for Image Uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'product-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Configure Multer for Image Uploads (memoryStorage - RAM only, no disk needed on Render)
 const upload = multer({ 
-  storage: storage,
+  storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
-    const allowed = ['.jpg', '.jpeg', '.png', '.webp', '.svg'];
+    const allowed = ['.jpg', '.jpeg', '.png', '.webp', '.svg', '.gif'];
     const ext = path.extname(file.originalname).toLowerCase();
     if (allowed.includes(ext)) {
       cb(null, true);
     } else {
-      cb(new Error('Only images (.jpg, .jpeg, .png, .webp, .svg) are allowed!'));
+      cb(new Error('Only images (.jpg, .jpeg, .png, .webp, .svg, .gif) are allowed!'));
     }
-  }
+  },
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
-// Helper function to upload files to Cloudinary and clean up local temporary files (supports remote URLs)
-async function uploadToCloudinary(localFilePath, folder = 'products') {
+// Helper function to upload files to Cloudinary
+// Supports: local file path (string), remote URL (string), or Buffer (from memory storage)
+async function uploadToCloudinary(input, folder = 'products') {
   try {
-    const isUrl = typeof localFilePath === 'string' && (localFilePath.startsWith('http://') || localFilePath.startsWith('https://'));
-    if (!isUrl && !fs.existsSync(localFilePath)) {
-      throw new Error(`File not found at: ${localFilePath}`);
+    // Case 1: Buffer from multer memoryStorage
+    if (Buffer.isBuffer(input) || (input && input.buffer)) {
+      const buffer = Buffer.isBuffer(input) ? input : input.buffer;
+      return await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: `little_to_large/${folder}`, resource_type: 'auto' },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result.secure_url);
+          }
+        );
+        const { Readable } = require('stream');
+        const readable = new Readable();
+        readable.push(buffer);
+        readable.push(null);
+        readable.pipe(stream);
+      });
     }
-    const result = await cloudinary.uploader.upload(localFilePath, {
+
+    // Case 2: Remote HTTP/HTTPS URL
+    const isUrl = typeof input === 'string' && (input.startsWith('http://') || input.startsWith('https://'));
+    if (isUrl) {
+      const result = await cloudinary.uploader.upload(input.trim(), {
+        folder: `little_to_large/${folder}`,
+        resource_type: 'auto'
+      });
+      return result.secure_url;
+    }
+
+    // Case 3: Local file path
+    if (!fs.existsSync(input)) {
+      throw new Error(`File not found at: ${input}`);
+    }
+    const result = await cloudinary.uploader.upload(input, {
       folder: `little_to_large/${folder}`,
       resource_type: 'auto'
     });
-    if (!isUrl) {
-      // Safely delete local temporary file
-      try {
-        fs.unlinkSync(localFilePath);
-      } catch (e) {
-        console.error('Failed to delete temp file:', e);
-      }
-    }
+    try { fs.unlinkSync(input); } catch (e) { console.error('Failed to delete temp file:', e); }
     return result.secure_url;
+
   } catch (err) {
     console.error('Cloudinary Upload Error:', err.message);
     throw err;
@@ -1584,7 +1600,7 @@ app.post('/api/reviews', authenticateToken, upload.array('review_media', 5), asy
     let mediaUrls = [];
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
-        const cloudUrl = await uploadToCloudinary(file.path, 'reviews');
+        const cloudUrl = await uploadToCloudinary(file.buffer, 'reviews');
         mediaUrls.push(cloudUrl);
       }
     }
@@ -2066,7 +2082,7 @@ app.post('/api/products', adminIpFilter, authenticateAdmin, upload.array('images
     let images = [];
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
-        const cloudUrl = await uploadToCloudinary(file.path, 'products');
+        const cloudUrl = await uploadToCloudinary(file.buffer, 'products');
         images.push(cloudUrl);
       }
     } else if (req.body.image_url) {
@@ -2107,7 +2123,7 @@ app.put('/api/products/:id', adminIpFilter, authenticateAdmin, upload.array('ima
       // Append new images
       const newImages = [];
       for (const file of req.files) {
-        const cloudUrl = await uploadToCloudinary(file.path, 'products');
+        const cloudUrl = await uploadToCloudinary(file.buffer, 'products');
         newImages.push(cloudUrl);
       }
       images = [...images, ...newImages];
@@ -2357,7 +2373,7 @@ app.post('/api/promotions', adminIpFilter, authenticateAdmin, upload.single('ima
 
   let final_media_url = '';
   if (req.file) {
-    final_media_url = await uploadToCloudinary(req.file.path, 'promotions');
+    final_media_url = await uploadToCloudinary(req.file.buffer, 'promotions');
   } else if (media_url) {
     if (media_url.startsWith('http://') || media_url.startsWith('https://')) {
       final_media_url = await uploadToCloudinary(media_url.trim(), 'promotions');
@@ -2428,7 +2444,7 @@ app.put('/api/homepage-settings', adminIpFilter, authenticateAdmin, upload.singl
   
   let final_media_url = '';
   if (req.file) {
-    final_media_url = await uploadToCloudinary(req.file.path, 'homepage');
+    final_media_url = await uploadToCloudinary(req.file.buffer, 'homepage');
   } else if (media_url) {
     if (media_url.startsWith('http://') || media_url.startsWith('https://')) {
       final_media_url = await uploadToCloudinary(media_url.trim(), 'homepage');
@@ -2586,7 +2602,7 @@ app.post('/api/admin/lookbook/upload', adminIpFilter, authenticateAdmin, upload.
       return res.status(400).json({ success: false, message: 'Please upload an image file' });
     }
     
-    const imageUrl = await uploadToCloudinary(req.file.path, 'lookbook');
+    const imageUrl = await uploadToCloudinary(req.file.buffer, 'lookbook');
     
     // Check if page already exists
     const existing = await db.get('SELECT id FROM lookbook_pages WHERE page_number = ?', [pageNumber]);
