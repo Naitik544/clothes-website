@@ -56,9 +56,9 @@ async function initDB() {
     console.warn("Failed to clear admin phone:", err.message);
   }
 
-  // Auto-correct any products where discount_price (MRP) was entered lower than price (Selling price)
+  // Auto-correct any products where discount_price was entered higher than price (swap so price is higher MRP)
   try {
-    await run("UPDATE products SET price = discount_price, discount_price = price WHERE discount_price IS NOT NULL AND discount_price < price");
+    await run("UPDATE products SET price = discount_price, discount_price = price WHERE discount_price IS NOT NULL AND discount_price > price");
   } catch (err) {
     console.warn("Failed to auto-correct reversed product prices:", err.message);
   }
