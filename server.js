@@ -862,7 +862,14 @@ app.post('/api/products/search-by-image', upload.single('image'), async (req, re
     return res.status(400).json({ success: false, message: 'Please upload an image file.' });
   }
 
-  const tempFilePath = req.file.path;
+  // Write buffer to temp file for Python script (AI search needs a file path)
+  const tempFilePath = path.join(uploadsDir, `search-${Date.now()}.jpg`);
+  try {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    fs.writeFileSync(tempFilePath, req.file.buffer);
+  } catch (writeErr) {
+    return res.status(500).json({ success: false, message: 'Failed to process uploaded image.' });
+  }
   const pythonScript = path.join(__dirname, 'image_search.py');
   const { exec } = require('child_process');
 
