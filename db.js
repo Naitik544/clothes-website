@@ -62,6 +62,13 @@ async function initDB() {
   } catch (err) {
     console.warn("Failed to auto-correct reversed product prices:", err.message);
   }
+
+  // Reset broken/empty homepage_settings media_url to default hero_vacation.png
+  try {
+    await run("UPDATE homepage_settings SET media_url = 'images/hero_vacation.png' WHERE media_url IS NULL OR media_url = '' OR media_url LIKE '%placeholder%'");
+  } catch (err) {
+    console.warn("Failed to reset homepage settings hero media_url:", err.message);
+  }
 }
 
 async function initMySQLFallback(useMySQL) {

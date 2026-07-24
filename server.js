@@ -2472,6 +2472,8 @@ app.get('/api/homepage-settings', async (req, res) => {
         media_type: 'image',
         festival_mode: 'none'
       };
+    } else if (!settings.media_url || settings.media_url.trim() === '') {
+      settings.media_url = 'images/hero_vacation.png';
     }
     res.json({ success: true, settings });
   } catch (err) {
@@ -2486,19 +2488,19 @@ app.put('/api/homepage-settings', adminIpFilter, authenticateAdmin, upload.singl
   
   let final_media_url = '';
   if (req.file) {
-    final_media_url = await uploadToCloudinary(req.file.buffer, 'homepage');
-  } else if (media_url) {
+    final_media_url = await uploadToCloudinary(req.file, 'homepage');
+  } else if (media_url && media_url.trim() !== '') {
     if (media_url.startsWith('http://') || media_url.startsWith('https://')) {
       final_media_url = await uploadToCloudinary(media_url.trim(), 'homepage');
     } else {
-      final_media_url = media_url;
+      final_media_url = media_url.trim();
     }
   } else {
     try {
       const existing = await db.get('SELECT media_url FROM homepage_settings WHERE id = 1');
-      final_media_url = existing ? existing.media_url : '';
+      final_media_url = (existing && existing.media_url && existing.media_url.trim() !== '') ? existing.media_url : 'images/hero_vacation.png';
     } catch (e) {
-      final_media_url = '';
+      final_media_url = 'images/hero_vacation.png';
     }
   }
 
