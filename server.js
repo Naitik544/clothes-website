@@ -234,51 +234,49 @@ const upload = multer({
 });
 
 // Helper function to upload files to Cloudinary
-// Supports: local file path (string), remote URL (string), or Buffer (from memory storage)
+// Supports: Buffer (from memory storage), remote URL (string), or local file path (string)
 async function uploadToCloudinary(input, folder = 'products') {
   try {
-    // Case 1: Buffer from multer memoryStorage
-    if (Buffer.isBuffer(input) || (input && input.buffer)) {
-      const buffer = Buffer.isBuffer(input) ? input : input.buffer;
-      return await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: `little_to_large/${folder}`, resource_type: 'auto' },
-          (error, result) => {
-            if (error) return reject(error);
-            resolve(result.secure_url);
-          }
-        );
-        const { Readable } = require('stream');
-        const readable = new Readable();
-        readable.push(buffer);
-        readable.push(null);
-        readable.pipe(stream);
+    // Case 1: Buffer from multer memoryStorage - convert to base64 data URI
+    if (Buffer.isBuffer(input)) {
+      console.log(`[Cloudinary] Uploading buffer of ${input.length} bytes to folder: ${folder}`);
+      const b64 = input.toString('base64');
+      const dataUri = `data:image/jpeg;base64,${b64}`;
+      const result = await cloudinary.uploader.upload(dataUri, {
+        folder: `little_to_large/${folder}`,
+        resource_type: 'auto'
       });
+      console.log(`[Cloudinary] Buffer upload success: ${result.secure_url}`);
+      return result.secure_url;
     }
 
-    // Case 2: Remote HTTP/HTTPS URL
-    const isUrl = typeof input === 'string' && (input.startsWith('http://') || input.startsWith('https://'));
-    if (isUrl) {
+    // Case 2: Remote HTTP/HTTPS URL - upload via URL
+    if (typeof input === 'string' && (input.startsWith('http://') || input.startsWith('https://'))) {
+      console.log(`[Cloudinary] Uploading from URL: ${input.substring(0, 80)}...`);
       const result = await cloudinary.uploader.upload(input.trim(), {
         folder: `little_to_large/${folder}`,
         resource_type: 'auto'
       });
+      console.log(`[Cloudinary] URL upload success: ${result.secure_url}`);
       return result.secure_url;
     }
 
     // Case 3: Local file path
-    if (!fs.existsSync(input)) {
-      throw new Error(`File not found at: ${input}`);
+    if (typeof input === 'string' && fs.existsSync(input)) {
+      console.log(`[Cloudinary] Uploading from local file: ${input}`);
+      const result = await cloudinary.uploader.upload(input, {
+        folder: `little_to_large/${folder}`,
+        resource_type: 'auto'
+      });
+      try { fs.unlinkSync(input); } catch (e) {}
+      console.log(`[Cloudinary] File upload success: ${result.secure_url}`);
+      return result.secure_url;
     }
-    const result = await cloudinary.uploader.upload(input, {
-      folder: `little_to_large/${folder}`,
-      resource_type: 'auto'
-    });
-    try { fs.unlinkSync(input); } catch (e) { console.error('Failed to delete temp file:', e); }
-    return result.secure_url;
+
+    throw new Error(`uploadToCloudinary: invalid input type - ${typeof input}, Buffer: ${Buffer.isBuffer(input)}`);
 
   } catch (err) {
-    console.error('Cloudinary Upload Error:', err.message);
+    console.error('[Cloudinary Upload Error]:', err.message);
     throw err;
   }
 }
