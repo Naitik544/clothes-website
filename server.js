@@ -2117,14 +2117,14 @@ app.post('/api/products', adminIpFilter, authenticateAdmin, upload.array('images
       images = ['https://res.cloudinary.com/wzknhexk/image/upload/v1721564126/placeholder.jpg'];
     }
 
-    let regPrice = parseFloat(price);
-    let offerPrice = discount_price && discount_price !== '' ? parseFloat(discount_price) : null;
+    let sellingPrice = parseFloat(price);
+    let mrpPrice = discount_price && discount_price !== '' ? parseFloat(discount_price) : null;
 
-    // Auto-correct if admin entered MRP and selling price in reversed fields
-    if (offerPrice !== null && offerPrice > regPrice) {
-      const temp = regPrice;
-      regPrice = offerPrice;
-      offerPrice = temp;
+    // Auto-correct if admin entered MRP and selling price reversed (MRP must be higher than selling price)
+    if (mrpPrice !== null && mrpPrice < sellingPrice) {
+      const temp = sellingPrice;
+      sellingPrice = mrpPrice;
+      mrpPrice = temp;
     }
 
     const returnDays = return_window_days !== undefined && return_window_days !== '' ? parseInt(return_window_days) : 7;
@@ -2132,7 +2132,7 @@ app.post('/api/products', adminIpFilter, authenticateAdmin, upload.array('images
     const result = await db.run(`
       INSERT INTO products (name, category, subcategory, price, discount_price, stock, description, size_variants, image_urls, return_window_days)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [name, category, subcategory || null, regPrice, offerPrice, parseInt(stock) || 0, description || '', size_variants || 'M', JSON.stringify(images), returnDays]);
+    `, [name, category, subcategory || null, sellingPrice, mrpPrice, parseInt(stock) || 0, description || '', size_variants || 'M', JSON.stringify(images), returnDays]);
  
     res.status(201).json({ success: true, message: 'Product added successfully', productId: result.insertId });
   } catch (err) {
@@ -2150,13 +2150,15 @@ app.put('/api/products/:id', adminIpFilter, authenticateAdmin, upload.array('ima
 
     let images = JSON.parse(existing.image_urls || '[]');
     if (req.files && req.files.length > 0) {
-      // Append new images
+      // Replace old images so new upload becomes the main image (images[0])
       const newImages = [];
       for (const file of req.files) {
-        const cloudUrl = await uploadToCloudinary(file.buffer, 'products');
-        newImages.push(cloudUrl);
+        const cloudUrl = await uploadToCloudinary(file, 'products');
+        if (cloudUrl) newImages.push(cloudUrl);
       }
-      images = [...images, ...newImages];
+      if (newImages.length > 0) {
+        images = newImages;
+      }
     } else if (req.body.image_url) {
       if (req.body.image_url.startsWith('http://') || req.body.image_url.startsWith('https://')) {
         const cloudUrl = await uploadToCloudinary(req.body.image_url.trim(), 'products');
@@ -2166,14 +2168,14 @@ app.put('/api/products/:id', adminIpFilter, authenticateAdmin, upload.array('ima
       }
     }
 
-    let regPrice = parseFloat(price);
-    let offerPrice = discount_price && discount_price !== '' ? parseFloat(discount_price) : null;
+    let sellingPrice = parseFloat(price);
+    let mrpPrice = discount_price && discount_price !== '' ? parseFloat(discount_price) : null;
 
-    // Auto-correct if admin entered MRP and selling price in reversed fields
-    if (offerPrice !== null && offerPrice > regPrice) {
-      const temp = regPrice;
-      regPrice = offerPrice;
-      offerPrice = temp;
+    // Auto-correct if admin entered MRP and selling price reversed
+    if (mrpPrice !== null && mrpPrice < sellingPrice) {
+      const temp = sellingPrice;
+      sellingPrice = mrpPrice;
+      mrpPrice = temp;
     }
 
     const returnDays = return_window_days !== undefined && return_window_days !== '' ? parseInt(return_window_days) : 7;
@@ -2182,7 +2184,7 @@ app.put('/api/products/:id', adminIpFilter, authenticateAdmin, upload.array('ima
       UPDATE products 
       SET name = ?, category = ?, subcategory = ?, price = ?, discount_price = ?, stock = ?, description = ?, size_variants = ?, image_urls = ?, return_window_days = ?
       WHERE id = ?
-    `, [name, category, subcategory || null, regPrice, offerPrice, parseInt(stock) || 0, description || '', size_variants || 'M', JSON.stringify(images), returnDays, req.params.id]);
+    `, [name, category, subcategory || null, sellingPrice, mrpPrice, parseInt(stock) || 0, description || '', size_variants || 'M', JSON.stringify(images), returnDays, req.params.id]);
 
     res.json({ success: true, message: 'Product updated successfully' });
   } catch (err) {
